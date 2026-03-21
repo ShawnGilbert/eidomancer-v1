@@ -1,0 +1,134 @@
+:root{
+  --midnight:#0f1020;
+  --violet:#4b2e83;
+  --gold:#c9a227;
+  --parchment:#f3e9d2;
+  --ember:#b14a2f;
+}
+
+*{ box-sizing:border-box; }
+
+html, body, #root{
+  height:100%;
+}
+
+body{
+  margin:0;
+  color:var(--parchment);
+  background:
+    radial-gradient(60% 40% at 50% 0%, rgba(75,46,131,0.35), transparent 70%),
+    linear-gradient(180deg, #14152a 0%, var(--midnight) 100%);
+  font-family: "Alegreya", serif;
+}
+
+a { color: inherit; }
+
+.app-shell{
+  min-height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:48px 20px;
+}
+
+.hero{
+  max-width:920px;
+  width:100%;
+  background: rgba(15,16,32,0.55);
+  border:1px solid rgba(201,162,39,0.25);
+  border-radius:18px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.45),
+              inset 0 0 0 1px rgba(255,255,255,0.05);
+  padding:36px 28px;
+  backdrop-filter: blur(6px);
+}
+
+.title{
+  font-family:"Cinzel", serif;
+  font-weight:800;
+  letter-spacing:0.5px;
+  font-size: clamp(28px, 4vw, 44px);
+  color: var(--parchment);
+  text-shadow: 0 0 12px rgba(201,162,39,0.25);
+  margin:0 0 8px;
+}
+
+.tagline{
+  margin:0 0 20px;
+  color: #ddd6c3;
+  font-style: italic;
+}
+
+.rule{
+  height:2px;
+  width:100%;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 12px 0 22px;
+  border:none;
+}
+
+.cta-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+}
+
+.btn{
+  border:none;
+  cursor:pointer;
+  padding:12px 18px;
+  border-radius:12px;
+  font-family:"Cinzel", serif;
+  font-weight:600;
+  letter-spacing:0.3px;
+  transition: transform .08s ease, box-shadow .12s ease, background .2s ease;
+}
+
+.btn-primary{
+  background: linear-gradient(180deg, var(--gold), #a8831f);
+  color:#1b1206;
+  box-shadow: 0 6px 18px rgba(201,162,39,0.35);
+}
+.btn-primary:hover{ transform: translateY(-1px); }
+
+.btn-ghost{
+  background: rgba(75,46,131,0.25);
+  color: var(--parchment);
+  border: 1px solid rgba(201,162,39,0.25);
+}
+.btn-ghost:hover{
+  background: rgba(75,46,131,0.38);
+}
+
+.footer{
+  margin-top:22px;
+  font-size:14px;
+  color:#c9c2b0;
+  opacity:.9;
+}
+
+/* Parchment card preview block (for later screens) */
+.parchment{
+  background: var(--parchment);
+  color:#2b1e0b;
+  border-radius:14px;
+  padding:16px;
+  border:1px solid #e0d6be;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+/* --- Ghost button clarity (put this at the very end of index.css) --- */
+.btn-ghost {
+  opacity: 1;
+  cursor: pointer;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.btn-ghost:hover:not([disabled]) {
+  background-color: rgba(201, 162, 39, 0.15);
+}
+
+.btn-ghost[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: rgba(75, 46, 131, 0.15);
+}

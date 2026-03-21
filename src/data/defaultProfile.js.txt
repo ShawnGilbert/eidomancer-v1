@@ -1,0 +1,11 @@
+const defaultProfile = {
+  name: "Caster",
+  theme: "The Emergent Ones",
+  mood: "reflective",
+  energy: "medium",
+  focus: "clarity",
+  context:
+    "You are balancing imagination, recovery, and the desire to build something meaningful.",
+};
+
+export default defaultProfile;

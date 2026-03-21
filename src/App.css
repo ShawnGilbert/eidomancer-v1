@@ -1,0 +1,126 @@
+/* ===== Base layout ===== */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.hero {
+  background: rgba(15, 16, 32, 0.55);
+  border: 1px solid rgba(201, 162, 39, 0.25);
+  border-radius: 18px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35),
+              inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  padding: 36px 28px;
+  max-width: 720px;
+  width: 100%;
+}
+
+/* ===== Typography ===== */
+.title {
+  font-family: "Cinzel", serif;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: clamp(28px, 4vw, 44px);
+  color: #f3e9d2;
+  text-shadow: 0 0 12px rgba(201, 162, 39, 0.25);
+  margin: 0 0 8px;
+}
+
+.tagline {
+  margin: 0 0 20px;
+  color: #ddd6c3;
+  font-style: italic;
+}
+
+.footer {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #c9c2b0;
+  opacity: 0.9;
+}
+
+/* ===== Divider ===== */
+.rule {
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, #c9a227, transparent);
+  margin: 12px 0 22px;
+  border: none;
+}
+
+/* ===== Buttons ===== */
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.btn {
+  border: none;
+  cursor: pointer;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-family: "Cinzel", serif;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.2s ease;
+}
+
+/* Primary gold button */
+.btn-primary {
+  background: linear-gradient(180deg, #c9a227, #a8831f);
+  color: #1b1206;
+  box-shadow: 0 6px 18px rgba(201, 162, 39, 0.35);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+}
+
+/* Ghost button (transparent) */
+.btn-ghost {
+  background: rgba(75, 46, 131, 0.25);
+  color: #f3e9d2;
+  border: 1px solid rgba(201, 162, 39, 0.25);
+  opacity: 1;
+  cursor: pointer;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+.btn-ghost:hover:not([disabled]) {
+  background-color: rgba(201, 162, 39, 0.15);
+}
+.btn-ghost[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== Parchment block ===== */
+.parchment {
+  background: #f3e9d2;
+  color: #2b1e0b;
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid #e0d6be;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* ===== Journal textarea ===== */
+.parchment textarea {
+  font-family: "Alegreya", serif;
+  font-size: 16px;
+  line-height: 1.4;
+  border: 1px solid #d7caaa;
+  border-radius: 8px;
+  padding: 8px;
+  width: 100%;
+  resize: vertical;
+}
+
+/* ===== History list ===== */
+.history-list {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}

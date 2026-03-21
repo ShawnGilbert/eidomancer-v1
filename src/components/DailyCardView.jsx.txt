@@ -1,0 +1,68 @@
+import { useState } from "react";
+import DailyCardResult from "./DailyCardResult";
+import { generateDailyCast } from "../lib/generateDailyCast";
+
+export default function DailyCardView({ profile, onSave }) {
+  const [card, setCard] = useState(null);
+  const [status, setStatus] = useState("idle");
+
+  const handleDraw = async () => {
+    try {
+      setStatus("generating");
+      await new Promise((resolve) => setTimeout(resolve, 450));
+      const nextCard = generateDailyCast(profile);
+      setCard(nextCard);
+      setStatus("result");
+    } catch (error) {
+      console.error("Failed to generate Daily Card", error);
+      setStatus("error");
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-3xl p-6">
+      <div className="mb-6 rounded-2xl border border-slate-700 bg-slate-900/70 p-6">
+        <div className="text-xs uppercase tracking-[0.25em] text-cyan-300">
+          Eidomancer Daily Card
+        </div>
+        <h1 className="mt-2 text-4xl font-bold text-slate-100">Daily Cast</h1>
+        <p className="mt-3 max-w-2xl text-slate-300">
+          A symbolic interface for reality. One signal. One interpretation. One grounded next move.
+        </p>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={handleDraw}
+            disabled={status === "generating"}
+            className="rounded-xl bg-cyan-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {status === "generating" ? "Drawing..." : "Draw Daily Card"}
+          </button>
+
+          {card && (
+            <button
+              onClick={() => onSave(card)}
+              className="rounded-xl border border-slate-500 px-5 py-3 font-semibold text-slate-100 transition hover:bg-slate-800"
+            >
+              Save Cast
+            </button>
+          )}
+        </div>
+
+        <div className="mt-4 text-sm text-slate-400">
+          Current profile: mood <span className="text-slate-200">{profile.mood}</span>, energy{" "}
+          <span className="text-slate-200">{profile.energy}</span>, focus{" "}
+          <span className="text-slate-200">{profile.focus}</span>
+        </div>
+      </div>
+
+      {status === "error" && (
+        <div className="mb-6 rounded-xl border border-red-800 bg-red-950/40 p-4 text-red-200">
+          Something went wrong while generating the Daily Card.
+        </div>
+      )}
+
+      {card && <DailyCardResult card={card} />}
+    </div>
+  );
+}

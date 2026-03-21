@@ -1,0 +1,40 @@
+export default function DailyCardResult({ card }) {
+  if (!card) return null;
+
+  return (
+    <div className="rounded-2xl border border-slate-700 bg-slate-900/80 p-6 shadow-xl">
+      <div className="mb-5 rounded-2xl border border-slate-700 bg-slate-950 p-6">
+        <div className="mb-2 text-xs uppercase tracking-[0.25em] text-cyan-300">
+          The Emergent Ones
+        </div>
+        <h2 className="text-3xl font-semibold text-slate-100">{card.title}</h2>
+        <p className="mt-2 text-sm text-slate-400">
+          {new Date(card.date).toLocaleDateString()}
+        </p>
+
+        <div className="mt-6 flex min-h-[240px] items-center justify-center rounded-xl border border-dashed border-slate-600 bg-gradient-to-b from-slate-800 to-slate-950 p-4 text-center text-slate-400">
+          Card image area / placeholder
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <section>
+          <div className="text-xs uppercase tracking-[0.2em] text-cyan-300">Signal</div>
+          <p className="mt-1 text-slate-200">{card.signal}</p>
+        </section>
+
+        <section>
+          <div className="text-xs uppercase tracking-[0.2em] text-cyan-300">
+            Interpretation
+          </div>
+          <p className="mt-1 text-slate-200">{card.interpretation}</p>
+        </section>
+
+        <section>
+          <div className="text-xs uppercase tracking-[0.2em] text-cyan-300">Action</div>
+          <p className="mt-1 font-medium text-amber-200">{card.action}</p>
+        </section>
+      </div>
+    </div>
+  );
+}

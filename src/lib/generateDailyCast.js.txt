@@ -1,0 +1,65 @@
+const TITLES = [
+  "Architect of Storms",
+  "Lantern of the Threshold",
+  "The Quiet Engine",
+  "Signal in the Fog",
+  "Keeper of the Unfinished Fire",
+  "The Measured Flame",
+];
+
+const SIGNALS = {
+  low: "Your system is signaling limited reserves. Friction is not failure today.",
+  medium:
+    "Your system is balancing strain and possibility. Direction matters more than intensity.",
+  high: "Your system is carrying charge and momentum. Use it deliberately before it scatters.",
+};
+
+const MOOD_INTERPRETATIONS = {
+  reflective:
+    "The pattern suggests a mind trying to translate lived experience into structure and meaning.",
+  tired:
+    "The pattern suggests your will is present, but your body is negotiating the cost of continued effort.",
+  hopeful:
+    "The pattern suggests an opening in the fog: not certainty, but enough signal to move.",
+  frustrated:
+    "The pattern suggests pressure without clean release. Simplicity is a form of power today.",
+  focused:
+    "The pattern suggests converging threads. What matters now is disciplined follow-through.",
+};
+
+const FOCUS_ACTIONS = {
+  clarity: "Choose one concrete task and finish only that before expanding outward.",
+  healing:
+    "Reduce needless friction today and make recovery part of the work, not the enemy of it.",
+  momentum: "Take the smallest visible action that proves movement is real.",
+  income: "Do one thing today that improves the path from idea to product.",
+  creativity:
+    "Capture one symbol, one phrase, or one design that feels alive and worth returning to.",
+};
+
+function pickTitle(profile) {
+  const seed = `${profile.name}-${profile.mood}-${profile.energy}-${profile.focus}`;
+  let total = 0;
+  for (let i = 0; i < seed.length; i += 1) total += seed.charCodeAt(i);
+  return TITLES[total % TITLES.length];
+}
+
+export function generateDailyCast(profile) {
+  const title = pickTitle(profile);
+  const signal = SIGNALS[profile.energy] || SIGNALS.medium;
+  const interpretation =
+    MOOD_INTERPRETATIONS[profile.mood] ||
+    "The pattern suggests a need to separate noise from signal before deciding where to aim your effort.";
+  const action =
+    FOCUS_ACTIONS[profile.focus] ||
+    "Choose one grounded step that aligns reality with intention.";
+
+  return {
+    date: new Date().toISOString(),
+    title,
+    signal,
+    interpretation,
+    action,
+    imagePrompt: `${title}, Eidomancer tarot card, The Emergent Ones theme, techno-mystic symbolism, semi-gothic framing, rustic tarot composition, luminous atmosphere, clear focal subject, symbolic environmental storytelling`,
+  };
+}
