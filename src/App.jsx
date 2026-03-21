@@ -203,8 +203,8 @@ export default function App() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:3001/api/cast", {
-        method: "POST",
+      const res = await fetch("https://eidomancer-api.onrender.com/api/cast", {
+  method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
