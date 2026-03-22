@@ -232,7 +232,56 @@ function imagePromptFromTitle(title = "", theme = "Emergent Ones", mode = "core"
 
 // === MAIN CARD GENERATION ===
 // Entry point: builds full card object
+function buildEcho({ cards = [], question = "", theme = "The Emergent Ones" }) {
+  if (!cards.length) {
+    return {
+      title: "Silent Return",
+      summary: "No signal resolved from the cast.",
+      advice: "Ask again with a clearer question."
+    };
+  }
 
+  const joined = cards
+    .map((card) =>
+      [card.title, card.keyword, card.mood, card.direction, card.meaning]
+        .filter(Boolean)
+        .join(" ")
+    )
+    .join(" ")
+    .toLowerCase();
+
+  const has = (words) => words.some((w) => joined.includes(w));
+
+  let title = "The Returning Signal";
+  let summary = "A pattern is present, but not yet fully claimed.";
+  let advice = "Move one step closer to the thing you already know matters.";
+
+  if (has(["hesitation", "delay", "waiting", "pause"])) {
+    title = "The Unspent Threshold";
+    summary = "The cast repeats a theme of held motion and unrealized readiness.";
+    advice = "Do not wait for perfect certainty. Begin with one smaller action.";
+  } else if (has(["storm", "conflict", "friction", "pressure"])) {
+    title = "The Pressure Beneath";
+    summary = "The spread points to tension that is trying to become movement or truth.";
+    advice = "Stop managing the surface only. Address the source of the pressure directly.";
+  } else if (has(["growth", "build", "seed", "becoming", "rise"])) {
+    title = "The Growing Shape";
+    summary = "This cast echoes development, emergence, and the forming of a new structure.";
+    advice = "Protect what is beginning. Small consistent effort matters more than dramatic force.";
+  } else if (has(["truth", "clarity", "light", "reveal", "vision"])) {
+    title = "The Revealed Thread";
+    summary = "Something wants to be seen more plainly than you have allowed.";
+    advice = "Name the truth in direct language before trying to optimize it.";
+  }
+
+  return {
+    title,
+    summary,
+    advice,
+    theme,
+    question
+  };
+}
 export function makeCard({
   question = "Daily Cast",
   theme = "Emergent Ones",
@@ -297,14 +346,27 @@ export function makeCard({
   ].join("\n");
 
   // === FINAL CARD OUTPUT ===
-  // Returns structured card data to UI
-  return {
-    title,
-    readingText,
-    theme,
-    date,
-    question,
-    mode,
-    imagePrompt: imagePromptFromTitle(title, theme, mode),
-  };
-}
+
+const card = {
+  title,
+  readingText,
+  theme,
+  date,
+  question,
+  mode,
+  imagePrompt: imagePromptFromTitle(title, theme, mode),
+};
+
+const cards = [card];
+
+const echo = buildEcho({
+  cards,
+  question,
+  theme
+});
+
+return {
+  ...card,
+  cards,
+  echo
+};

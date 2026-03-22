@@ -75,6 +75,18 @@ Identify the core conflict or imbalance
 ACTION:
 Give a concrete, realistic next step
 
+ECHO:
+A reflective return signal — what comes back from the canyon after the main reading.
+
+TITLE:
+A very short echo title (2–5 words)
+
+SUMMARY:
+A distilled emotional or philosophical meaning in 1–2 sentences
+
+ADVICE:
+One direct sentence that is slightly more blunt and actionable than the ACTION section
+
 RULES:
 - No fluff
 - No generic advice
@@ -85,6 +97,8 @@ RULES:
 - Use session memory for continuity when useful
 - Do not use markdown, bold, bullets, or heading symbols
 - Keep labels exactly as written
+- Include every section every time
+- Do not omit ECHO, TITLE, SUMMARY, or ADVICE
 `;
 
     const completion = await client.chat.completions.create({
