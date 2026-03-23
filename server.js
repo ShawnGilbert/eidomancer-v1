@@ -85,7 +85,7 @@ SUMMARY:
 A distilled emotional or philosophical meaning in 1–2 sentences
 
 ADVICE:
-One direct sentence that is slightly more blunt and actionable than the ACTION section
+One direct statement that identifies what the user is likely avoiding or misinterpreting, even if it feels slightly confronting
 
 RULES:
 - No fluff
@@ -99,6 +99,14 @@ RULES:
 - Keep labels exactly as written
 - Include every section every time
 - Do not omit ECHO, TITLE, SUMMARY, or ADVICE
+- ECHO should feel more piercing and honest than the main reading
+- ADVICE should identify the likely avoidance pattern or self-protection behavior behind the situation
+- Avoid generic motivation; be specific about what the person is doing or not doing
+- If appropriate, reframe "confusion" as hesitation, fear, or avoidance
+- Prefer insight over encouragement
+- It is acceptable to challenge the user's assumptions if it improves accuracy
+- Prefer identifying what the user may be avoiding over offering comfort
+- Do not default to encouragement; prioritize honest pattern recognition
 `;
 
     const completion = await client.chat.completions.create({

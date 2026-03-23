@@ -22,34 +22,40 @@ function cleanLine(text = "") {
 
 function parseEcho(text) {
   const echoBlockMatch = text.match(
-    /Echo\s*:?\s*([\s\S]*?)(?=\n[A-Z][A-Za-z ]+\s*:|$)/i
+    /ECHO\s*:?\s*([\s\S]*?)(?=\nCARD TITLE\s*:|\nSNAPSHOT\s*:|\nFIELD READING\s*:|\nTENSION\s*:|\nACTION\s*:|$)/i
   );
 
   if (!echoBlockMatch) return null;
 
   const block = echoBlockMatch[1].trim();
 
+  const lines = block
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const firstLine = lines[0] || "";
+
   const title =
-    extractSection(block, "Title") ||
+    extractSection(block, "TITLE") ||
     extractSection(block, "Echo Title") ||
-    cleanLine(block.split("\n")[0] || "");
+    cleanLine(firstLine);
 
   const summary =
-    extractSection(block, "Summary") ||
+    extractSection(block, "SUMMARY") ||
     extractSection(block, "Meaning") ||
-    cleanLine(block.split("\n").slice(1, 2).join(" ").trim());
+    "";
 
   const advice =
-    extractSection(block, "Advice") ||
-    extractSection(block, "Action") ||
-    cleanLine(block.split("\n").slice(2).join(" ").trim());
+    extractSection(block, "ADVICE") ||
+    "";
 
   if (!title && !summary && !advice) return null;
 
   return {
     title: title || "The Echo",
-    summary: summary || "",
-    advice: advice || "",
+    summary,
+    advice,
   };
 }
 
