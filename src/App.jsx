@@ -1,54 +1,83 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const API_URL = "https://eidomancer-api.onrender.com/api/cast";
+// ========================================
+// CONFIG / CONSTANTS
+// ========================================
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3001/api/cast";
 
 const STORAGE_KEYS = {
-  history: "eidomancer_history_v1",
+  history: "eidomancer_history_v3",
 };
 
-function extractSection(text, label) {
-  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const regex = new RegExp(
-    `${escaped}\\s*:?\\s*([\\s\\S]*?)(?=\\n[A-Z][A-Za-z ]+\\s*:|$)`,
-    "i"
-  );
-  const match = text.match(regex);
-  return match ? match[1].trim() : "";
+const SUGGESTED_QUESTIONS = [
+  "What pattern am I standing inside right now?",
+  "What am I refusing to admit to myself?",
+  "What should I focus on over the next 7 days?",
+  "What is draining my momentum?",
+  "What wants to emerge if I stop resisting it?",
+];
+
+const HISTORY_LIMIT = 12;
+
+// ========================================
+// PARSING / TEXT PROCESSING
+// ========================================
+const MAIN_SECTION_LABELS = [
+  "CARD TITLE",
+  "VERDICT",
+  "SNAPSHOT",
+  "FIELD READING",
+  "TENSION",
+  "ACTION",
+  "ECHO",
+];
+
+const ECHO_SECTION_LABELS = ["TITLE", "SUMMARY", "ADVICE"];
+
+function normalizeNewlines(text = "") {
+  return text.replace(/\r\n/g, "\n").trim();
 }
 
 function cleanLine(text = "") {
   return text.replace(/^[#*\-\s]+/, "").trim();
 }
 
-function parseEcho(text) {
-  const echoBlockMatch = text.match(
-    /ECHO\s*:?\s*([\s\S]*?)(?=\nCARD TITLE\s*:|\nSNAPSHOT\s*:|\nFIELD READING\s*:|\nTENSION\s*:|\nACTION\s*:|$)/i
+function getSectionValue(text, label, allLabels) {
+  const normalized = normalizeNewlines(text);
+  const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const otherLabels = allLabels.filter((item) => item !== label);
+
+  const nextPattern =
+    otherLabels.length > 0
+      ? otherLabels
+          .map((item) => item.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+          .join("|")
+      : null;
+
+  const regex = new RegExp(
+    nextPattern
+      ? `(?:^|\\n)${escapedLabel}\\s*:\\s*([\\s\\S]*?)(?=\\n(?:${nextPattern})\\s*:|$)`
+      : `(?:^|\\n)${escapedLabel}\\s*:\\s*([\\s\\S]*)$`,
+    "i"
   );
 
-  if (!echoBlockMatch) return null;
+  const match = normalized.match(regex);
+  return match ? match[1].trim() : "";
+}
 
-  const block = echoBlockMatch[1].trim();
+function parseEcho(text = "") {
+  const normalized = normalizeNewlines(text);
+  const echoBlock = getSectionValue(normalized, "ECHO", MAIN_SECTION_LABELS);
 
-  const lines = block
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  const firstLine = lines[0] || "";
+  if (!echoBlock) return null;
 
   const title =
-    extractSection(block, "TITLE") ||
-    extractSection(block, "Echo Title") ||
-    cleanLine(firstLine);
+    getSectionValue(echoBlock, "TITLE", ECHO_SECTION_LABELS) ||
+    cleanLine(echoBlock.split("\n")[0] || "");
 
-  const summary =
-    extractSection(block, "SUMMARY") ||
-    extractSection(block, "Meaning") ||
-    "";
-
-  const advice =
-    extractSection(block, "ADVICE") ||
-    "";
+  const summary = getSectionValue(echoBlock, "SUMMARY", ECHO_SECTION_LABELS);
+  const advice = getSectionValue(echoBlock, "ADVICE", ECHO_SECTION_LABELS);
 
   if (!title && !summary && !advice) return null;
 
@@ -60,39 +89,27 @@ function parseEcho(text) {
 }
 
 function parseCast(text = "") {
+  const normalized = normalizeNewlines(text);
+
   const title =
-    extractSection(text, "Card Title") ||
-    extractSection(text, "Title") ||
-    cleanLine(text.split("\n")[0] || "") ||
+    getSectionValue(normalized, "CARD TITLE", MAIN_SECTION_LABELS) ||
     "Untitled Cast";
 
-  const snapshot =
-    extractSection(text, "Snapshot") ||
-    extractSection(text, "Overview") ||
-    extractSection(text, "Signal") ||
-    "";
-
-  const fieldReading =
-    extractSection(text, "Field Reading") ||
-    extractSection(text, "Field") ||
-    "";
-
-  const tension =
-    extractSection(text, "Tension") ||
-    extractSection(text, "Friction") ||
-    "";
-
-  const action =
-    extractSection(text, "Action") ||
-    extractSection(text, "Next Action") ||
-    extractSection(text, "Recommendation") ||
-    "";
-
-  const echo = parseEcho(text);
+  const verdict = getSectionValue(normalized, "VERDICT", MAIN_SECTION_LABELS);
+  const snapshot = getSectionValue(normalized, "SNAPSHOT", MAIN_SECTION_LABELS);
+  const fieldReading = getSectionValue(
+    normalized,
+    "FIELD READING",
+    MAIN_SECTION_LABELS
+  );
+  const tension = getSectionValue(normalized, "TENSION", MAIN_SECTION_LABELS);
+  const action = getSectionValue(normalized, "ACTION", MAIN_SECTION_LABELS);
+  const echo = parseEcho(normalized);
 
   return {
-    raw: text,
+    raw: normalized,
     title,
+    verdict,
     snapshot,
     fieldReading,
     tension,
@@ -101,6 +118,49 @@ function parseCast(text = "") {
   };
 }
 
+// ========================================
+// HELPERS
+// ========================================
+function safeLoadHistory() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.history);
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.error("Failed to load history:", err);
+    return [];
+  }
+}
+
+function safeSaveHistory(nextHistory) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(nextHistory));
+  } catch (err) {
+    console.error("Failed to save history:", err);
+  }
+}
+
+function buildShareText(question, result) {
+  const parts = [
+    `Eidomancer Cast: ${result?.title || "Untitled Cast"}`,
+    question ? `Question: ${question}` : "",
+    result?.verdict ? `Verdict: ${result.verdict}` : "",
+    result?.snapshot ? `Snapshot: ${result.snapshot}` : "",
+    result?.fieldReading ? `Field Reading: ${result.fieldReading}` : "",
+    result?.tension ? `Tension: ${result.tension}` : "",
+    result?.action ? `Action: ${result.action}` : "",
+    result?.echo?.title ? `Echo: ${result.echo.title}` : "",
+    result?.echo?.summary ? result.echo.summary : "",
+    result?.echo?.advice ? `Advice: ${result.echo.advice}` : "",
+  ];
+
+  return parts.filter(Boolean).join("\n\n");
+}
+
+// ========================================
+// UI COMPONENTS
+// ========================================
 function Section({ label, text }) {
   if (!text) return null;
 
@@ -126,7 +186,7 @@ function Section({ label, text }) {
       <p
         style={{
           margin: 0,
-          lineHeight: 1.6,
+          lineHeight: 1.65,
           whiteSpace: "pre-wrap",
         }}
       >
@@ -136,27 +196,67 @@ function Section({ label, text }) {
   );
 }
 
+function PromptChip({ text, onClick }) {
+  return (
+    <button
+      onClick={() => onClick(text)}
+      style={{
+        padding: "10px 12px",
+        borderRadius: "999px",
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "rgba(255,255,255,0.04)",
+        color: "#fff",
+        cursor: "pointer",
+        fontSize: "0.88rem",
+        lineHeight: 1.2,
+      }}
+    >
+      {text}
+    </button>
+  );
+}
+
+// ========================================
+// MAIN APP COMPONENT
+// ========================================
 export default function App() {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.history);
-      if (saved) {
-        setHistory(JSON.parse(saved));
-      }
-    } catch (err) {
-      console.error("Failed to load history:", err);
-    }
+    setHistory(safeLoadHistory());
   }, []);
 
-  const saveHistory = (next) => {
-    setHistory(next);
-    localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(next));
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 1800);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
+  const canCast = useMemo(
+    () => question.trim().length > 0 && !loading,
+    [question, loading]
+  );
+
+  const saveHistory = (nextHistory) => {
+    setHistory(nextHistory);
+    safeSaveHistory(nextHistory);
+  };
+
+  const resetCurrentCast = () => {
+    setResult(null);
+    setError("");
+    setStatusMessage("");
+  };
+
+  const clearInputAndResult = () => {
+    setQuestion("");
+    resetCurrentCast();
   };
 
   const generateCast = async () => {
@@ -169,6 +269,7 @@ export default function App() {
 
     setLoading(true);
     setError("");
+    setStatusMessage("Casting through the field...");
 
     try {
       const res = await fetch(API_URL, {
@@ -181,22 +282,32 @@ export default function App() {
         }),
       });
 
-      const data = await res.json();
+      let data = null;
+
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
 
       if (!res.ok) {
-        throw new Error(data?.error || "Failed to generate cast.");
+        throw new Error(
+          data?.error || `Failed to generate cast (${res.status}).`
+        );
       }
 
       const text = data?.text || "No cast returned.";
       const cast = parseCast(text);
 
       setResult(cast);
+      setStatusMessage("Cast received.");
 
       const newEntry = {
         id: Date.now(),
         timestamp: new Date().toLocaleString(),
         question: trimmedQuestion,
         title: cast.title,
+        verdict: cast.verdict,
         snapshot: cast.snapshot,
         fieldReading: cast.fieldReading,
         tension: cast.tension,
@@ -205,11 +316,12 @@ export default function App() {
         raw: cast.raw,
       };
 
-      const nextHistory = [newEntry, ...history].slice(0, 12);
+      const nextHistory = [newEntry, ...history].slice(0, HISTORY_LIMIT);
       saveHistory(nextHistory);
     } catch (err) {
       console.error(err);
       setError(err.message || "Something went wrong while casting.");
+      setStatusMessage("");
     } finally {
       setLoading(false);
     }
@@ -219,6 +331,7 @@ export default function App() {
     setQuestion(item.question || "");
     setResult({
       title: item.title || "Untitled Cast",
+      verdict: item.verdict || "",
       snapshot: item.snapshot || "",
       fieldReading: item.fieldReading || "",
       tension: item.tension || "",
@@ -227,11 +340,37 @@ export default function App() {
       raw: item.raw || "",
     });
     setError("");
+    setStatusMessage("Loaded from recent casts.");
   };
 
   const clearHistory = () => {
-    localStorage.removeItem(STORAGE_KEYS.history);
+    try {
+      localStorage.removeItem(STORAGE_KEYS.history);
+    } catch (err) {
+      console.error("Failed to clear history:", err);
+    }
     setHistory([]);
+    setStatusMessage("Recent casts cleared.");
+  };
+
+  const handleCopyCast = async () => {
+    if (!result) return;
+
+    try {
+      await navigator.clipboard.writeText(buildShareText(question, result));
+      setCopied(true);
+      setStatusMessage("Cast copied to clipboard.");
+    } catch (err) {
+      console.error("Copy failed:", err);
+      setError("Could not copy the cast.");
+    }
+  };
+
+  const handleQuestionKeyDown = (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      if (canCast) generateCast();
+    }
   };
 
   return (
@@ -266,9 +405,58 @@ export default function App() {
           }}
         >
           <div style={{ marginBottom: "18px" }}>
+            <div
+              style={{
+                fontSize: "0.78rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                opacity: 0.65,
+                marginBottom: "4px",
+              }}
+            >
+              The Emergent Ones
+            </div>
+
+            <div
+              style={{
+                fontSize: "1.2rem",
+                opacity: 0.4,
+                marginBottom: "10px",
+              }}
+            >
+              ◈
+            </div>
+
             <h1 style={{ margin: 0, fontSize: "2rem" }}>Eidomancer</h1>
-            <p style={{ marginTop: "8px", opacity: 0.8, lineHeight: 1.6 }}>
-              Ask your question. Receive the cast. Hear the Echo.
+
+            <p style={{ marginTop: "8px", opacity: 0.85, lineHeight: 1.6 }}>
+              Ask a real question. Receive a symbolic cast. A modern, adaptive
+              system for navigating uncertainty through pattern, tension, and
+              insight.
+            </p>
+
+            <p
+              style={{
+                marginTop: "6px",
+                opacity: 0.65,
+                fontSize: "0.92rem",
+                lineHeight: 1.5,
+              }}
+            >
+              Not Tarot—but a fluid, evolving reflection system that adapts as
+              reality shifts.
+            </p>
+
+            <p
+              style={{
+                marginTop: "10px",
+                opacity: 0.6,
+                fontSize: "0.88rem",
+                lineHeight: 1.5,
+              }}
+            >
+              The question shapes the field. The cast reveals the pattern. The
+              Echo speaks what remains.
             </p>
           </div>
 
@@ -288,6 +476,7 @@ export default function App() {
             id="question"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={handleQuestionKeyDown}
             placeholder="What pattern am I standing inside right now?"
             rows={5}
             style={{
@@ -304,23 +493,44 @@ export default function App() {
             }}
           />
 
+          <div style={{ marginTop: "14px" }}>
+            <div
+              style={{
+                marginBottom: "10px",
+                fontSize: "0.82rem",
+                opacity: 0.68,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+              }}
+            >
+              Suggested prompts
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              {SUGGESTED_QUESTIONS.map((item) => (
+                <PromptChip key={item} text={item} onClick={setQuestion} />
+              ))}
+            </div>
+          </div>
+
           <div
             style={{
               display: "flex",
               gap: "12px",
-              marginTop: "16px",
+              marginTop: "18px",
               flexWrap: "wrap",
+              alignItems: "center",
             }}
           >
             <button
               onClick={generateCast}
-              disabled={loading}
+              disabled={!canCast}
               style={{
                 padding: "12px 18px",
                 borderRadius: "12px",
                 border: "none",
-                cursor: loading ? "not-allowed" : "pointer",
-                background: loading ? "#6b7280" : "#7c3aed",
+                cursor: canCast ? "pointer" : "not-allowed",
+                background: canCast ? "#7c3aed" : "#6b7280",
                 color: "#fff",
                 fontWeight: 700,
                 fontSize: "0.98rem",
@@ -330,24 +540,60 @@ export default function App() {
             </button>
 
             <button
-              onClick={() => {
-                setQuestion("");
-                setResult(null);
-                setError("");
-              }}
+              onClick={clearInputAndResult}
+              disabled={loading}
               style={{
                 padding: "12px 18px",
                 borderRadius: "12px",
                 border: "1px solid rgba(255,255,255,0.14)",
-                cursor: "pointer",
+                cursor: loading ? "not-allowed" : "pointer",
                 background: "rgba(255,255,255,0.04)",
                 color: "#fff",
                 fontWeight: 600,
+                opacity: loading ? 0.7 : 1,
               }}
             >
               Clear
             </button>
+
+            {result && (
+              <button
+                onClick={handleCopyCast}
+                disabled={loading}
+                style={{
+                  padding: "12px 18px",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(255,255,255,0.14)",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  background: "rgba(255,255,255,0.04)",
+                  color: "#fff",
+                  fontWeight: 600,
+                  opacity: loading ? 0.7 : 1,
+                }}
+              >
+                {copied ? "Copied" : "Copy Cast"}
+              </button>
+            )}
+
+            <div style={{ fontSize: "0.88rem", opacity: 0.72 }}>
+              Press Ctrl/Cmd + Enter to cast
+            </div>
           </div>
+
+          {statusMessage && !error && (
+            <div
+              style={{
+                marginTop: "16px",
+                padding: "12px 14px",
+                borderRadius: "12px",
+                background: "rgba(59,130,246,0.12)",
+                border: "1px solid rgba(96,165,250,0.24)",
+                color: "#dbeafe",
+              }}
+            >
+              {statusMessage}
+            </div>
+          )}
 
           {error && (
             <div
@@ -385,9 +631,45 @@ export default function App() {
                 >
                   Current Cast
                 </div>
+
                 <h2 style={{ margin: 0, fontSize: "1.7rem" }}>
                   {result.title}
                 </h2>
+
+                {result.verdict && (
+                  <div
+                    style={{
+                      marginTop: "12px",
+                      padding: "14px 16px",
+                      borderRadius: "14px",
+                      background: "rgba(124,58,237,0.12)",
+                      border: "1px solid rgba(167,139,250,0.25)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "0.74rem",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                        opacity: 0.72,
+                        marginBottom: "6px",
+                        fontWeight: 700,
+                      }}
+                    >
+                      Verdict
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: "1rem",
+                        lineHeight: 1.6,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {result.verdict}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <Section label="Snapshot" text={result.snapshot} />
@@ -518,6 +800,7 @@ export default function App() {
                   >
                     {item.timestamp}
                   </div>
+
                   <div
                     style={{
                       fontWeight: 700,
@@ -527,6 +810,20 @@ export default function App() {
                   >
                     {item.title || "Untitled Cast"}
                   </div>
+
+                  {item.verdict && (
+                    <div
+                      style={{
+                        fontSize: "0.82rem",
+                        opacity: 0.82,
+                        lineHeight: 1.45,
+                        marginBottom: "6px",
+                      }}
+                    >
+                      {item.verdict}
+                    </div>
+                  )}
+
                   <div
                     style={{
                       fontSize: "0.92rem",
@@ -542,6 +839,14 @@ export default function App() {
           )}
         </aside>
       </div>
+
+      <style>{`
+        @media (max-width: 900px) {
+          main > div {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </main>
   );
 }
