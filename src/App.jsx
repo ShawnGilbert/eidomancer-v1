@@ -45,7 +45,10 @@ function normalizeResponse(payload) {
   const data = payload && typeof payload === "object" ? payload : {};
 
   return {
-    title: typeof data.title === "string" && data.title.trim() ? data.title.trim() : "Untitled Cast",
+    title:
+      typeof data.title === "string" && data.title.trim()
+        ? data.title.trim()
+        : "Untitled Cast",
     pattern: typeof data.pattern === "string" ? data.pattern.trim() : "",
     tension: typeof data.tension === "string" ? data.tension.trim() : "",
     insight: typeof data.insight === "string" ? data.insight.trim() : "",
@@ -82,7 +85,10 @@ export default function App() {
     saveHistory(history);
   }, [history]);
 
-  const canCast = useMemo(() => question.trim().length > 3 && !loading, [question, loading]);
+  const canCast = useMemo(
+    () => question.trim().length > 3 && !loading,
+    [question, loading]
+  );
 
   async function handleCast() {
     const trimmed = question.trim();
@@ -206,8 +212,8 @@ export default function App() {
           <h1>Eidomancer</h1>
 
           <p className="lead">
-            Ask a real question. Receive a symbolic cast. A modern, adaptive system for navigating
-            uncertainty through pattern, tension, and insight.
+            Ask a real question. Receive a symbolic cast. A modern, adaptive system
+            for navigating uncertainty through pattern, tension, and insight.
           </p>
 
           <p className="sublead">
@@ -246,15 +252,30 @@ export default function App() {
           </div>
 
           <div className="button-row">
-            <button type="button" className="primary-button" onClick={handleCast} disabled={!canCast}>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={handleCast}
+              disabled={!canCast}
+            >
               {loading ? "Casting..." : "Cast"}
             </button>
 
-            <button type="button" className="secondary-button" onClick={handleClearQuestion} disabled={loading}>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={handleClearQuestion}
+              disabled={loading}
+            >
               Clear
             </button>
 
-            <button type="button" className="secondary-button" onClick={handleCopyCast} disabled={!result}>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={handleCopyCast}
+              disabled={!result}
+            >
               Copy Cast
             </button>
 
@@ -280,27 +301,32 @@ export default function App() {
           </div>
 
           {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
-          {!errorMessage && statusMessage ? <div className="status-banner">{statusMessage}</div> : null}
+          {!errorMessage && statusMessage ? (
+            <div className="status-banner">{statusMessage}</div>
+          ) : null}
 
           <section className="current-cast-shell">
-            <div className="eyebrow">CURRENT CAST</div>
+            <div className="cast-shell-header">
+              <div>
+                <div className="eyebrow">CURRENT CAST</div>
+                <h2>{result?.title || "Untitled Cast"}</h2>
+              </div>
 
-            <div className="cast-tab-row">
-              <button type="button" className="cast-tab active">
-                Interpretation
-              </button>
-              <button type="button" className="cast-tab" disabled>
-                Raw
-              </button>
-              <button type="button" className="cast-tab" disabled>
-                Card
-              </button>
-              <button type="button" className="cast-tab" disabled>
-                Notes
-              </button>
+              <div className="cast-tab-row">
+                <button type="button" className="cast-tab active">
+                  Interpretation
+                </button>
+                <button type="button" className="cast-tab" disabled>
+                  Raw
+                </button>
+                <button type="button" className="cast-tab" disabled>
+                  Card
+                </button>
+                <button type="button" className="cast-tab" disabled>
+                  Notes
+                </button>
+              </div>
             </div>
-
-            <h2>{result?.title || "Untitled Cast"}</h2>
 
             {!result ? (
               <div className="empty-result">
@@ -308,7 +334,7 @@ export default function App() {
               </div>
             ) : (
               <div className="result-stack">
-                <div className="result-block">
+                <div className="result-block question-block">
                   <div className="result-label">Question</div>
                   <p>{result.question}</p>
                 </div>
