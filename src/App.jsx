@@ -184,9 +184,7 @@ export default function App() {
 
   function handleClearHistory() {
     setHistory([]);
-    if (result && !question.trim()) {
-      setResult(null);
-    }
+    setStatusMessage("History cleared.");
   }
 
   function handleKeyDown(event) {
@@ -212,8 +210,12 @@ export default function App() {
             uncertainty through pattern, tension, and insight.
           </p>
 
-          <p className="sublead">Not Tarot—but a fluid, evolving reflection system that adapts as reality shifts.</p>
-          <p className="sublead">The question shapes the field. The cast reveals the pattern. The Echo speaks what remains.</p>
+          <p className="sublead">
+            Not Tarot—but a fluid, evolving reflection system that adapts as reality shifts.
+          </p>
+          <p className="sublead">
+            The question shapes the field. The cast reveals the pattern. The Echo speaks what remains.
+          </p>
 
           <label className="label" htmlFor="cast-question">
             Your question
@@ -259,11 +261,45 @@ export default function App() {
             <span className="shortcut-hint">Press Ctrl/Cmd + Enter to cast</span>
           </div>
 
+          <div className="future-action-row">
+            <button type="button" className="future-button" disabled>
+              Regenerate
+            </button>
+            <button type="button" className="future-button" disabled>
+              Deepen
+            </button>
+            <button type="button" className="future-button" disabled>
+              Save
+            </button>
+            <button type="button" className="future-button" disabled>
+              Export
+            </button>
+            <button type="button" className="future-button" disabled>
+              Card View
+            </button>
+          </div>
+
           {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
           {!errorMessage && statusMessage ? <div className="status-banner">{statusMessage}</div> : null}
 
           <section className="current-cast-shell">
             <div className="eyebrow">CURRENT CAST</div>
+
+            <div className="cast-tab-row">
+              <button type="button" className="cast-tab active">
+                Interpretation
+              </button>
+              <button type="button" className="cast-tab" disabled>
+                Raw
+              </button>
+              <button type="button" className="cast-tab" disabled>
+                Card
+              </button>
+              <button type="button" className="cast-tab" disabled>
+                Notes
+              </button>
+            </div>
+
             <h2>{result?.title || "Untitled Cast"}</h2>
 
             {!result ? (
@@ -347,6 +383,16 @@ export default function App() {
               ))}
             </div>
           )}
+
+          <div className="sidebar-placeholder">
+            <div className="sidebar-placeholder-title">Saved Decks</div>
+            <div className="sidebar-placeholder-body">Coming soon</div>
+          </div>
+
+          <div className="sidebar-placeholder">
+            <div className="sidebar-placeholder-title">Filters</div>
+            <div className="sidebar-placeholder-body">Coming soon</div>
+          </div>
         </aside>
       </main>
     </div>
