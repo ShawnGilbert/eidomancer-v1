@@ -26,18 +26,13 @@ if (!request.question) {
   return;
 }
 
-dispatch({ type: actionTypes.START_CAST, payload: request });
+dispatch({
+  type: actionTypes.START_CAST,
+  payload: request,
+});
 
 try {
   const result = await generateMeaning(request);
-
-  dispatch({
-    type: actionTypes.CAST_SUCCESS,
-    payload: {
-      cast: result.cast,
-      rawResponse: result.rawResponse,
-    },
-  });
 
   if (result.usedFallback) {
     dispatch({
@@ -48,15 +43,15 @@ try {
         rawResponse: result.rawResponse,
       },
     });
-
-    dispatch({
-      type: actionTypes.CAST_SUCCESS,
-      payload: {
-        cast: result.cast,
-        rawResponse: result.rawResponse,
-      },
-    });
   }
+
+  dispatch({
+    type: actionTypes.CAST_SUCCESS,
+    payload: {
+      cast: result.cast,
+      rawResponse: result.rawResponse,
+    },
+  });
 } catch (error) {
   dispatch({
     type: actionTypes.CAST_ERROR,
@@ -71,15 +66,7 @@ try {
 
 }
 
-return ( <main className="app-shell"> <div className="main-column"> <CastInputPanel onCast={handleCast} /> <CastResultPanel /> </div>
-
-```
-  <div className="side-column">
-    <ArchivePanel />
-  </div>
-</main>
-```
-
+return ( <main className="app-shell"> <div className="main-column"> <CastInputPanel onCast={handleCast} /> <CastResultPanel /> </div> <div className="side-column"> <ArchivePanel /> </div> </main>
 );
 }
 
