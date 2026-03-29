@@ -15,7 +15,7 @@ echo: "Name the drag. Narrow the field. Move one stone.",
 }
 
 export async function generateMeaning(request) {
-const response = await fetch("/api/cast", {
+const response = await fetch("https://eidomancer-api.onrender.com/api/cast", {
 method: "POST",
 headers: {
 "Content-Type": "application/json",
