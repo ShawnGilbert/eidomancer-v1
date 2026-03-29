@@ -32,7 +32,7 @@ case actionTypes.CAST_SUCCESS:
     ...state,
     activeCast: action.payload.cast,
     rawResponse: action.payload.rawResponse,
-    archive: [action.payload.cast, ...state.archive],
+    archive: [action.payload.cast, ...(state.archive || [])],
     status: {
       phase: "success",
       message: "Cast completed.",
