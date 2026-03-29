@@ -15,7 +15,6 @@ return {
 inputQuestion: action.payload,
 };
 
-```
 case actionTypes.START_CAST:
   return {
     ...state,
@@ -43,7 +42,6 @@ case actionTypes.CAST_SUCCESS:
 case actionTypes.CAST_ERROR:
   return {
     ...state,
-    activeCast: state.activeCast,
     rawResponse: action.payload.rawResponse ?? null,
     status: {
       phase: "error",
@@ -69,12 +67,11 @@ case actionTypes.CLEAR_ACTIVE_CAST:
 case actionTypes.LOAD_ARCHIVE:
   return {
     ...state,
-    archive: action.payload,
+    archive: Array.isArray(action.payload) ? action.payload : [],
   };
 
 default:
   return state;
-```
 
 }
 }

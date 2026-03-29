@@ -3,7 +3,6 @@ import { eidomancerReducer, actionTypes } from "./eidomancerReducer";
 import { initialState } from "./initialState";
 
 const EidomancerContext = createContext(null);
-
 const ARCHIVE_KEY = "eidomancer-archive-v1";
 
 export function EidomancerProvider({ children }) {
@@ -25,15 +24,24 @@ export function EidomancerProvider({ children }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem(ARCHIVE_KEY, JSON.stringify(state.archive));
+      localStorage.setItem(ARCHIVE_KEY, JSON.stringify(state?.archive ?? []));
     } catch (error) {
       console.error("Failed to save archive", error);
     }
-  }, [state.archive]);
+  }, [state?.archive]);
 
-  const value = useMemo(() => ({ state, dispatch }), [state]);
+  const value = useMemo(() => {
+    return {
+      state: state ?? initialState,
+      dispatch,
+    };
+  }, [state, dispatch]);
 
-  return <EidomancerContext.Provider value={value}>{children}</EidomancerContext.Provider>;
+  return (
+    <EidomancerContext.Provider value={value}>
+      {children}
+    </EidomancerContext.Provider>
+  );
 }
 
 export function useEidomancer() {
