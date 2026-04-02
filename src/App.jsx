@@ -1,89 +1,63 @@
-import CastInputPanel from "./components/cast/CastInputPanel";
-import CastResultPanel from "./components/cast/CastResultPanel";
-import ArchivePanel from "./components/archive/ArchivePanel";
-import { EidomancerProvider, useEidomancer } from "./state/EidomancerContext";
-import { actionTypes } from "./state/eidomancerReducer";
-import { normalizeCastRequest } from "./lib/casting/normalizeCastRequest";
-import { generateMeaning } from "./lib/casting/generateMeaning";
-import "./index.css";
+import { starterPrompts } from "./data/starterPrompts";
+import { useEidomancerStore } from "./hooks/useEidomancerStore";
 
-function AppContent() {
-  const { state, dispatch } = useEidomancer();
-
-  async function handleCast() {
-    
-    const request = normalizeCastRequest(state?.inputQuestion, state?.profile);
-        if (!request.question) {
-      console.warn("No question submitted");
-      dispatch({
-        type: actionTypes.CAST_ERROR,
-        payload: {
-          message: "No question submitted.",
-          error: "Enter a question before casting.",
-          rawResponse: null,
-        },
-      });
-      return;
-    }
-
-    dispatch({
-      type: actionTypes.START_CAST,
-      payload: request,
-    });
-
-    try {
-      
-      const result = await generateMeaning(request);
-      
-
-      if (result.usedFallback) {
-        dispatch({
-          type: actionTypes.CAST_ERROR,
-          payload: {
-            message: "Fallback cast used.",
-            error: result.error,
-            rawResponse: result.rawResponse,
-          },
-        });
-      }
-
-      dispatch({
-        type: actionTypes.CAST_SUCCESS,
-        payload: {
-          cast: result.cast,
-          rawResponse: result.rawResponse,
-        },
-      });
-    } catch (error) {
-      console.error("handleCast error:", error);
-      dispatch({
-        type: actionTypes.CAST_ERROR,
-        payload: {
-          message: "Cast failed.",
-          error: error.message,
-          rawResponse: null,
-        },
-      });
-    }
-  }
-
-  return (
-    <main className="app-shell">
-      <div className="main-column">
-        <CastInputPanel onCast={handleCast} />
-        <CastResultPanel />
-      </div>
-      <div className="side-column">
-        <ArchivePanel />
-      </div>
-    </main>
-  );
-}
+import { QuestionPanel } from "./components/QuestionPanel";
+import { RecentCastsPanel } from "./components/RecentCastsPanel";
+import { ActiveCastCard } from "./components/ActiveCastCard";
+import { PackageActionsPanel } from "./components/PackageActionsPanel";
+import { GeneratedOutputsPanel } from "./components/GeneratedOutputsPanel";
+import { TipJarFooter } from "./components/TipJarFooter";
 
 export default function App() {
+  const store = useEidomancerStore();
+
   return (
-    <EidomancerProvider>
-      <AppContent />
-    </EidomancerProvider>
+    <main className="min-h-screen bg-[#020b2a] px-6 py-8 text-white">
+      <div className="mx-auto max-w-7xl">
+        <div className="grid gap-6 lg:grid-cols-[1.8fr_1fr]">
+          <QuestionPanel
+            question={store.question}
+            setQuestion={store.setQuestion}
+            prompts={starterPrompts}
+            onCast={store.castQuestion}
+            onClear={store.clearQuestion}
+            isCasting={store.isCasting}
+          />
+
+          <RecentCastsPanel
+            casts={store.recentCasts}
+            activeCastId={store.activeCast?.id}
+            onLoadCast={store.loadCast}
+          />
+        </div>
+
+        <div className="mt-6 space-y-6">
+          <ActiveCastCard
+            activeCast={store.activeCast}
+            isCasting={store.isCasting}
+          />
+
+          {store.activeCast && (
+            <>
+              <PackageActionsPanel
+                onGenerate={store.generateAsset}
+                onGenerateAll={store.generateAllAssets}
+                isGeneratingAsset={store.isGeneratingAsset}
+              />
+
+              <GeneratedOutputsPanel activeCast={store.activeCast} />
+            </>
+          )}
+
+          {store.error && (
+            <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+              {store.error}
+            </div>
+          )}
+
+          <TipJarFooter />
+        </div>
+      </div>
+    </main>
   );
 }
