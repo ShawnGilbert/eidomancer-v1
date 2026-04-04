@@ -1,307 +1,223 @@
-function slugify(text) {
+// D:\eidomancer\src\lib\castEngine.js
+
+const USE_LIVE_API = false;
+const MAX_INPUT_CHARS = 4000;
+const MAX_FALLBACK_SNIPPET_CHARS = 600;
+
+// -------------------------
+// CLEANING
+// -------------------------
+
+function normalizeWhitespace(text = "") {
   return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40);
+    .replace(/\r\n/g, "\n")
+    .replace(/\t/g, " ")
+    .replace(/[ ]{2,}/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
-function nowIso() {
-  return new Date().toISOString();
+function stripTimestamps(text = "") {
+  return text.replace(/\b\d{1,2}:\d{2}(?::\d{2})?\b/g, "");
 }
 
-function archetypeFromQuestion(question) {
-  const q = question.toLowerCase();
+function stripUiNoise(text = "") {
+  const lines = text.split("\n");
 
-  if (q.includes("focus") || q.includes("next")) return "The Narrowing Path";
-  if (q.includes("refusing") || q.includes("admit")) return "The Hidden Knot";
-  if (q.includes("momentum") || q.includes("drain")) return "The Leaking Vessel";
-  if (q.includes("emerge")) return "The Unarmored Self";
-  if (q.includes("pattern")) return "The Loop That Knows";
+  return lines
+    .filter((line) => {
+      const t = line.trim().toLowerCase();
+      if (!t) return true;
 
-  return "The Signal Beneath the Noise";
+      if (
+        t === "transcript" ||
+        t === "show transcript" ||
+        t === "description" ||
+        t === "comments"
+      )
+        return false;
+
+      if (/^@\w+/.test(t)) return false;
+      if (/^https?:\/\//.test(t)) return false;
+
+      return true;
+    })
+    .join("\n");
 }
 
-function symbolFromArchetype(archetype) {
-  const map = {
-    "The Narrowing Path": "A dim trail tightening through a dense forest",
-    "The Hidden Knot": "A rope twisted around itself, resisting untangling",
-    "The Leaking Vessel": "A cracked container slowly losing its contents",
-    "The Unarmored Self": "A figure removing armor under soft light",
-    "The Loop That Knows": "A spiral folding back into itself",
-    "The Signal Beneath the Noise": "A faint pulse beneath static",
-  };
+function looksLikeTranscript(text = "") {
+  if (text.length > 1500) return true;
 
-  return map[archetype] || "A shifting, undefined symbol";
+  const lines = text.split("\n").filter(Boolean);
+  return lines.length > 10;
 }
 
-function titleFromQuestion(question) {
-  const lower = question.toLowerCase();
+function cleanInputText(input = "") {
+  let text = normalizeWhitespace(input);
+  const transcriptLike = looksLikeTranscript(text);
 
-  if (lower.includes("pattern")) return "The Spiral of Becoming";
-  if (lower.includes("momentum")) return "The Friction Beneath Motion";
-  if (lower.includes("focus")) return "The Narrowing Beam";
-  if (lower.includes("refusing") || lower.includes("admit")) {
-    return "The Gate of Avoided Knowing";
-  }
-  if (lower.includes("emerge") || lower.includes("resisting")) {
-    return "The Quiet Pulse of Becoming";
+  if (transcriptLike) {
+    text = stripTimestamps(text);
+    text = stripUiNoise(text);
+    text = normalizeWhitespace(text);
   }
 
-  return "Pattern Under Tension";
+  if (text.length > MAX_INPUT_CHARS) {
+    text = text.slice(0, MAX_INPUT_CHARS);
+  }
+
+  return { cleaned: text, transcriptLike };
 }
 
-function sigilFromQuestion(question) {
-  const lower = question.toLowerCase();
-
-  if (lower.includes("pattern")) return "🜂 ◌ 🜁";
-  if (lower.includes("momentum")) return "⟁ ↯ ⟁";
-  if (lower.includes("focus")) return "◉ ⌁ ◉";
-  if (lower.includes("refusing") || lower.includes("admit")) return "⚶ ✦ ⚶";
-  if (lower.includes("emerge") || lower.includes("resisting")) return "☽ ✧ ☽";
-
-  return "✦ ◌ ✦";
+function shortSnippet(text = "") {
+  if (text.length < MAX_FALLBACK_SNIPPET_CHARS) return text;
+  return text.slice(0, MAX_FALLBACK_SNIPPET_CHARS) + "...";
 }
 
-function sectionSigils() {
-  return {
-    archetype: "◈",
-    oracle: "✧",
-    threshold: "◬",
-    omen: "⟁",
-    pattern: "≈",
-    tension: "🔥",
-    insight: "✺",
-    advice: "⬢",
-    invitation: "☉",
-    echo: "◎",
-  };
+// -------------------------
+// FALLBACK SEED
+// -------------------------
+
+function buildFallbackSeed(input = "") {
+  const { cleaned, transcriptLike } = cleanInputText(input);
+  const snippet = shortSnippet(cleaned);
+
+  return [
+    "Gist",
+    transcriptLike
+      ? `Transcript detected. Compressed source: ${snippet}`
+      : `The input centers on: ${snippet}`,
+    "",
+    "Core Tension",
+    transcriptLike
+      ? "A large signal is buried under excess structure."
+      : "Movement exists but is disrupted by hesitation.",
+  ].join("\n");
 }
 
-function omenFromQuestion(question) {
-  const lower = question.toLowerCase();
+// -------------------------
+// FALLBACK CAST (UPGRADED POETRY)
+// -------------------------
 
-  if (lower.includes("pattern")) {
-    return "The circle is not a prison unless you forget that spirals also return.";
+function buildFallbackCastFromSeed(seed = "") {
+  const transcriptMode = seed.toLowerCase().includes("transcript");
+
+  if (transcriptMode) {
+    return [
+      "🃏 Card Title",
+      "The Signal Beneath Density",
+      "",
+      "Signal",
+      "You are facing something large, but most of it is not the point.",
+      "",
+      "Tension",
+      "Volume creates the illusion of importance.",
+      "",
+      "Pattern",
+      "The truth is smaller than the structure around it.",
+      "",
+      "🧠 Poem",
+      [
+        "Too many words",
+        "stacked like walls.",
+        "",
+        "Too many lines",
+        "asking to matter.",
+        "",
+        "But something remains",
+        "when the rest is stripped away.",
+        "",
+        "A signal.",
+        "",
+        "Quiet.",
+        "Persistent.",
+      ].join("\n"),
+      "",
+      "⚡ Echo",
+      "The signal survives the noise.",
+    ].join("\n");
   }
 
-  if (lower.includes("momentum")) {
-    return "What feels like stalled motion may be force leaking through too many exits.";
-  }
-
-  if (lower.includes("focus")) {
-    return "A scattered lantern still gives light, but a narrowed beam reveals the path.";
-  }
-
-  if (lower.includes("refusing") || lower.includes("admit")) {
-    return "The truth you avoid often stands closest to the door that would actually open.";
-  }
-
-  if (lower.includes("emerge") || lower.includes("resisting")) {
-    return "What wants to live in you rarely arrives shouting. It waits for permission.";
-  }
-
-  return "The signal is present, but the vessel has not fully aligned around it yet.";
+  return [
+    "🃏 Card Title",
+    "The Friction Beneath Motion",
+    "",
+    "Signal",
+    "You are already moving, but something keeps interrupting you.",
+    "",
+    "Tension",
+    "You want progress, but also certainty.",
+    "",
+    "Pattern",
+    "Too many paths are competing for the same step.",
+    "",
+    "🧠 Poem",
+    [
+      "You are not still.",
+      "",
+      "You are splitting.",
+      "",
+      "Momentum",
+      "trying to exist",
+      "in too many directions.",
+      "",
+      "Choose one.",
+      "",
+      "Let the rest fall silent.",
+    ].join("\n"),
+      "",
+      "⚡ Echo",
+      "Movement begins when choice commits.",
+    ].join("\n");
 }
 
-function patternFromQuestion(question) {
-  const lower = question.toLowerCase();
+// -------------------------
+// API (SAFE)
+// -------------------------
 
-  if (lower.includes("pattern")) {
-    return "You are moving through a recurring structure that resembles a circle, but the deeper truth is that you are revisiting the same terrain with slightly more awareness each time.";
+async function callLLM(prompt) {
+  const res = await fetch("/api/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt }),
+  });
+
+  const text = await res.text();
+
+  if (!res.ok) throw new Error("LLM failed");
+
+  try {
+    const data = JSON.parse(text);
+    return data.text || data.output || data.result || "";
+  } catch {
+    return text;
   }
-
-  if (lower.includes("momentum")) {
-    return "Your movement is real, but it keeps colliding with hidden drag: fatigue, divided attention, and too many simultaneous meanings competing for action.";
-  }
-
-  if (lower.includes("focus")) {
-    return "You are standing in a field of possible directions, but your attention is diffused across too many worthy threads for any one of them to gather force.";
-  }
-
-  if (lower.includes("refusing") || lower.includes("admit")) {
-    return "A truth is already present in your system, but it remains half-veiled because acknowledging it would demand a change in posture, not just a change in thought.";
-  }
-
-  if (lower.includes("emerge") || lower.includes("resisting")) {
-    return "Something quieter and more honest is trying to come forward, but it cannot fully emerge while your energy is still invested in bracing against uncertainty.";
-  }
-
-  return "You are standing inside a repeated structure where insight is already present, but full movement is delayed by hesitation, emotional drag, or split commitment.";
 }
 
-function tensionFromQuestion(question) {
-  const lower = question.toLowerCase();
+// -------------------------
+// PIPELINE
+// -------------------------
 
-  if (lower.includes("pattern")) {
-    return "You may be mistaking recurrence for failure when it could actually be refinement in disguise.";
+export async function buildSeed(input) {
+  const { cleaned } = cleanInputText(input);
+
+  if (!USE_LIVE_API) {
+    return buildFallbackSeed(cleaned);
   }
 
-  if (lower.includes("momentum")) {
-    return "Part of you wants forward motion, while another part keeps trying to solve the whole map before permitting the next step.";
-  }
-
-  if (lower.includes("focus")) {
-    return "You are tempted to honor every signal at once, which creates the feeling of responsibility without the traction of commitment.";
-  }
-
-  if (lower.includes("refusing") || lower.includes("admit")) {
-    return "The cost of clarity is that it may force you to stop narrating around the issue and start naming it directly.";
-  }
-
-  if (lower.includes("emerge") || lower.includes("resisting")) {
-    return "The more tightly you grip control, the harder it becomes for the next authentic form of yourself to take shape.";
-  }
-
-  return "Part of you wants transformation, but another part still organizes itself around the familiar weight of old loops.";
+  return await callLLM(cleaned);
 }
 
-function insightFromQuestion(question) {
-  const lower = question.toLowerCase();
-
-  if (lower.includes("pattern")) {
-    return "The pattern is not simple repetition. It is a spiral. The scenery returns, but you are not the same traveler each time you pass it.";
+export async function generateCastFromSeed(seed) {
+  if (!USE_LIVE_API) {
+    return buildFallbackCastFromSeed(seed);
   }
 
-  if (lower.includes("momentum")) {
-    return "What looks like laziness may actually be overloaded meaning. Too many live threads are diluting force.";
-  }
-
-  if (lower.includes("focus")) {
-    return "Focus is not discovering the perfect target. It is choosing a worthy target long enough for signal to outweigh static.";
-  }
-
-  if (lower.includes("refusing") || lower.includes("admit")) {
-    return "The mind often hides from truths that would require grief, effort, or identity change. The resistance is information.";
-  }
-
-  if (lower.includes("emerge") || lower.includes("resisting")) {
-    return "Emergence rarely feels dramatic at first. It often feels like relief mixed with vulnerability.";
-  }
-
-  return "The pattern is not lack of intelligence. It is partial clarity without a committed channel for expression.";
+  return await callLLM(seed);
 }
 
-function adviceFromQuestion(question) {
-  const lower = question.toLowerCase();
-
-  if (lower.includes("pattern")) {
-    return "Track what is improving, not just what is returning. Notice the degree of change inside the repetition.";
-  }
-
-  if (lower.includes("momentum")) {
-    return "Reduce the next move until it becomes visible and survivable. Let proof create energy instead of waiting for energy to create proof.";
-  }
-
-  if (lower.includes("focus")) {
-    return "Choose one thread to privilege for the next seven days. Protect it from dilution. Let the others wait without being erased.";
-  }
-
-  if (lower.includes("refusing") || lower.includes("admit")) {
-    return "Write the avoided sentence plainly. Do not solve it yet. Just remove its camouflage.";
-  }
-
-  if (lower.includes("emerge") || lower.includes("resisting")) {
-    return "Loosen the grip. Make room for a softer move, a smaller truth, or a less armored desire to speak.";
-  }
-
-  return "Reduce the next step to something visible and survivable. Name the friction, choose one action, and let momentum return through proof rather than mood.";
-}
-
-function echoFromQuestion(question) {
-  const lower = question.toLowerCase();
-
-  if (lower.includes("pattern")) return "You are not looping. You are spiraling.";
-  if (lower.includes("momentum")) return "Motion returns when drag is named.";
-  if (lower.includes("focus")) return "A chosen beam burns brighter than scattered light.";
-  if (lower.includes("refusing") || lower.includes("admit")) {
-    return "The avoided truth is already in the room.";
-  }
-  if (lower.includes("emerge") || lower.includes("resisting")) {
-    return "What wants to live in you needs a little less armor.";
-  }
-
-  return "You do not need total certainty. You need one honest move.";
-}
-
-function readingFromParts({ title, omen, pattern, tension, insight, advice, echo }) {
-  return `${title} appears when a part of your life is already trying to change, but your inner posture has not fully caught up to that change yet.
-
-${omen}
-
-What this cast suggests is not simple confusion. ${pattern}
-
-The strain comes from this split: ${tension}
-
-What becomes visible now is this: ${insight}
-
-The invitation is not to force a grand transformation all at once. ${advice}
-
-Take the echo with you: ${echo}`;
-}
-
-function thresholdFromParts({ archetype, symbol }) {
-  return `You are standing at the threshold of ${archetype.toLowerCase()}. The image here is ${symbol.toLowerCase()}.`;
-}
-
-function invitationFromAdvice(advice) {
-  return `For now, let this be enough: ${advice}`;
-}
-
-export function buildCastRecord(question) {
-  const title = titleFromQuestion(question);
-  const archetype = archetypeFromQuestion(question);
-  const symbol = symbolFromArchetype(archetype);
-  const sigil = sigilFromQuestion(question);
-  const sigils = sectionSigils();
-  const omen = omenFromQuestion(question);
-  const pattern = patternFromQuestion(question);
-  const tension = tensionFromQuestion(question);
-  const insight = insightFromQuestion(question);
-  const advice = adviceFromQuestion(question);
-  const echo = echoFromQuestion(question);
-
-  return {
-    id: `cast_${Date.now()}_${slugify(title)}`,
-    theme: "The Emergent Ones",
-    input: {
-      type: "question",
-      question,
-      sourceText: "",
-    },
-    cast: {
-      title,
-      archetype,
-      oracle: echo,
-      symbol,
-      sigil,
-      sigils,
-      omen,
-      threshold: thresholdFromParts({ archetype, symbol }),
-      reading: readingFromParts({
-        title,
-        omen,
-        pattern,
-        tension,
-        insight,
-        advice,
-        echo,
-      }),
-      invitation: invitationFromAdvice(advice),
-      pattern,
-      tension,
-      insight,
-      advice,
-      echo,
-    },
-    assets: {
-      coreCard: null,
-      echo: null,
-      lyrics: null,
-      suno: null,
-      youtube: null,
-      fullPackage: null,
-    },
-    createdAt: nowIso(),
-  };
+export async function generateCast(input) {
+  const seed = await buildSeed(input);
+  const cast = await generateCastFromSeed(seed);
+  return cast;
 }

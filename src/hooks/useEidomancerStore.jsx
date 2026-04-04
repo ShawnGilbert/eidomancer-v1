@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { buildCastRecord } from "../lib/castEngine";
+import { runEidomancerCast } from "../pipeline";
 import {
   generateCoreCard,
   generateEcho,
@@ -18,6 +18,89 @@ const assetGenerators = {
   youtube: generateYouTubePackage,
   fullPackage: generateFullPackage,
 };
+
+function createId() {
+  return `cast-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function extractSection(text = "", startLabel, endLabel) {
+  const startRegex = new RegExp(`^${startLabel}\\s*$`, "m");
+  const startMatch = text.match(startRegex);
+  if (!startMatch) return "";
+
+  const contentStart = startMatch.index + startMatch[0].length;
+
+  if (!endLabel) {
+    return text.slice(contentStart).trim();
+  }
+
+  const endRegex = new RegExp(`^${endLabel}\\s*$`, "m");
+  const endMatch = text.slice(contentStart).match(endRegex);
+
+  if (!endMatch) {
+    return text.slice(contentStart).trim();
+  }
+
+  const endIndex = contentStart + endMatch.index;
+  return text.slice(contentStart, endIndex).trim();
+}
+
+function parseCastText(castText = "") {
+  const titleRaw = extractSection(castText, "🃏 Card Title", "Signal");
+  const signal = extractSection(castText, "Signal", "Tension");
+  const tension = extractSection(castText, "Tension", "Pattern");
+  const pattern = extractSection(castText, "Pattern", "🧠 Poem");
+  const poem = extractSection(castText, "🧠 Poem", "⚡ Echo");
+  const echo = extractSection(castText, "⚡ Echo", null);
+
+  const cleanedTitle =
+    titleRaw
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .find((line) => !line.startsWith("(")) || "Untitled Cast";
+
+  return {
+    title: cleanedTitle,
+    signal: signal || "",
+    tension: tension || "",
+    pattern: pattern || "",
+    poem: poem || "",
+    echo: echo || "",
+  };
+}
+
+function buildCastRecord(question, castResult) {
+  const castText = castResult?.castText || "";
+  const parsed = parseCastText(castText);
+
+  const readingText = [
+    parsed.signal && `Signal\n${parsed.signal}`,
+    parsed.tension && `Tension\n${parsed.tension}`,
+    parsed.pattern && `Pattern\n${parsed.pattern}`,
+    parsed.poem && `Poem\n${parsed.poem}`,
+    parsed.echo && `Echo\n${parsed.echo}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  return {
+    id: createId(),
+    createdAt: new Date().toISOString(),
+    question,
+    theme: castResult?.theme || "The Emergent Ones",
+    title: parsed.title,
+    signal: parsed.signal,
+    tension: parsed.tension,
+    pattern: parsed.pattern,
+    poem: parsed.poem,
+    echo: parsed.echo,
+    castText,
+    readingText,
+    assets: {},
+    type: castResult?.type || "eidomancer_cast",
+  };
+}
 
 export function useEidomancerStore() {
   const [question, setQuestion] = useState("");
@@ -46,8 +129,16 @@ export function useEidomancerStore() {
       setError(null);
       setIsCasting(true);
 
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const record = buildCastRecord(trimmed);
+      const castResult = await runEidomancerCast({
+        input: trimmed,
+        theme: "The Emergent Ones",
+      });
+
+      if (castResult?.error) {
+        throw new Error(castResult.error);
+      }
+
+      const record = buildCastRecord(trimmed, castResult);
 
       setRecentCasts((prev) => [record, ...prev].slice(0, 20));
       setActiveCastId(record.id);

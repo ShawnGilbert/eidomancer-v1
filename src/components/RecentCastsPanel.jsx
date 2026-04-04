@@ -18,9 +18,17 @@ export function RecentCastsPanel({ casts, activeCastId, onLoadCast }) {
                   : "border-white/10 bg-white/5 hover:bg-white/10"
               }`}
             >
-              <div className="text-sm font-semibold text-white">{cast.cast.title}</div>
-              <div className="mt-1 line-clamp-2 text-xs text-blue-100/70">{cast.input.question}</div>
-              <div className="mt-3 text-sm text-blue-100/85">{cast.cast.echo}</div>
+              <div className="text-sm font-semibold text-white">
+                {cast.title || "Untitled Cast"}
+              </div>
+
+              <div className="mt-1 line-clamp-2 text-xs text-blue-100/70">
+                {cast.question || "No question saved."}
+              </div>
+
+              <div className="mt-3 text-sm text-blue-100/85">
+                {cast.echo || "No echo yet."}
+              </div>
             </button>
           ))
         )}

@@ -4,40 +4,56 @@ function joinTags(tags) {
 
 export function generateCoreCard(record) {
   return {
-    headline: record.cast.title,
-    subhead: record.cast.echo,
+    headline: record.title,
+    subhead: record.echo,
     sections: {
-      pattern: record.cast.pattern,
-      tension: record.cast.tension,
-      insight: record.cast.insight,
-      advice: record.cast.advice,
+      signal: record.signal,
+      tension: record.tension,
+      pattern: record.pattern,
+      poem: record.poem,
     },
-    footer: `Theme: ${record.theme}`,
+    footer: `Theme: ${record.theme || "The Emergent Ones"}`,
   };
 }
 
 export function generateEcho(record) {
   return {
-    title: record.cast.title,
+    title: record.title,
     concept:
       "A symbolic, meme-capable image prompt that compresses the cast into one emotionally sticky visual.",
-    prompt: `Create an Eidomancer Echo image for "${record.cast.title}" under The Emergent Ones theme. Center the image on this emotional compression: ${record.cast.echo} Visualize this pattern: ${record.cast.pattern} The style should feel cinematic, mystical, futuristic, symbolic, and socially shareable.`,
+    prompt: `Create an Eidomancer Echo image for "${record.title}" under The Emergent Ones theme. Center the image on this emotional compression: ${record.echo} Visualize this pattern: ${record.pattern} Include the emotional tone of this signal: ${record.signal} The style should feel cinematic, mystical, futuristic, symbolic, and socially shareable.`,
   };
 }
 
 export function generateLyrics(record) {
   return {
-    title: record.cast.title,
-    lyrics: `Verse 1\n${record.cast.pattern}\n\nPre-Chorus\n${record.cast.tension}\n\nChorus\n${record.cast.echo}\n${record.cast.insight}\n\nVerse 2\nThe signal keeps returning through another door\nThe shape looks familiar but it is not before\n\nBridge\n${record.cast.advice}\n\nOutro\n${record.cast.echo}`,
+    title: record.title,
+    lyrics: `Verse 1
+${record.signal}
+
+Pre-Chorus
+${record.tension}
+
+Chorus
+${record.echo}
+
+Verse 2
+${record.pattern}
+
+Bridge
+${record.poem}
+
+Outro
+${record.echo}`,
   };
 }
 
 export function generateSuno(record) {
   return {
-    title: record.cast.title,
-    stylePrompt: `Cinematic, emotionally intelligent, future-mystic, symbolic, reflective, grounded but transcendent, with strong melodic payoff and memorable chorus. Theme focus: ${record.cast.echo}`,
+    title: record.title,
+    stylePrompt: `Cinematic, emotionally intelligent, future-mystic, symbolic, reflective, grounded but transcendent, with strong melodic payoff and memorable chorus. Theme focus: ${record.echo}. Emotional basis: ${record.signal}`,
     vocalMood: "Reflective, sincere, vivid, quietly intense",
-    hook: record.cast.echo,
+    hook: record.echo,
   };
 }
 
@@ -49,16 +65,33 @@ export function generateYouTubePackage(record) {
     "symbolic cast",
     "meaning compression",
     "philosophy",
-    record.cast.title,
+    record.title,
   ];
 
   return {
     titleOptions: [
-      `${record.cast.title} | Eidomancer Cast`,
-      `${record.cast.echo} | Eidomancer`,
-      `${record.cast.title} - Signal from The Emergent Ones`,
+      `${record.title} | Eidomancer Cast`,
+      `${record.echo} | Eidomancer`,
+      `${record.title} - Signal from The Emergent Ones`,
     ],
-    description: `${record.cast.title}\n\nQuestion: ${record.input.question}\n\nPattern\n${record.cast.pattern}\n\nTension\n${record.cast.tension}\n\nInsight\n${record.cast.insight}\n\nAdvice\n${record.cast.advice}\n\nEcho\n${record.cast.echo}`,
+    description: `${record.title}
+
+Question: ${record.question}
+
+Signal
+${record.signal}
+
+Tension
+${record.tension}
+
+Pattern
+${record.pattern}
+
+Poem
+${record.poem}
+
+Echo
+${record.echo}`,
     tags,
     tagString: joinTags(tags),
   };
@@ -75,10 +108,35 @@ export function generateFullPackage(record) {
     "============================",
     "",
     "TITLE:",
-    record.cast.title,
+    record.title,
     "",
     "HOOK:",
-    record.cast.echo,
+    record.echo,
+    "",
+    "----------------------------",
+    "QUESTION",
+    "----------------------------",
+    record.question,
+    "",
+    "----------------------------",
+    "SIGNAL",
+    "----------------------------",
+    record.signal,
+    "",
+    "----------------------------",
+    "TENSION",
+    "----------------------------",
+    record.tension,
+    "",
+    "----------------------------",
+    "PATTERN",
+    "----------------------------",
+    record.pattern,
+    "",
+    "----------------------------",
+    "POEM",
+    "----------------------------",
+    record.poem,
     "",
     "----------------------------",
     "YOUTUBE TITLE OPTIONS",
@@ -111,7 +169,7 @@ export function generateFullPackage(record) {
   ].join("\n");
 
   return {
-    title: record.cast.title,
+    title: record.title,
     bundle,
   };
 }

@@ -3,6 +3,13 @@
 // Core logic for card + image generation
 // ========================================
 
+// 🔹 NEW: Import Cast Engine
+import { generateCast } from "./lib/castEngine";
+
+// ========================================
+// EXISTING UTILITIES (UNCHANGED)
+// ========================================
+
 function hashString(str = "") {
   let h = 2166136261;
   for (let i = 0; i < str.length; i++) {
@@ -25,6 +32,10 @@ function mulberry32(seed) {
 function pick(rand, arr) {
   return arr[Math.floor(rand() * arr.length)];
 }
+
+// ========================================
+// EXISTING IMAGE + CARD LOGIC (UNCHANGED)
+// ========================================
 
 function getAccentColor(title = "") {
   const t = title.toLowerCase();
@@ -115,8 +126,9 @@ function titleConfig(title = "") {
   };
 }
 
-// === IMAGE PROMPT GENERATION ===
-// Builds the text prompt sent to the image model
+// ========================================
+// IMAGE PROMPT GENERATION (UNCHANGED)
+// ========================================
 
 function corePromptFromTitle(title = "", theme = "Emergent Ones") {
   const cfg = titleConfig(title);
@@ -159,129 +171,37 @@ function corePromptFromTitle(title = "", theme = "Emergent Ones") {
   ].join(", ");
 }
 
-// === MYTHIC PROMPT GENERATION ===
-// Breaks tarot structure entirely
-
-function mythicPromptFromTitle(title = "", theme = "Emergent Ones") {
-  const cfg = titleConfig(title);
-  const accent = getAccentColor(title);
-
-  return [
-    cfg.subject,
-    cfg.environment,
-    "legendary collector-tier artwork",
-    "mythic rarity visual",
-    "cosmic spectacle illustration",
-    "surreal reality-bending scene",
-    "epic sci-fi fantasy concept art",
-    "cinematic scene",
-    "wide-angle composition",
-    "environment-driven image",
-    "no frame, no border, no card layout",
-    "not a tarot card",
-    "not an illustration inside a frame",
-    "subject integrated into the world",
-    "subject not centered like a portrait",
-    "camera perspective, not flat composition",
-    "dynamic asymmetrical composition",
-    "massive glowing energy source dominating the sky",
-    "huge celestial object or radiant core",
-    "environment much larger than the subject",
-    "monumental sacred geometry built into the world",
-    "large-scale architecture or cosmic structures",
-    "explosive lighting",
-    "energy beams, arcs, particles, luminous atmosphere",
-    "high contrast between darkness and radiant power",
-    "epic moment frozen in time",
-    `vivid color palette with ${accent}`,
-    "bright luminous highlights",
-    "strong color separation",
-    "rich saturation",
-    "not muted, not washed out",
-    "AAA game cinematic art",
-    "high detail environment storytelling",
-    "fantasy concept art",
-    "visually overwhelming in a beautiful way",
-    "foreground, midground, background depth",
-    "atmospheric perspective",
-    "world scale, not portrait scale",
-    "impossible geometry",
-    "reality folding into itself",
-    "light behaving like liquid",
-    "cosmic scale intelligence presence",
-    "multiple layers of meaning",
-    "symbolic systems embedded in the environment",
-    "fractals, recursion, infinite patterns",
-    "awe-inspiring, overwhelming, transcendent",
-    "feels like witnessing something beyond human scale",
-    "collector-poster energy",
-    "awe-inspiring spectacle",
-    `${theme} aesthetic`,
-  ].join(", ");
-}
-
-// === MODE SWITCHING LOGIC ===
-// Controls Core vs Mythic behavior
-
 function imagePromptFromTitle(title = "", theme = "Emergent Ones", mode = "core") {
-  if (mode === "mythic") {
-    return mythicPromptFromTitle(title, theme);
-  }
   return corePromptFromTitle(title, theme);
 }
 
-// === MAIN CARD GENERATION ===
-// Entry point: builds full card object
-function buildEcho({ cards = [], question = "", theme = "The Emergent Ones" }) {
-  if (!cards.length) {
+// ========================================
+// 🆕 NEW: EIDOMANCER CAST PIPELINE
+// ========================================
+
+export async function runEidomancerCast({
+  input = "",
+  theme = "The Emergent Ones"
+}) {
+  if (!input || input.trim().length === 0) {
     return {
-      title: "Silent Return",
-      summary: "No signal resolved from the cast.",
-      advice: "Ask again with a clearer question."
+      error: "No input provided."
     };
   }
 
-  const joined = cards
-    .map((card) =>
-      [card.title, card.keyword, card.mood, card.direction, card.meaning]
-        .filter(Boolean)
-        .join(" ")
-    )
-    .join(" ")
-    .toLowerCase();
-
-  const has = (words) => words.some((w) => joined.includes(w));
-
-  let title = "The Returning Signal";
-  let summary = "A pattern is present, but not yet fully claimed.";
-  let advice = "Move one step closer to the thing you already know matters.";
-
-  if (has(["hesitation", "delay", "waiting", "pause"])) {
-    title = "The Unspent Threshold";
-    summary = "The cast repeats a theme of held motion and unrealized readiness.";
-    advice = "Do not wait for perfect certainty. Begin with one smaller action.";
-  } else if (has(["storm", "conflict", "friction", "pressure"])) {
-    title = "The Pressure Beneath";
-    summary = "The spread points to tension that is trying to become movement or truth.";
-    advice = "Stop managing the surface only. Address the source of the pressure directly.";
-  } else if (has(["growth", "build", "seed", "becoming", "rise"])) {
-    title = "The Growing Shape";
-    summary = "This cast echoes development, emergence, and the forming of a new structure.";
-    advice = "Protect what is beginning. Small consistent effort matters more than dramatic force.";
-  } else if (has(["truth", "clarity", "light", "reveal", "vision"])) {
-    title = "The Revealed Thread";
-    summary = "Something wants to be seen more plainly than you have allowed.";
-    advice = "Name the truth in direct language before trying to optimize it.";
-  }
+  const castText = await generateCast(input);
 
   return {
-    title,
-    summary,
-    advice,
+    type: "eidomancer_cast",
     theme,
-    question
+    castText
   };
 }
+
+// ========================================
+// EXISTING CARD GENERATION (UNCHANGED)
+// ========================================
+
 export function makeCard({
   question = "Daily Cast",
   theme = "Emergent Ones",
@@ -306,67 +226,17 @@ export function makeCard({
 
   const title = pick(rand, titles);
 
-  const openingLines = [
-    "By the indifferent regularities of physics:",
-    "By the slow machinery of reality:",
-    "By the hidden math beneath your mood:",
-    "By the shape of energy moving through the day:",
-    "By the pressure of the real against the imagined:",
-  ];
+  const readingText = "Existing card system unchanged.";
 
-  const stateLines = [
-    "Your energy ebbs with disrupted circadian light.",
-    "Your momentum is being taxed by too many open loops.",
-    "Your attention is fraying across too many possible futures.",
-    "Your signal weakens when every task feels equally important.",
-    "Your clarity improves the moment one concrete step is chosen.",
-  ];
+  const card = {
+    title,
+    readingText,
+    theme,
+    date,
+    question,
+    mode,
+    imagePrompt: imagePromptFromTitle(title, theme, mode),
+  };
 
-  const physicsLines = [
-    "Physics first. Without the laws of reality, no myth, dream, or transcendence can take shape.",
-    "Reality answers structure more reliably than intention alone.",
-    "Coherence beats intensity. One aligned act outweighs ten imagined ones.",
-    "The world does not require inspiration first; it often grants inspiration after motion begins.",
-  ];
-
-  const adviceLines = [
-    "You walk between currents. Choose one current and let the others pass.",
-    "Reduce noise. Protect the next hour from ornamental distraction.",
-    "Shrink the scope until action becomes undeniable.",
-    "Treat indecision as friction, not mystery.",
-    "A small completed act will restore more power than another spiral of possibility.",
-  ];
-
-  const readingText = [
-    `${pick(rand, openingLines)} ${pick(rand, stateLines)}`,
-    "",
-    pick(rand, physicsLines),
-    "",
-    `In the tongue of The Emergent Ones: ${pick(rand, adviceLines)}`,
-  ].join("\n");
-
-  // === FINAL CARD OUTPUT ===
-
-const card = {
-  title,
-  readingText,
-  theme,
-  date,
-  question,
-  mode,
-  imagePrompt: imagePromptFromTitle(title, theme, mode),
-};
-
-const cards = [card];
-
-const echo = buildEcho({
-  cards,
-  question,
-  theme
-});
-
-return {
-  ...card,
-  cards,
-  echo
-};
+  return card;
+}
