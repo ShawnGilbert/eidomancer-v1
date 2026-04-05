@@ -1,3 +1,5 @@
+import { TarotSectionCard } from "./TarotSectionCard";
+import CastSection from "./CastSection";
 const sectionStyles = {
   header: "bg-purple-500/10 border-purple-400/20 text-purple-200",
   signal: "bg-slate-100/5 border-slate-200/10 text-slate-100",
@@ -107,42 +109,49 @@ export function ActiveCastCard({ activeCast, isCasting }) {
         </p>
       </div>
 
-      <div className="mt-6 space-y-4">
-        <SectionCard
-          title="Signal"
-          body={activeCast.signal}
-          type="signal"
-          sigil="◌"
-        />
+      <div className="mt-6 space-y-6">
+  <div className="grid gap-5 lg:grid-cols-3">
+    <TarotSectionCard
+      title="Signal"
+      body={activeCast.signal}
+      sigil="⊚"
+      tone="blue"
+      orientation="portrait"
+    />
 
-        <SectionCard
-          title="Tension"
-          body={activeCast.tension}
-          type="tension"
-          sigil="🔥"
-        />
+    <TarotSectionCard
+      title="Tension"
+      body={activeCast.tension}
+      sigil="🔥"
+      tone="ember"
+      orientation="portrait"
+    />
 
-        <SectionCard
-          title="Pattern"
-          body={activeCast.pattern}
-          type="pattern"
-          sigil="≈"
-        />
+    <TarotSectionCard
+      title="Pattern"
+      body={activeCast.pattern}
+      sigil="≈"
+      tone="violet"
+      orientation="portrait"
+    />
+  </div>
 
-        <SectionCard
-          title="Poem"
-          body={activeCast.poem}
-          type="poem"
-          sigil="✶"
-        />
+  <TarotSectionCard
+    title="Poem"
+    body={activeCast.poem}
+    sigil="✶"
+    tone="violet"
+    orientation="landscape"
+  />
 
-        <SectionCard
-          title="Echo"
-          body={activeCast.echo}
-          type="echo"
-          sigil="◎"
-        />
-      </div>
+  <TarotSectionCard
+    title="Echo"
+    body={activeCast.echo}
+    sigil="🜃"
+    tone="teal"
+    orientation="landscape"
+  />
+</div>
     </section>
   );
 }

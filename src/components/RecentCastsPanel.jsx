@@ -3,7 +3,7 @@ export function RecentCastsPanel({ casts, activeCastId, onLoadCast }) {
     <aside className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-md">
       <h2 className="text-2xl font-semibold">Recent Casts</h2>
 
-      <div className="mt-5 space-y-3">
+      <div className="mt-5 space-y-3 max-h-[70vh] overflow-y-auto pr-1">
         {casts.length === 0 ? (
           <div className="text-sm text-blue-100/70">No casts yet.</div>
         ) : (
