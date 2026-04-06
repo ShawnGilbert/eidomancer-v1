@@ -1,32 +1,45 @@
-export default function CastSection({ title, body, color = "purple", icon }) {
-  if (!body) return null;
+const styles = {
+  signal: "border-cyan-400/20 bg-cyan-500/10 text-cyan-100",
+  tension: "border-orange-400/20 bg-orange-500/10 text-orange-100",
+  pattern: "border-blue-400/20 bg-blue-500/10 text-blue-100",
+  poem: "border-fuchsia-400/20 bg-fuchsia-500/10 text-fuchsia-50",
+  echo: "border-violet-400/20 bg-violet-500/10 text-violet-100",
+};
 
-  const colorMap = {
-    purple: "bg-purple-500/10 border-purple-400/30 text-purple-200",
-    blue: "bg-blue-500/10 border-blue-400/30 text-blue-200",
-    orange: "bg-orange-500/10 border-orange-400/30 text-orange-200",
-    green: "bg-green-500/10 border-green-400/30 text-green-200",
-    red: "bg-red-500/10 border-red-400/30 text-red-200",
-  };
+const sigils = {
+  signal: "◈",
+  tension: "✦",
+  pattern: "⬡",
+  poem: "☽",
+  echo: "✧",
+};
+
+export function CastSection({ section }) {
+  if (!section) return null;
+
+  const style = styles[section.type] || styles.signal;
+  const sigil = sigils[section.type] || "◇";
+  const isPoem = section.type === "poem";
+  const content = typeof section.content === "string" ? section.content : "";
 
   return (
-  <div
-    className={`relative rounded-2xl border ${colorMap[color]} shadow-[0_10px_30px_rgba(0,0,0,0.28)] overflow-hidden`}
-  >
-    <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-white/[0.05] to-transparent" />
-
-    <div className="relative px-4 py-3 border-b border-white/10 bg-black/10">
-      <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] opacity-90">
-        <span className="text-base">{icon || "✦"}</span>
-        <span>{title}</span>
+    <div className={`rounded-2xl border p-4 shadow-md backdrop-blur-sm ${style}`}>
+      <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.25em] opacity-80">
+        <span>{sigil}</span>
+        <span>{section.label || "Section"}</span>
       </div>
-    </div>
 
-    <div className="relative p-4">
-      <div className="rounded-xl border border-white/8 bg-black/10 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap">
-        {body}
-      </div>
+      {isPoem ? (
+        <div className="space-y-1 font-medium">
+          {content.split("\n").map((line, i) => (
+            <div key={i} className="whitespace-pre-wrap">
+              {line || "\u00A0"}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="whitespace-pre-wrap leading-relaxed">{content}</div>
+      )}
     </div>
-  </div>
-);
+  );
 }

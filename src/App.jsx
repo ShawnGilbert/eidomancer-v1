@@ -3,7 +3,7 @@ import { useEidomancerStore } from "./hooks/useEidomancerStore";
 
 import { QuestionPanel } from "./components/QuestionPanel";
 import { RecentCastsPanel } from "./components/RecentCastsPanel";
-import { ActiveCastCard } from "./components/ActiveCastCard";
+import ActiveCastCard from "./components/ActiveCastCard";
 import { PackageActionsPanel } from "./components/PackageActionsPanel";
 import { GeneratedOutputsPanel } from "./components/GeneratedOutputsPanel";
 import { TipJarFooter } from "./components/TipJarFooter";
@@ -32,10 +32,10 @@ export default function App() {
         </div>
 
         <div className="mt-6 space-y-6">
-          <ActiveCastCard
-            activeCast={store.activeCast}
-            isCasting={store.isCasting}
-          />
+         <ActiveCastCard
+  cast={store.activeCast}
+  isCasting={store.isCasting}
+/>
 
           {store.activeCast && (
             <>

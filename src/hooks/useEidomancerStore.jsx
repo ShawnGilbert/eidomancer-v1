@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { runEidomancerCast } from "../pipeline";
+import { generateCast, formatCastAsText } from "../lib/castEngine";
 import {
   generateCoreCard,
   generateEcho,
@@ -23,82 +23,40 @@ function createId() {
   return `cast-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function extractSection(text = "", startLabel, endLabel) {
-  const startRegex = new RegExp(`^${startLabel}\\s*$`, "m");
-  const startMatch = text.match(startRegex);
-  if (!startMatch) return "";
+function normalizeCastRecord(question, castResult) {
+  const safeCast =
+    castResult && typeof castResult === "object"
+      ? castResult
+      : {
+          title: "Untitled Cast",
+          subtitle: "",
+          mode: "fallback",
+          sourceType: "question",
+          questionType: "general",
+          poemShape: "free_verse",
+          seed: "",
+          sections: [],
+        };
 
-  const contentStart = startMatch.index + startMatch[0].length;
-
-  if (!endLabel) {
-    return text.slice(contentStart).trim();
-  }
-
-  const endRegex = new RegExp(`^${endLabel}\\s*$`, "m");
-  const endMatch = text.slice(contentStart).match(endRegex);
-
-  if (!endMatch) {
-    return text.slice(contentStart).trim();
-  }
-
-  const endIndex = contentStart + endMatch.index;
-  return text.slice(contentStart, endIndex).trim();
-}
-
-function parseCastText(castText = "") {
-  const titleRaw = extractSection(castText, "🃏 Card Title", "Signal");
-  const signal = extractSection(castText, "Signal", "Tension");
-  const tension = extractSection(castText, "Tension", "Pattern");
-  const pattern = extractSection(castText, "Pattern", "🧠 Poem");
-  const poem = extractSection(castText, "🧠 Poem", "⚡ Echo");
-  const echo = extractSection(castText, "⚡ Echo", null);
-
-  const cleanedTitle =
-    titleRaw
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .find((line) => !line.startsWith("(")) || "Untitled Cast";
-
-  return {
-    title: cleanedTitle,
-    signal: signal || "",
-    tension: tension || "",
-    pattern: pattern || "",
-    poem: poem || "",
-    echo: echo || "",
-  };
-}
-
-function buildCastRecord(question, castResult) {
-  const castText = castResult?.castText || "";
-  const parsed = parseCastText(castText);
-
-  const readingText = [
-    parsed.signal && `Signal\n${parsed.signal}`,
-    parsed.tension && `Tension\n${parsed.tension}`,
-    parsed.pattern && `Pattern\n${parsed.pattern}`,
-    parsed.poem && `Poem\n${parsed.poem}`,
-    parsed.echo && `Echo\n${parsed.echo}`,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+  const sections = Array.isArray(safeCast.sections) ? safeCast.sections : [];
 
   return {
     id: createId(),
     createdAt: new Date().toISOString(),
     question,
-    theme: castResult?.theme || "The Emergent Ones",
-    title: parsed.title,
-    signal: parsed.signal,
-    tension: parsed.tension,
-    pattern: parsed.pattern,
-    poem: parsed.poem,
-    echo: parsed.echo,
-    castText,
-    readingText,
+    theme: "The Emergent Ones",
+    title: safeCast.title || "Untitled Cast",
+    subtitle: safeCast.subtitle || "",
+    mode: safeCast.mode || "fallback",
+    sourceType: safeCast.sourceType || "question",
+    questionType: safeCast.questionType || "general",
+    poemShape: safeCast.poemShape || "free_verse",
+    seed: safeCast.seed || "",
+    sections,
+    castText: formatCastAsText(safeCast),
+    readingText: formatCastAsText(safeCast),
     assets: {},
-    type: castResult?.type || "eidomancer_cast",
+    type: "eidomancer_cast",
   };
 }
 
@@ -129,16 +87,8 @@ export function useEidomancerStore() {
       setError(null);
       setIsCasting(true);
 
-      const castResult = await runEidomancerCast({
-        input: trimmed,
-        theme: "The Emergent Ones",
-      });
-
-      if (castResult?.error) {
-        throw new Error(castResult.error);
-      }
-
-      const record = buildCastRecord(trimmed, castResult);
+      const castResult = await generateCast(trimmed);
+      const record = normalizeCastRecord(trimmed, castResult);
 
       setRecentCasts((prev) => [record, ...prev].slice(0, 20));
       setActiveCastId(record.id);
