@@ -1,9 +1,14 @@
 export function TipJarFooter() {
   return (
-    <footer className="pt-8 text-center text-sm text-blue-100/50">
-      <div className="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-4">
-        Support the signal. Tip jar can live here later.
-      </div>
-    </footer>
+    <div className="text-center text-xs opacity-60 mt-6">
+      <a
+        href="https://ko-fi.com/tecknowshaman"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="hover:opacity-100 transition"
+      >
+        ✦ Support the Signal ✦
+      </a>
+    </div>
   );
 }
