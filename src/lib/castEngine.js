@@ -3,13 +3,20 @@
 const USE_LIVE_API = false;
 const MAX_INPUT_CHARS = 4000;
 const MAX_FALLBACK_SNIPPET_CHARS = 900;
+const VALID_SECTION_TYPES = new Set(["signal", "tension", "pattern", "poem", "echo"]);
 
 // -------------------------
 // CLEANING
 // -------------------------
 
+function asString(value = "") {
+  if (typeof value === "string") return value;
+  if (value == null) return "";
+  return String(value);
+}
+
 function normalizeWhitespace(text = "") {
-  return text
+  return asString(text)
     .replace(/\r\n/g, "\n")
     .replace(/\t/g, " ")
     .replace(/[ ]{2,}/g, " ")
@@ -18,11 +25,11 @@ function normalizeWhitespace(text = "") {
 }
 
 function stripTimestamps(text = "") {
-  return text.replace(/\b\d{1,2}:\d{2}(?::\d{2})?\b/g, "");
+  return asString(text).replace(/\b\d{1,2}:\d{2}(?::\d{2})?\b/g, "");
 }
 
 function stripUiNoise(text = "") {
-  const lines = text.split("\n");
+  const lines = asString(text).split("\n");
 
   return lines
     .filter((line) => {
@@ -47,9 +54,10 @@ function stripUiNoise(text = "") {
 }
 
 function looksLikeTranscript(text = "") {
-  if (text.length > 1500) return true;
+  const normalized = normalizeWhitespace(text);
+  if (normalized.length > 1500) return true;
 
-  const lines = text.split("\n").filter(Boolean);
+  const lines = normalized.split("\n").filter(Boolean);
   return lines.length > 10;
 }
 
@@ -71,8 +79,9 @@ function cleanInputText(input = "") {
 }
 
 function shortSnippet(text = "") {
-  if (text.length <= MAX_FALLBACK_SNIPPET_CHARS) return text;
-  return text.slice(0, MAX_FALLBACK_SNIPPET_CHARS) + "...";
+  const normalized = asString(text);
+  if (normalized.length <= MAX_FALLBACK_SNIPPET_CHARS) return normalized;
+  return normalized.slice(0, MAX_FALLBACK_SNIPPET_CHARS) + "...";
 }
 
 // -------------------------
@@ -80,10 +89,11 @@ function shortSnippet(text = "") {
 // -------------------------
 
 function detectQuestionType(text = "") {
-  const t = text.toLowerCase();
+  const cleaned = normalizeWhitespace(text);
+  const t = cleaned.toLowerCase();
 
-  if (!t.trim()) return "general";
-  if (looksLikeTranscript(text)) return "transcript";
+  if (!t) return "general";
+  if (looksLikeTranscript(cleaned)) return "transcript";
 
   if (
     /\b(why|meaning|purpose|soul|truth|reality|belief|faith|god|ethics|morality|philosophy)\b/.test(
@@ -128,8 +138,12 @@ function detectQuestionType(text = "") {
   return "general";
 }
 
-function inferPoemShape({ sourceType = "question", questionType = "general", input = "" }) {
-  const t = input.toLowerCase();
+function inferPoemShape({
+  sourceType = "question",
+  questionType = "general",
+  input = "",
+}) {
+  const t = normalizeWhitespace(input).toLowerCase();
 
   if (sourceType === "transcript") return "signal_column";
   if (questionType === "decision") return "fork";
@@ -170,11 +184,19 @@ function buildFallbackSeed(input = "") {
 // STRUCTURED CAST HELPERS
 // -------------------------
 
+function normalizeSectionType(type = "signal") {
+  const normalized = normalizeWhitespace(type).toLowerCase();
+  return VALID_SECTION_TYPES.has(normalized) ? normalized : "signal";
+}
+
 function createSection(type, label, content, meta = {}) {
+  const normalizedContent = normalizeWhitespace(content);
+  const normalizedLabel = normalizeWhitespace(label);
+
   return {
-    type,
-    label,
-    content: normalizeWhitespace(content),
+    type: normalizeSectionType(type),
+    label: normalizedLabel,
+    content: normalizedContent,
     ...meta,
   };
 }
@@ -189,17 +211,27 @@ function createCast({
   seed = "",
   sections = [],
 }) {
+  const normalizedSections = sections
+    .filter(Boolean)
+    .map((section) =>
+      createSection(
+        section.type,
+        section.label,
+        section.content,
+        section.shape ? { shape: section.shape } : {}
+      )
+    )
+    .filter((section) => section.label && section.content);
+
   return {
     title: normalizeWhitespace(title),
     subtitle: normalizeWhitespace(subtitle),
-    mode,
-    sourceType,
-    questionType,
-    poemShape,
+    mode: normalizeWhitespace(mode) || "default",
+    sourceType: normalizeWhitespace(sourceType) || "question",
+    questionType: normalizeWhitespace(questionType) || "general",
+    poemShape: normalizeWhitespace(poemShape) || "free_verse",
     seed: normalizeWhitespace(seed),
-    sections: sections.filter(
-      (section) => section && section.label && section.content
-    ),
+    sections: normalizedSections,
   };
 }
 
@@ -507,11 +539,7 @@ function buildFallbackCastFromSeed(seed = "", input = "") {
           "The truth is smaller than the structure around it."
         ),
         createSection("poem", "Poem", poem.content, { shape: poem.shape }),
-        createSection(
-          "echo",
-          "Echo",
-          "The signal survives the noise."
-        ),
+        createSection("echo", "Echo", "The signal survives the noise."),
       ],
     });
   }
@@ -579,6 +607,21 @@ function buildFallbackCastFromSeed(seed = "", input = "") {
       "Too many paths are competing for the same step.",
   };
 
+  const echoContent =
+    sourceType === "transcript"
+      ? "The signal survives the noise."
+      : questionType === "decision"
+      ? "Commitment turns possibility into direction."
+      : questionType === "emotional"
+      ? "The feeling is real, but it is not the whole sea."
+      : questionType === "constructive"
+      ? "What you build next matters more than what you imagine all at once."
+      : questionType === "relational"
+      ? "The mirror hurts most when it reflects what is ready to be seen."
+      : questionType === "philosophical"
+      ? "Not every true answer arrives in its final form."
+      : "Movement begins when choice commits.";
+
   return createCast({
     title: titleMap[questionType] || titleMap.general,
     subtitle: subtitleMap[questionType] || subtitleMap.general,
@@ -604,23 +647,7 @@ function buildFallbackCastFromSeed(seed = "", input = "") {
         patternMap[questionType] || patternMap.general
       ),
       createSection("poem", "Poem", poem.content, { shape: poem.shape }),
-      createSection(
-        "echo",
-        "Echo",
-        sourceType === "transcript"
-          ? "The signal survives the noise."
-          : questionType === "decision"
-          ? "Commitment turns possibility into direction."
-          : questionType === "emotional"
-          ? "The feeling is real, but it is not the whole sea."
-          : questionType === "constructive"
-          ? "What you build next matters more than what you imagine all at once."
-          : questionType === "relational"
-          ? "The mirror hurts most when it reflects what is ready to be seen."
-          : questionType === "philosophical"
-          ? "Not every true answer arrives in its final form."
-          : "Movement begins when choice commits."
-      ),
+      createSection("echo", "Echo", echoContent),
     ],
   });
 }
@@ -638,7 +665,9 @@ async function callLLM(prompt) {
 
   const text = await res.text();
 
-  if (!res.ok) throw new Error("LLM failed");
+  if (!res.ok) {
+    throw new Error(`LLM failed (${res.status})`);
+  }
 
   try {
     const data = JSON.parse(text);
@@ -649,8 +678,12 @@ async function callLLM(prompt) {
 }
 
 function normalizeLiveCastResponse(raw, seed = "", input = "") {
+  const { cleaned, transcriptLike } = cleanInputText(input);
+  const sourceType = transcriptLike ? "transcript" : "question";
+  const questionType = detectQuestionType(cleaned);
+
   if (!raw) {
-    return buildFallbackCastFromSeed(seed, input);
+    return buildFallbackCastFromSeed(seed, cleaned);
   }
 
   if (typeof raw === "object" && raw.title && Array.isArray(raw.sections)) {
@@ -658,25 +691,16 @@ function normalizeLiveCastResponse(raw, seed = "", input = "") {
       title: raw.title,
       subtitle: raw.subtitle || "",
       mode: raw.mode || "live",
-      sourceType: raw.sourceType || (looksLikeTranscript(input) ? "transcript" : "question"),
-      questionType: raw.questionType || detectQuestionType(input),
+      sourceType: raw.sourceType || sourceType,
+      questionType: raw.questionType || questionType,
       poemShape: raw.poemShape || "free_verse",
       seed: raw.seed || seed,
-      sections: raw.sections.map((section) =>
-        createSection(
-          section.type || "signal",
-          section.label || "Section",
-          section.content || "",
-          section.shape ? { shape: section.shape } : {}
-        )
-      ),
+      sections: raw.sections,
     });
   }
 
   if (typeof raw === "string") {
-    const questionType = detectQuestionType(input);
-    const sourceType = looksLikeTranscript(input) ? "transcript" : "question";
-    const poem = buildPoem({ sourceType, questionType, input });
+    const poem = buildPoem({ sourceType, questionType, input: cleaned });
 
     return createCast({
       title: "Live Cast",
@@ -687,13 +711,13 @@ function normalizeLiveCastResponse(raw, seed = "", input = "") {
       poemShape: poem.shape,
       seed,
       sections: [
-        createSection("signal", "Signal", normalizeWhitespace(raw)),
+        createSection("signal", "Signal", raw),
         createSection("poem", "Poem", poem.content, { shape: poem.shape }),
       ],
     });
   }
 
-  return buildFallbackCastFromSeed(seed, input);
+  return buildFallbackCastFromSeed(seed, cleaned);
 }
 
 // -------------------------
