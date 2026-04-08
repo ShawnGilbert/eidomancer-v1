@@ -30,6 +30,7 @@ function normalizeCastRecord(question, castResult) {
       : {
           title: "Untitled Cast",
           subtitle: "",
+          coreCard: null,
           mode: "fallback",
           sourceType: "question",
           questionType: "general",
@@ -40,13 +41,43 @@ function normalizeCastRecord(question, castResult) {
 
   const sections = Array.isArray(safeCast.sections) ? safeCast.sections : [];
 
+  const safeCoreCard =
+    safeCast.coreCard && typeof safeCast.coreCard === "object"
+      ? {
+          title:
+            typeof safeCast.coreCard.title === "string"
+              ? safeCast.coreCard.title.trim()
+              : "",
+          subtitle:
+            typeof safeCast.coreCard.subtitle === "string"
+              ? safeCast.coreCard.subtitle.trim()
+              : "",
+          hook:
+            typeof safeCast.coreCard.hook === "string"
+              ? safeCast.coreCard.hook.trim()
+              : "",
+        }
+      : null;
+
+  const fallbackTitle =
+    (typeof safeCast.title === "string" && safeCast.title.trim()) ||
+    safeCoreCard?.title ||
+    "Untitled Cast";
+
+  const fallbackSubtitle =
+    (typeof safeCast.subtitle === "string" && safeCast.subtitle.trim()) ||
+    safeCoreCard?.subtitle ||
+    "";
+
   return {
     id: createId(),
     createdAt: new Date().toISOString(),
     question,
+    input: question,
     theme: "The Emergent Ones",
-    title: safeCast.title || "Untitled Cast",
-    subtitle: safeCast.subtitle || "",
+    title: fallbackTitle,
+    subtitle: fallbackSubtitle,
+    coreCard: safeCoreCard,
     mode: safeCast.mode || "fallback",
     sourceType: safeCast.sourceType || "question",
     questionType: safeCast.questionType || "general",

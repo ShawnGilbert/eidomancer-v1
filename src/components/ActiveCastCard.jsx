@@ -1,5 +1,6 @@
 import CardFrame from "./CardFrame";
 import { TarotSectionCard } from "./TarotSectionCard";
+import CoreCard from "./CoreCard";
 
 function buildLegacySections(cast) {
   if (!cast || typeof cast !== "object") return [];
@@ -92,15 +93,84 @@ function renderHeaderMeta(cast) {
 
   return (
     <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-      {chips.map((chip) => (
+      {chips.map((chip, index) => (
         <div
-          key={chip}
+          key={`${chip}-${index}`}
           className="rounded-full border border-violet-200/20 bg-violet-300/10 px-4 py-1.5 text-[11px] uppercase tracking-[0.22em] text-violet-100/85"
         >
           {chip}
         </div>
       ))}
     </div>
+  );
+}
+
+function getQuestionText(cast) {
+  if (typeof cast?.question === "string" && cast.question.trim()) {
+    return cast.question.trim();
+  }
+
+  if (typeof cast?.input === "string" && cast.input.trim()) {
+    return cast.input.trim();
+  }
+
+  return "";
+}
+
+function getHeaderTitle(cast) {
+  if (typeof cast?.title === "string" && cast.title.trim()) {
+    return cast.title.trim();
+  }
+
+  return "Untitled Cast";
+}
+
+function getHeaderSubtitle(cast) {
+  if (typeof cast?.subtitle === "string" && cast.subtitle.trim()) {
+    return cast.subtitle.trim();
+  }
+
+  return "";
+}
+
+function getHeaderHook(cast) {
+  if (typeof cast?.coreCard?.hook === "string" && cast.coreCard.hook.trim()) {
+    return cast.coreCard.hook.trim();
+  }
+
+  return "";
+}
+
+function buildSectionLookup(sections) {
+  const lookup = {
+    signal: null,
+    tension: null,
+    pattern: null,
+    poem: null,
+    echo: null,
+  };
+
+  for (const section of sections) {
+    if (section?.type && lookup.hasOwnProperty(section.type)) {
+      lookup[section.type] = section;
+    }
+  }
+
+  return lookup;
+}
+
+function renderSectionCard(section, index) {
+  if (!section) return null;
+
+  return (
+    <TarotSectionCard
+      key={`${section.type || "section"}-${section.label || "Section"}-${index}`}
+      title={section.label || "Section"}
+      body={section.content || ""}
+      sigil={getSigil(section.type)}
+      tone={getTone(section.type)}
+      orientation="portrait"
+    />
   );
 }
 
@@ -127,9 +197,12 @@ export default function ActiveCastCard({ cast, isCasting = false }) {
 
   const sections = getSections(cast);
   const dominantType = getDominantType(sections);
+  const sectionLookup = buildSectionLookup(sections);
 
-  const primarySections = sections.filter((section) => section?.type !== "poem");
-  const poemSection = sections.find((section) => section?.type === "poem");
+  const headerTitle = getHeaderTitle(cast);
+  const headerSubtitle = getHeaderSubtitle(cast);
+  const headerHook = getHeaderHook(cast);
+  const questionText = getQuestionText(cast);
 
   return (
     <div className="space-y-7">
@@ -148,43 +221,51 @@ export default function ActiveCastCard({ cast, isCasting = false }) {
           {renderHeaderMeta(cast)}
 
           <h2 className="mt-6 text-4xl font-semibold tracking-tight text-white md:text-5xl">
-            {cast.title || "Untitled Cast"}
+            {headerTitle}
           </h2>
 
-          {cast.question ? (
+          {headerSubtitle ? (
+            <p className="mt-4 text-base text-slate-300/85">{headerSubtitle}</p>
+          ) : null}
+
+          {headerHook ? (
+            <p className="mt-2 text-sm italic text-violet-100/80">
+              {headerHook}
+            </p>
+          ) : null}
+
+          {questionText ? (
             <p className="mt-5 text-lg text-slate-300/90">
               <span className="text-slate-400">Question:</span>{" "}
-              {cast.question}
-            </p>
-          ) : cast.subtitle ? (
-            <p className="mt-5 text-base text-slate-300/85">
-              {cast.subtitle}
+              {questionText}
             </p>
           ) : null}
         </div>
       </CardFrame>
 
-      {primarySections.length > 0 ? (
-        <div className="grid gap-6 lg:grid-cols-3">
-          {primarySections.map((section, index) => (
-            <TarotSectionCard
-              key={`${section.type || "section"}-${index}`}
-              title={section.label || "Section"}
-              body={section.content || ""}
-              sigil={getSigil(section.type)}
-              tone={getTone(section.type)}
-              orientation="portrait"
-            />
-          ))}
-        </div>
-      ) : null}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div>{renderSectionCard(sectionLookup.signal, 0)}</div>
 
-      {poemSection ? (
+        <div>
+          <CoreCard cast={cast} title="Core Card" />
+        </div>
+
+        <div>{renderSectionCard(sectionLookup.pattern, 1)}</div>
+
+        <div>{renderSectionCard(sectionLookup.echo, 2)}</div>
+
+        <div className="hidden lg:block" />
+
+        <div>{renderSectionCard(sectionLookup.tension, 3)}</div>
+      </div>
+
+      {sectionLookup.poem ? (
         <TarotSectionCard
-          title={poemSection.label || "Poem"}
-          body={poemSection.content || ""}
-          sigil={getSigil(poemSection.type)}
-          tone={getTone(poemSection.type)}
+          key={`${sectionLookup.poem.type || "poem"}-${sectionLookup.poem.label || "Poem"}-full`}
+          title={sectionLookup.poem.label || "Poem"}
+          body={sectionLookup.poem.content || ""}
+          sigil={getSigil(sectionLookup.poem.type)}
+          tone={getTone(sectionLookup.poem.type)}
           orientation="landscape"
         />
       ) : null}

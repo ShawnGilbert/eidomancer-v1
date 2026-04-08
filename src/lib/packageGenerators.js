@@ -2,102 +2,175 @@ function joinTags(tags) {
   return tags.filter(Boolean).join(", ");
 }
 
-export function generateCoreCard(record) {
+function normalizeText(value, fallback = "Not generated yet.") {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  return fallback;
+}
+
+function getSectionContent(record, type, fallback = "Not generated yet.") {
+  if (!record || !Array.isArray(record.sections)) return fallback;
+
+  const match = record.sections.find((section) => section?.type === type);
+  if (!match || typeof match.content !== "string" || !match.content.trim()) {
+    return fallback;
+  }
+
+  return match.content.trim();
+}
+
+function getQuestion(record) {
+  return normalizeText(record?.question || record?.input, "No question provided.");
+}
+
+function getTheme(record) {
+  return normalizeText(record?.theme, "The Emergent Ones");
+}
+
+function getTitle(record) {
+  return normalizeText(record?.coreCard?.title || record?.title, "Untitled Cast");
+}
+
+function getSubtitle(record) {
+  return normalizeText(
+    record?.coreCard?.subtitle || record?.subtitle,
+    "A pattern asks to be named."
+  );
+}
+
+function getHook(record) {
+  return normalizeText(
+    record?.coreCard?.hook || getSectionContent(record, "echo", ""),
+    "The signal is still forming."
+  );
+}
+
+function flattenRecord(record) {
   return {
-    headline: record.title,
-    subhead: record.echo,
+    title: getTitle(record),
+    subtitle: getSubtitle(record),
+    hook: getHook(record),
+    question: getQuestion(record),
+    theme: getTheme(record),
+    signal: getSectionContent(record, "signal"),
+    tension: getSectionContent(record, "tension"),
+    pattern: getSectionContent(record, "pattern"),
+    poem: getSectionContent(record, "poem"),
+    echo: getSectionContent(record, "echo"),
+  };
+}
+
+export function generateCoreCard(record) {
+  const cast = flattenRecord(record);
+
+  return {
+    headline: cast.title,
+    subhead: cast.subtitle,
+    hook: cast.hook,
+    question: cast.question,
     sections: {
-      signal: record.signal,
-      tension: record.tension,
-      pattern: record.pattern,
-      poem: record.poem,
+      signal: cast.signal,
+      tension: cast.tension,
+      pattern: cast.pattern,
+      poem: cast.poem,
+      echo: cast.echo,
     },
-    footer: `Theme: ${record.theme || "The Emergent Ones"}`,
+    footer: `Theme: ${cast.theme}`,
   };
 }
 
 export function generateEcho(record) {
+  const cast = flattenRecord(record);
+
   return {
-    title: record.title,
+    title: cast.title,
     concept:
       "A symbolic, meme-capable image prompt that compresses the cast into one emotionally sticky visual.",
-    prompt: `Create an Eidomancer Echo image for "${record.title}" under The Emergent Ones theme. Center the image on this emotional compression: ${record.echo} Visualize this pattern: ${record.pattern} Include the emotional tone of this signal: ${record.signal} The style should feel cinematic, mystical, futuristic, symbolic, and socially shareable.`,
+    prompt: `Create an Eidomancer Echo image for "${cast.title}" under ${cast.theme} theme. Center the image on this emotional compression: ${cast.echo} Visualize this pattern: ${cast.pattern} Include the emotional tone of this signal: ${cast.signal} The style should feel cinematic, mystical, futuristic, symbolic, and socially shareable.`,
   };
 }
 
 export function generateLyrics(record) {
+  const cast = flattenRecord(record);
+
   return {
-    title: record.title,
+    title: cast.title,
     lyrics: `Verse 1
-${record.signal}
+${cast.signal}
 
 Pre-Chorus
-${record.tension}
+${cast.tension}
 
 Chorus
-${record.echo}
+${cast.echo}
 
 Verse 2
-${record.pattern}
+${cast.pattern}
 
 Bridge
-${record.poem}
+${cast.poem}
 
 Outro
-${record.echo}`,
+${cast.hook}`,
   };
 }
 
 export function generateSuno(record) {
+  const cast = flattenRecord(record);
+
   return {
-    title: record.title,
-    stylePrompt: `Cinematic, emotionally intelligent, future-mystic, symbolic, reflective, grounded but transcendent, with strong melodic payoff and memorable chorus. Theme focus: ${record.echo}. Emotional basis: ${record.signal}`,
+    title: cast.title,
+    stylePrompt: `Cinematic, emotionally intelligent, future-mystic, symbolic, reflective, grounded but transcendent, with strong melodic payoff and memorable chorus. Theme focus: ${cast.echo}. Emotional basis: ${cast.signal}. Core hook: ${cast.hook}`,
     vocalMood: "Reflective, sincere, vivid, quietly intense",
-    hook: record.echo,
+    hook: cast.hook,
   };
 }
 
 export function generateYouTubePackage(record) {
+  const cast = flattenRecord(record);
+
   const tags = [
     "Eidomancer",
-    "The Emergent Ones",
+    cast.theme,
     "AI music",
     "symbolic cast",
     "meaning compression",
     "philosophy",
-    record.title,
+    cast.title,
   ];
 
   return {
     titleOptions: [
-      `${record.title} | Eidomancer Cast`,
-      `${record.echo} | Eidomancer`,
-      `${record.title} - Signal from The Emergent Ones`,
+      `${cast.title} | Eidomancer Cast`,
+      `${cast.hook} | Eidomancer`,
+      `${cast.title} - Signal from ${cast.theme}`,
     ],
-    description: `${record.title}
+    description: `${cast.title}
 
-Question: ${record.question}
+${cast.subtitle}
+
+Question: ${cast.question}
 
 Signal
-${record.signal}
+${cast.signal}
 
 Tension
-${record.tension}
+${cast.tension}
 
 Pattern
-${record.pattern}
+${cast.pattern}
 
 Poem
-${record.poem}
+${cast.poem}
 
 Echo
-${record.echo}`,
+${cast.echo}`,
     tags,
     tagString: joinTags(tags),
   };
 }
 
 export function generateFullPackage(record) {
+  const cast = flattenRecord(record);
   const youtube = generateYouTubePackage(record);
   const lyrics = generateLyrics(record);
   const suno = generateSuno(record);
@@ -108,35 +181,43 @@ export function generateFullPackage(record) {
     "============================",
     "",
     "TITLE:",
-    record.title,
+    cast.title,
+    "",
+    "SUBTITLE:",
+    cast.subtitle,
     "",
     "HOOK:",
-    record.echo,
+    cast.hook,
     "",
     "----------------------------",
     "QUESTION",
     "----------------------------",
-    record.question,
+    cast.question,
     "",
     "----------------------------",
     "SIGNAL",
     "----------------------------",
-    record.signal,
+    cast.signal,
     "",
     "----------------------------",
     "TENSION",
     "----------------------------",
-    record.tension,
+    cast.tension,
     "",
     "----------------------------",
     "PATTERN",
     "----------------------------",
-    record.pattern,
+    cast.pattern,
     "",
     "----------------------------",
     "POEM",
     "----------------------------",
-    record.poem,
+    cast.poem,
+    "",
+    "----------------------------",
+    "ECHO",
+    "----------------------------",
+    cast.echo,
     "",
     "----------------------------",
     "YOUTUBE TITLE OPTIONS",
@@ -169,7 +250,7 @@ export function generateFullPackage(record) {
   ].join("\n");
 
   return {
-    title: record.title,
+    title: cast.title,
     bundle,
   };
 }

@@ -27,6 +27,41 @@ function safeParseJson(text) {
   }
 }
 
+function extractTextFromResponse(response) {
+  if (!response || typeof response !== "object") return "";
+
+  if (typeof response.output_text === "string" && response.output_text.trim()) {
+    return response.output_text.trim();
+  }
+
+  if (Array.isArray(response.output)) {
+    const chunks = [];
+
+    for (const item of response.output) {
+      if (!item || typeof item !== "object") continue;
+      if (!Array.isArray(item.content)) continue;
+
+      for (const content of item.content) {
+        if (!content || typeof content !== "object") continue;
+
+        if (typeof content.text === "string" && content.text.trim()) {
+          chunks.push(content.text.trim());
+        }
+      }
+    }
+
+    if (chunks.length) {
+      return chunks.join("\n").trim();
+    }
+  }
+
+  return "";
+}
+
+// ----------------------------------
+// Existing cast route
+// ----------------------------------
+
 app.post("/api/cast", async (req, res) => {
   try {
     const question = req.body?.question?.trim();
@@ -36,7 +71,9 @@ app.post("/api/cast", async (req, res) => {
     }
 
     if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ error: "Missing OPENAI_API_KEY on the server." });
+      return res
+        .status(500)
+        .json({ error: "Missing OPENAI_API_KEY on the server." });
     }
 
     const prompt = `
@@ -106,6 +143,48 @@ Question: ${question}
     console.error("Cast error:", error);
     return res.status(500).json({
       error: error?.message || "The cast failed on the server.",
+    });
+  }
+});
+
+// ----------------------------------
+// New generic generation route
+// Used by castEngine.js
+// ----------------------------------
+
+app.post("/api/generate", async (req, res) => {
+  try {
+    const prompt = req.body?.prompt?.trim();
+
+    if (!prompt) {
+      return res.status(400).json({ error: "A prompt is required." });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res
+        .status(500)
+        .json({ error: "Missing OPENAI_API_KEY on the server." });
+    }
+
+    const response = await openai.responses.create({
+      model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+      input: prompt,
+    });
+
+    const text = extractTextFromResponse(response);
+
+    if (!text) {
+      return res.status(500).json({
+        error: "Model returned an empty response.",
+        raw: response,
+      });
+    }
+
+    return res.json({ text });
+  } catch (error) {
+    console.error("Generate error:", error);
+    return res.status(500).json({
+      error: error?.message || "The generate request failed on the server.",
     });
   }
 });

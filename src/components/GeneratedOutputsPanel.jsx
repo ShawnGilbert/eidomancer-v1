@@ -4,13 +4,13 @@ function stringifyAsset(data) {
   if (!data) return "Not generated yet.";
 
   if (typeof data === "string") return data;
-
   if (typeof data !== "object") return String(data);
 
   if (data.bundle) return data.bundle;
   if (data.lyrics) return data.lyrics;
   if (data.prompt) return data.prompt;
   if (data.description) return data.description;
+  if (data.body) return data.body;
 
   return Object.entries(data)
     .map(([key, value]) => {
@@ -35,14 +35,54 @@ function previewText(text, maxLength = 180) {
   return `${text.slice(0, maxLength).trim()}...`;
 }
 
-function AssetCard({
-  title,
-  data,
-  isOpen,
-  onToggle,
-  onCopy,
-  copied,
-}) {
+function buildDerivedAssets(activeCast) {
+  const explicitAssets =
+    activeCast && typeof activeCast.assets === "object" ? activeCast.assets : {};
+
+  const coreCard =
+    explicitAssets.coreCard ||
+    (activeCast?.coreCard
+      ? {
+          title: activeCast.coreCard.title || activeCast.title || "Core Card",
+          subtitle: activeCast.coreCard.subtitle || "",
+          hook: activeCast.coreCard.hook || "",
+          question: activeCast.question || activeCast.input || "",
+        }
+      : null);
+
+  const echo =
+    explicitAssets.echo ||
+    activeCast?.shareables?.echoCard ||
+    (activeCast?.echo
+      ? {
+          title: activeCast.title || "Echo",
+          body: activeCast.echo,
+          vibe: activeCast?.shareables?.echoCard?.vibe || "neutral",
+        }
+      : null);
+
+  return {
+    ...explicitAssets,
+    coreCard,
+    echo,
+    lyrics: explicitAssets.lyrics || null,
+    suno: explicitAssets.suno || null,
+    youtube: explicitAssets.youtube || null,
+    fullPackage:
+      explicitAssets.fullPackage ||
+      (coreCard || echo
+        ? {
+            title: activeCast?.title || "Untitled Cast",
+            subtitle: activeCast?.subtitle || "",
+            question: activeCast?.question || activeCast?.input || "",
+            coreCard,
+            echo,
+          }
+        : null),
+  };
+}
+
+function AssetCard({ title, data, isOpen, onToggle, onCopy, copied }) {
   const fullText = useMemo(() => stringifyAsset(data), [data]);
   const shortText = useMemo(() => previewText(fullText), [fullText]);
   const hasContent = !!data;
@@ -70,7 +110,7 @@ function AssetCard({
             type="button"
             onClick={onCopy}
             disabled={!hasContent}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-blue-50 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-blue-50 transition hover:bg-white/10 disabled:opacity-50"
           >
             {copied ? "Copied" : "Copy"}
           </button>
@@ -81,7 +121,7 @@ function AssetCard({
 }
 
 export function GeneratedOutputsPanel({ activeCast }) {
-  const { assets = {} } = activeCast || {};
+  const assets = useMemo(() => buildDerivedAssets(activeCast), [activeCast]);
   const [copied, setCopied] = useState("");
   const [openSections, setOpenSections] = useState({
     coreCard: false,
@@ -119,23 +159,17 @@ export function GeneratedOutputsPanel({ activeCast }) {
 
   return (
     <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <div className="text-xs uppercase tracking-[0.25em] text-blue-200/70">
-            Generated Outputs
-          </div>
-          <h3 className="mt-2 text-2xl font-semibold text-white">
-            Cast-derived assets
-          </h3>
-        </div>
+      <div className="flex justify-between items-center">
+        <h3 className="text-2xl font-semibold text-white">
+          Cast-derived assets
+        </h3>
 
         <button
-          type="button"
           onClick={handleCopyFullPackage}
           disabled={!assets.fullPackage}
-          className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-blue-50 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+          className="text-sm text-blue-200"
         >
-          {copied === "fullPackageTop" ? "Copied Full Package" : "Copy Full Package"}
+          Copy Full Package
         </button>
       </div>
 
