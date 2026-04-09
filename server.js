@@ -18,7 +18,29 @@ app.use(express.json());
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
+app.get("/api/ai/status", async (_req, res) => {
+  try {
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(200).json({
+        connected: false,
+        provider: "openai",
+        reason: "Missing OPENAI_API_KEY on the server.",
+      });
+    }
 
+    return res.status(200).json({
+      connected: true,
+      provider: "openai",
+      model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      connected: false,
+      provider: "openai",
+      reason: error?.message || "Unknown status error.",
+    });
+  }
+});
 function safeParseJson(text) {
   try {
     return JSON.parse(text);

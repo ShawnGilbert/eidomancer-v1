@@ -8,21 +8,32 @@ import { PackageActionsPanel } from "./components/PackageActionsPanel";
 import { GeneratedOutputsPanel } from "./components/GeneratedOutputsPanel";
 import { TipJarFooter } from "./components/TipJarFooter";
 
+// ✅ NEW
+import AIConnectionPanel from "./components/AIConnectionPanel";
+
 export default function App() {
   const store = useEidomancerStore();
 
   return (
     <main className="min-h-screen bg-[#020b2a] px-6 py-8 text-white">
       <div className="mx-auto max-w-7xl">
+
+        {/* ✅ NEW — AI CONNECTION PANEL */}
+        <div className="mb-6">
+          <AIConnectionPanel />
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-[1.8fr_1fr]">
           <QuestionPanel
-            question={store.question}
-            setQuestion={store.setQuestion}
-            prompts={starterPrompts}
-            onCast={store.castQuestion}
-            onClear={store.clearQuestion}
-            isCasting={store.isCasting}
-          />
+  question={store.question}
+  setQuestion={store.setQuestion}
+  prompts={starterPrompts}
+  onCast={store.castQuestion}
+  onClear={store.clearQuestion}
+  isCasting={store.isCasting}
+  aiConnected={store.aiConnected}
+  aiStatus={store.aiStatus}
+/>
 
           <RecentCastsPanel
             casts={store.recentCasts}
@@ -32,9 +43,12 @@ export default function App() {
         </div>
 
         <div className="mt-6 space-y-6">
-         <ActiveCastCard
+          <ActiveCastCard
   cast={store.activeCast}
   isCasting={store.isCasting}
+  aiConnected={store.aiConnected}
+  aiStatus={store.aiStatus}
+  aiMessage={store.aiMessage}
 />
 
           {store.activeCast && (

@@ -102,6 +102,9 @@ export function useEidomancerStore() {
   const [isGeneratingAsset, setIsGeneratingAsset] = useState(false);
   const [error, setError] = useState(null);
 
+  const [aiStatus, setAiStatus] = useState("checking");
+  const [aiMessage, setAiMessage] = useState("Checking the Ruliad...");
+
   useEffect(() => {
     saveCasts(recentCasts);
   }, [recentCasts]);
@@ -110,9 +113,49 @@ export function useEidomancerStore() {
     return recentCasts.find((item) => item.id === activeCastId) ?? null;
   }, [recentCasts, activeCastId]);
 
+  const aiConnected = aiStatus === "connected";
+
+  async function refreshAIStatus() {
+    try {
+      setAiStatus("checking");
+      setAiMessage("Checking the Ruliad...");
+
+      const response = await fetch("/api/ai/status");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.reason || "Failed to check AI connection.");
+      }
+
+      if (data?.connected) {
+        setAiStatus("connected");
+        setAiMessage("Connected to the Ruliad");
+      } else {
+        setAiStatus("disconnected");
+        setAiMessage(data?.reason || "AI connection is unavailable.");
+      }
+    } catch (err) {
+      setAiStatus("error");
+      setAiMessage(err?.message || "AI connection check failed.");
+    }
+  }
+
+  useEffect(() => {
+    refreshAIStatus();
+  }, []);
+
   async function castQuestion() {
     const trimmed = question.trim();
     if (!trimmed) return;
+
+    if (!aiConnected) {
+      setError(
+        aiStatus === "checking"
+          ? "The Ruliad is still being checked. Try again in a moment."
+          : aiMessage || "The Ruliad is silent. No cast can form."
+      );
+      return;
+    }
 
     try {
       setError(null);
@@ -220,6 +263,10 @@ export function useEidomancerStore() {
     isCasting,
     isGeneratingAsset,
     error,
+    aiStatus,
+    aiMessage,
+    aiConnected,
+    refreshAIStatus,
     castQuestion,
     generateAsset,
     generateAllAssets,

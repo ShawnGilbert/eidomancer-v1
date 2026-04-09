@@ -151,7 +151,7 @@ function buildSectionLookup(sections) {
   };
 
   for (const section of sections) {
-    if (section?.type && lookup.hasOwnProperty(section.type)) {
+    if (section?.type && Object.prototype.hasOwnProperty.call(lookup, section.type)) {
       lookup[section.type] = section;
     }
   }
@@ -174,7 +174,41 @@ function renderSectionCard(section, index) {
   );
 }
 
-export default function ActiveCastCard({ cast, isCasting = false }) {
+function EmptyState({ aiConnected, aiStatus, aiMessage }) {
+  let title = "No Active Cast";
+  let body =
+    "Ask a real question. Receive a symbolic cast. A modern, adaptive system for navigating uncertainty through pattern, tension, and insight.";
+
+  if (aiStatus === "checking") {
+    title = "Checking the Ruliad";
+    body = "Eidomancer is testing whether the interpretive channel is open.";
+  } else if (!aiConnected) {
+    title = "AI Connection Required";
+    body = aiMessage || "The Ruliad is silent. No interpretation can form.";
+  }
+
+  return (
+    <CardFrame dominantType="signal" className="p-8 md:p-10">
+      <div className="text-center">
+        <div className="text-[11px] uppercase tracking-[0.34em] text-slate-300/70">
+          Active Cast
+        </div>
+
+        <div className="mt-6 text-3xl font-semibold text-white">{title}</div>
+
+        <p className="mt-4 text-sm text-slate-300/80">{body}</p>
+      </div>
+    </CardFrame>
+  );
+}
+
+export default function ActiveCastCard({
+  cast,
+  isCasting = false,
+  aiConnected = false,
+  aiStatus = "checking",
+  aiMessage = "",
+}) {
   if (isCasting) {
     return (
       <CardFrame dominantType="signal" className="p-8 md:p-10">
@@ -193,7 +227,15 @@ export default function ActiveCastCard({ cast, isCasting = false }) {
     );
   }
 
-  if (!cast || typeof cast !== "object") return null;
+  if (!cast || typeof cast !== "object") {
+    return (
+      <EmptyState
+        aiConnected={aiConnected}
+        aiStatus={aiStatus}
+        aiMessage={aiMessage}
+      />
+    );
+  }
 
   const sections = getSections(cast);
   const dominantType = getDominantType(sections);
@@ -245,17 +287,12 @@ export default function ActiveCastCard({ cast, isCasting = false }) {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div>{renderSectionCard(sectionLookup.signal, 0)}</div>
-
         <div>
           <CoreCard cast={cast} title="Core Card" />
         </div>
-
         <div>{renderSectionCard(sectionLookup.pattern, 1)}</div>
-
         <div>{renderSectionCard(sectionLookup.echo, 2)}</div>
-
         <div className="hidden lg:block" />
-
         <div>{renderSectionCard(sectionLookup.tension, 3)}</div>
       </div>
 

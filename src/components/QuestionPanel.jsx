@@ -7,8 +7,25 @@ export function QuestionPanel({
   onCast,
   onClear,
   isCasting,
+
+  // ✅ NEW
+  aiConnected,
+  aiStatus,
 }) {
-  const canCast = question.trim().length > 0 && !isCasting;
+  const hasQuestion = question.trim().length > 0;
+
+  const canCast =
+    hasQuestion &&
+    !isCasting &&
+    aiConnected &&
+    aiStatus !== "checking";
+
+  function getButtonLabel() {
+    if (isCasting) return "Casting...";
+    if (aiStatus === "checking") return "Checking...";
+    if (!aiConnected) return "AI Offline";
+    return "Cast";
+  }
 
   return (
     <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-md">
@@ -61,7 +78,7 @@ export function QuestionPanel({
           disabled={!canCast}
           className="rounded-xl bg-cyan-500/80 px-5 py-2 text-sm font-medium text-white transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isCasting ? "Casting..." : "Cast"}
+          {getButtonLabel()}
         </button>
 
         <button
