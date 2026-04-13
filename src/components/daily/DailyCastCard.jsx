@@ -1,5 +1,6 @@
 // D:\eidomancer\src\components\daily\DailyCastCard.jsx
 
+import { useEffect, useState } from "react";
 import DailyShareButton from "./DailyShareButton";
 
 function getSectionContent(cast, type) {
@@ -43,12 +44,28 @@ export default function DailyCastCard({
   showPoem = true,
   className = "",
 }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!cast) return;
+
+    setVisible(false);
+
+    const timer = window.setTimeout(() => {
+      setVisible(true);
+    }, 50);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [cast]);
+
   if (!cast) return null;
 
   const coreTitle = cast?.coreCard?.title || cast?.title || "Daily Cast";
   const coreSubtitle = cast?.coreCard?.subtitle || cast?.subtitle || "";
   const coreHook = cast?.coreCard?.hook || "";
-  const dailyFocus = cast?.metadata?.dailyFocus || "";
+  const dailyFocus = cast?.metadata?.dailyFocus || cast?.question || "";
 
   const signal = getSectionContent(cast, "signal");
   const tension = getSectionContent(cast, "tension");
@@ -58,7 +75,13 @@ export default function DailyCastCard({
   const actionPrompt = tension || pattern || signal;
 
   return (
-    <div className={`space-y-6 ${className}`.trim()}>
+    <div
+      className={`space-y-6 transform transition-all duration-500 ease-out ${
+        visible
+          ? "opacity-100 scale-100 translate-y-0"
+          : "opacity-0 scale-[0.98] translate-y-3"
+      } ${className}`.trim()}
+    >
       <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>

@@ -23,6 +23,7 @@ export default function useDailyCast() {
   const [error, setError] = useState("");
   const [shareMessage, setShareMessage] = useState("");
   const [focusValue, setFocusValue] = useState("");
+  const [inputResetKey, setInputResetKey] = useState(0);
 
   useEffect(() => {
     detectReturnEvent();
@@ -41,10 +42,6 @@ export default function useDailyCast() {
         const savedFocus = getDailyFocus(dateKey);
         const stored = getTodayDailyCast(dateKey);
 
-        if (!cancelled) {
-          setFocusValue(savedFocus);
-        }
-
         const storedMatchesFocus =
           stored &&
           (stored?.metadata?.dailyFocus || "").trim() === savedFocus.trim();
@@ -62,14 +59,17 @@ export default function useDailyCast() {
             castId: stored?.id || null,
             castType: stored?.castType || "daily",
             engagementMode:
-              stored?.metadata?.engagementMode || stored?.engagement?.mode || null,
+              stored?.metadata?.engagementMode ||
+              stored?.engagement?.mode ||
+              null,
             focusApplied: Boolean(savedFocus),
           });
 
-          return;
+          // Do not return; allow background refresh.
         }
 
         const history = getRecentDailyCasts(7);
+
         const generated = await generateDailyCast({
           question: savedFocus,
           sourceText: "",
@@ -136,13 +136,108 @@ export default function useDailyCast() {
   }, []);
 
   useEffect(() => {
+    if (!selectedCast || selectedCast.mode !== "no-ai") {
+      return;
+    }
+
+    let cancelled = false;
+    let retryTimer = null;
+
+    async function retryCast() {
+      const dateKey = getDateKey();
+      const savedFocus = getDailyFocus(dateKey);
+
+      try {
+        const history = getRecentDailyCasts(7).filter(
+          (cast) => cast?.dateKey !== dateKey
+        );
+
+        const generated = await generateDailyCast({
+          question: savedFocus,
+          sourceText: "",
+          userContext: "",
+          history,
+          profile: {
+            theme: "The Emergent Ones",
+          },
+        });
+
+        if (generated?.mode === "no-ai") {
+          if (!cancelled) {
+            retryTimer = window.setTimeout(retryCast, 3000);
+          }
+          return;
+        }
+
+        const castWithFocus = {
+          ...generated,
+          metadata: {
+            ...(generated?.metadata || {}),
+            dailyFocus: savedFocus,
+          },
+        };
+
+        saveDailyCast(castWithFocus);
+
+        logEvent("daily_cast_generated", {
+          dateKey: castWithFocus?.dateKey || dateKey,
+          castId: castWithFocus?.id || null,
+          castType: castWithFocus?.castType || "daily",
+          engagementMode:
+            castWithFocus?.metadata?.engagementMode ||
+            castWithFocus?.engagement?.mode ||
+            null,
+          continuityCount:
+            castWithFocus?.metadata?.continuityCount || history.length || 0,
+          focusApplied: Boolean(savedFocus),
+          generationReason: "auto_reconnect",
+        });
+
+        logEvent("daily_cast_viewed", {
+          source: "auto_reconnect",
+          dateKey: castWithFocus?.dateKey || dateKey,
+          castId: castWithFocus?.id || null,
+          castType: castWithFocus?.castType || "daily",
+          engagementMode:
+            castWithFocus?.metadata?.engagementMode ||
+            castWithFocus?.engagement?.mode ||
+            null,
+          focusApplied: Boolean(savedFocus),
+        });
+
+        if (!cancelled) {
+          setSelectedCast(castWithFocus);
+          setRecentCasts(getRecentDailyCasts(7));
+          setStatus("ready");
+          setError("");
+        }
+      } catch {
+        if (!cancelled) {
+          retryTimer = window.setTimeout(retryCast, 3000);
+        }
+      }
+    }
+
+    retryTimer = window.setTimeout(retryCast, 2000);
+
+    return () => {
+      cancelled = true;
+      if (retryTimer) {
+        window.clearTimeout(retryTimer);
+      }
+    };
+  }, [selectedCast]);
+
+  useEffect(() => {
     if (!shareMessage) return;
 
     const timer = window.setTimeout(() => {
       setShareMessage("");
     }, 2000);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [shareMessage]);
 
   async function handleShare() {
@@ -164,7 +259,9 @@ export default function useDailyCast() {
         castId: selectedCast?.id || null,
         castType: selectedCast?.castType || "daily",
         engagementMode:
-          selectedCast?.metadata?.engagementMode || selectedCast?.engagement?.mode || null,
+          selectedCast?.metadata?.engagementMode ||
+          selectedCast?.engagement?.mode ||
+          null,
         shareVariant: payload.preferredText ? "preferred" : "full",
         focusApplied: Boolean(selectedCast?.metadata?.dailyFocus),
       });
@@ -182,7 +279,8 @@ export default function useDailyCast() {
       dateKey: cast?.dateKey || null,
       castId: cast?.id || null,
       castType: cast?.castType || "daily",
-      engagementMode: cast?.metadata?.engagementMode || cast?.engagement?.mode || null,
+      engagementMode:
+        cast?.metadata?.engagementMode || cast?.engagement?.mode || null,
       focusApplied: Boolean(cast?.metadata?.dailyFocus),
     });
 
@@ -191,7 +289,8 @@ export default function useDailyCast() {
       dateKey: cast?.dateKey || null,
       castId: cast?.id || null,
       castType: cast?.castType || "daily",
-      engagementMode: cast?.metadata?.engagementMode || cast?.engagement?.mode || null,
+      engagementMode:
+        cast?.metadata?.engagementMode || cast?.engagement?.mode || null,
       focusApplied: Boolean(cast?.metadata?.dailyFocus),
     });
   }
@@ -209,8 +308,6 @@ export default function useDailyCast() {
       } else {
         clearDailyFocus(dateKey);
       }
-
-      setFocusValue(normalizedFocus);
 
       const history = getRecentDailyCasts(7).filter(
         (cast) => cast?.dateKey !== dateKey
@@ -265,6 +362,10 @@ export default function useDailyCast() {
       setSelectedCast(castWithFocus);
       setRecentCasts(getRecentDailyCasts(7));
       setStatus("ready");
+
+      // Clear the draft box after a successful cast submit.
+      setFocusValue("");
+      setInputResetKey((key) => key + 1);
     } catch (err) {
       setError(err?.message || "Failed to regenerate daily cast.");
       setStatus("error");
@@ -295,7 +396,7 @@ export default function useDailyCast() {
     error,
     shareMessage,
     focusValue,
-    setFocusValue,
+    inputResetKey,
     handleShare,
     handleSelectRecentCast,
     submitFocus,

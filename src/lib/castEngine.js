@@ -538,44 +538,57 @@ export async function generateCast(input) {
     engagementProfile,
   });
 
-  try {
-    const raw = await callLLM(prompt);
-    const parsed = tryParseJSON(raw);
+  // 🔁 NEW: retry logic
+  const MAX_RETRIES = 5;
+  const RETRY_DELAY = 2000; // 2 seconds
 
-    if (parsed && parsed.sections) {
-      const adaptedSections = (parsed.sections || []).map((section) => {
-        const normalizedType = normalizeType(section?.type);
-        const originalContent =
-          typeof section?.content === "string" ? section.content : "";
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const raw = await callLLM(prompt);
+      const parsed = tryParseJSON(raw);
 
-        return {
-          ...section,
-          type: normalizedType,
-          content: adaptSectionContent(
-            normalizedType,
-            originalContent,
-            engagementProfile
-          ),
-        };
-      });
+      if (parsed && parsed.sections) {
+        const adaptedSections = (parsed.sections || []).map((section) => {
+          const normalizedType = normalizeType(section?.type);
+          const originalContent =
+            typeof section?.content === "string" ? section.content : "";
 
-      const adaptedCoreCard = adaptCoreCard(parsed.coreCard, engagementProfile);
+          return {
+            ...section,
+            type: normalizedType,
+            content: adaptSectionContent(
+              normalizedType,
+              originalContent,
+              engagementProfile
+            ),
+          };
+        });
 
-      return createCast({
-        ...parsed,
-        coreCard: adaptedCoreCard,
-        sections: adaptedSections,
-        input: cleanedQuestion,
-        question: cleanedQuestion,
-        sourceText: cleanedSource,
-        userContext: payload.userContext,
-        engagement,
-        metadata,
-      });
+        const adaptedCoreCard = adaptCoreCard(parsed.coreCard, engagementProfile);
+
+        return createCast({
+          ...parsed,
+          coreCard: adaptedCoreCard,
+          sections: adaptedSections,
+          input: cleanedQuestion,
+          question: cleanedQuestion,
+          sourceText: cleanedSource,
+          userContext: payload.userContext,
+          engagement,
+          metadata,
+        });
+      }
+
+      // if bad response, retry
+      throw new Error("Invalid AI response");
+    } catch (err) {
+      // last attempt → fail
+      if (attempt === MAX_RETRIES - 1) {
+        return buildNoAIState(cleanedQuestion, engagement, metadata);
+      }
+
+      // wait before retry
+      await new Promise((res) => setTimeout(res, RETRY_DELAY));
     }
-
-    return buildNoAIState(cleanedQuestion, engagement, metadata);
-  } catch {
-    return buildNoAIState(cleanedQuestion, engagement, metadata);
   }
 }

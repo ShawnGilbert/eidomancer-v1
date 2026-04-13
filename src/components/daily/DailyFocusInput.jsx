@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 export default function DailyFocusInput({
   initialValue = "",
+  resetKey = 0,
+  appliedFocus = "",
   onSubmit,
   onClear,
   isLoading = false,
@@ -14,6 +16,10 @@ export default function DailyFocusInput({
   useEffect(() => {
     setValue(initialValue || "");
   }, [initialValue]);
+
+  useEffect(() => {
+    setValue("");
+  }, [resetKey]);
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -30,6 +36,8 @@ export default function DailyFocusInput({
     setValue("");
     onClear?.();
   }
+
+  const hasAppliedFocus = Boolean(String(appliedFocus || "").trim());
 
   return (
     <div
@@ -80,6 +88,16 @@ export default function DailyFocusInput({
           </button>
         </div>
       </form>
+
+      <div className="mt-4 rounded-2xl border border-cyan-400/15 bg-cyan-500/10 px-4 py-3">
+        <div className="text-[11px] uppercase tracking-[0.2em] text-cyan-200/65">
+          Applied Focus
+        </div>
+
+        <div className="mt-2 text-sm leading-6 text-white/85">
+          {hasAppliedFocus ? appliedFocus : "No explicit focus applied to the current cast."}
+        </div>
+      </div>
     </div>
   );
 }
