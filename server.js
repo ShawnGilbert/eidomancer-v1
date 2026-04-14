@@ -7,7 +7,7 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
-
+console.log("SERVER FILE LOADED");
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -18,6 +18,7 @@ app.use(express.json());
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
+
 app.get("/api/ai/status", async (_req, res) => {
   try {
     if (!process.env.OPENAI_API_KEY) {
@@ -41,6 +42,7 @@ app.get("/api/ai/status", async (_req, res) => {
     });
   }
 });
+
 function safeParseJson(text) {
   try {
     return JSON.parse(text);
@@ -170,39 +172,75 @@ Question: ${question}
 });
 
 // ----------------------------------
-// New generic generation route
+// Generic generation route
 // Used by castEngine.js
 // ----------------------------------
 
 app.post("/api/generate", async (req, res) => {
   try {
-    const prompt = req.body?.prompt?.trim();
-
-    if (!prompt) {
-      return res.status(400).json({ error: "A prompt is required." });
-    }
-
+    const prompt = typeof req.body?.prompt === "string" ? req.body.prompt.trim() : "";
+    const imagePrompt =
+      typeof req.body?.imagePrompt === "string"
+        ? req.body.imagePrompt.trim()
+        : "";
+console.log("GENERATE BODY:", req.body);
+console.log("PROMPT:", prompt);
+console.log("IMAGE PROMPT:", imagePrompt);
     if (!process.env.OPENAI_API_KEY) {
       return res
         .status(500)
         .json({ error: "Missing OPENAI_API_KEY on the server." });
     }
 
-    const response = await openai.responses.create({
-      model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
-      input: prompt,
-    });
-
-    const text = extractTextFromResponse(response);
-
-    if (!text) {
-      return res.status(500).json({
-        error: "Model returned an empty response.",
-        raw: response,
+    // IMAGE GENERATION
+    if (imagePrompt && !prompt) {
+      const image = await openai.images.generate({
+        model: "gpt-image-1",
+        prompt: imagePrompt,
+        size: "1024x1024",
       });
+
+      console.log("RAW IMAGE RESPONSE:", image);
+
+      const imageData = image?.data?.[0];
+      let imageUrl = "";
+
+      if (imageData?.url) {
+        imageUrl = imageData.url;
+      } else if (imageData?.b64_json) {
+        imageUrl = `data:image/png;base64,${imageData.b64_json}`;
+      }
+
+      if (!imageUrl) {
+        return res.status(500).json({
+          error: "Image generation failed.",
+          raw: image,
+        });
+      }
+
+      return res.json({ imageUrl });
     }
 
-    return res.json({ text });
+    // TEXT GENERATION
+    if (prompt) {
+      const response = await openai.responses.create({
+        model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+        input: prompt,
+      });
+
+      const text = extractTextFromResponse(response);
+
+      if (!text) {
+        return res.status(500).json({
+          error: "Model returned an empty response.",
+          raw: response,
+        });
+      }
+
+      return res.json({ text });
+    }
+
+    return res.status(400).json({ error: "No prompt provided." });
   } catch (error) {
     console.error("Generate error:", error);
     return res.status(500).json({

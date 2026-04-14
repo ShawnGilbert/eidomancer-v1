@@ -37,6 +37,7 @@ export default function DailyFocusInput({
     onClear?.();
   }
 
+  const hasTypedFocus = Boolean(value.trim());
   const hasAppliedFocus = Boolean(String(appliedFocus || "").trim());
 
   return (
@@ -44,58 +45,60 @@ export default function DailyFocusInput({
       className={`rounded-3xl border border-white/10 bg-white/5 p-5 ${className}`.trim()}
     >
       <div className="text-xs uppercase tracking-[0.2em] text-cyan-200/70">
-        Today’s Focus
+        Refine Today’s Cast
       </div>
 
-      <div className="mt-2 text-sm leading-6 text-white/70">
-        Give Eidomancer one question, tension, or area of attention for today.
+      <div className="mt-2 text-sm leading-6 text-white/72">
+        Offer one question, tension, or area of attention. Keep it simple and real.
       </div>
 
       <form onSubmit={handleSubmit} className="mt-4 space-y-3">
         <textarea
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          placeholder="What is today really about?"
+          placeholder="What is pressing on you today?"
           rows={4}
           disabled={isLoading}
-          className="w-full rounded-2xl border border-white/10 bg-[#0b1622] px-4 py-3 text-sm leading-6 text-white placeholder:text-white/35 outline-none transition focus:border-cyan-400/40"
+          className="w-full rounded-2xl border border-white/10 bg-[#0b1622] px-4 py-3 text-sm leading-6 text-white placeholder:text-white/35 outline-none transition focus:border-cyan-400/40 focus:bg-[#0d1927]"
         />
 
         <div className="flex flex-wrap gap-3">
           <button
             type="submit"
-            disabled={isLoading || !value.trim()}
+            disabled={isLoading || !hasTypedFocus}
             className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${
-              isLoading || !value.trim()
+              isLoading || !hasTypedFocus
                 ? "cursor-not-allowed border border-white/10 bg-white/5 text-white/35"
                 : "border border-cyan-400/30 bg-cyan-500/15 text-cyan-100 hover:bg-cyan-500/25"
             }`}
           >
-            {isLoading ? "Casting..." : "Cast From Focus"}
+            {isLoading ? "Casting..." : "Refine Cast"}
           </button>
 
           <button
             type="button"
             onClick={handleClear}
-            disabled={isLoading || !value.trim()}
+            disabled={isLoading || (!hasTypedFocus && !hasAppliedFocus)}
             className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${
-              isLoading || !value.trim()
+              isLoading || (!hasTypedFocus && !hasAppliedFocus)
                 ? "cursor-not-allowed border border-white/10 bg-white/5 text-white/35"
                 : "border border-white/10 bg-white/5 text-white/75 hover:bg-white/10"
             }`}
           >
-            Clear
+            Clear Focus
           </button>
         </div>
       </form>
 
       <div className="mt-4 rounded-2xl border border-cyan-400/15 bg-cyan-500/10 px-4 py-3">
         <div className="text-[11px] uppercase tracking-[0.2em] text-cyan-200/65">
-          Applied Focus
+          Current Lens
         </div>
 
         <div className="mt-2 text-sm leading-6 text-white/85">
-          {hasAppliedFocus ? appliedFocus : "No explicit focus applied to the current cast."}
+          {hasAppliedFocus
+            ? appliedFocus
+            : "No explicit focus is shaping the current cast."}
         </div>
       </div>
     </div>

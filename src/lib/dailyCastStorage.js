@@ -4,7 +4,10 @@ const STORAGE_KEY = "eidomancer_daily_casts_v1";
 const MAX_STORED_CASTS = 30;
 
 function isBrowser() {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+  return (
+    typeof window !== "undefined" &&
+    typeof window.localStorage !== "undefined"
+  );
 }
 
 function safeJsonParse(value, fallback) {
@@ -24,15 +27,32 @@ function isValidCast(candidate) {
   );
 }
 
-function normalizeCast(cast) {
-  if (!isValidCast(cast)) return null;
+function stripHeavyFields(cast) {
+  if (!cast || typeof cast !== "object") return cast;
 
   return {
     ...cast,
-    dateKey: String(cast.dateKey).trim(),
+    coreCard:
+      cast.coreCard && typeof cast.coreCard === "object"
+        ? {
+            ...cast.coreCard,
+            imageUrl: "",
+          }
+        : cast.coreCard,
+  };
+}
+
+function normalizeCast(cast) {
+  if (!isValidCast(cast)) return null;
+
+  const stripped = stripHeavyFields(cast);
+
+  return {
+    ...stripped,
+    dateKey: String(stripped.dateKey).trim(),
     createdAt:
-      typeof cast.createdAt === "string" && cast.createdAt.trim()
-        ? cast.createdAt
+      typeof stripped.createdAt === "string" && stripped.createdAt.trim()
+        ? stripped.createdAt
         : new Date().toISOString(),
   };
 }
@@ -87,7 +107,11 @@ function readStorage() {
 function writeStorage(casts = []) {
   if (!isBrowser()) return [];
 
-  const cleaned = sortNewestFirst(dedupeByDateKey(casts)).slice(0, MAX_STORED_CASTS);
+  const cleaned = sortNewestFirst(dedupeByDateKey(casts)).slice(
+    0,
+    MAX_STORED_CASTS
+  );
+
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
   return cleaned;
 }
@@ -102,7 +126,10 @@ export function saveDailyCast(cast) {
     throw new Error("saveDailyCast requires a cast object with a valid dateKey.");
   }
 
-  const existing = readStorage().filter((item) => item.dateKey !== normalized.dateKey);
+  const existing = readStorage().filter(
+    (item) => item.dateKey !== normalized.dateKey
+  );
+
   return writeStorage([normalized, ...existing]);
 }
 
@@ -114,8 +141,7 @@ export function getTodayDailyCast(dateKey) {
 }
 
 export function getRecentDailyCasts(limit = 7) {
-  const safeLimit =
-    Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 7;
+  const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 7;
 
   return readStorage().slice(0, safeLimit);
 }

@@ -8,18 +8,29 @@ function formatGenerationSource(selectedCast) {
   const dailyFocus = selectedCast?.metadata?.dailyFocus || "";
 
   if (reason === "focus_submitted" && dailyFocus) {
-    return "Regenerated from focus";
+    return "This cast was shaped by the focus you submitted.";
   }
 
   if (reason === "focus_cleared") {
-    return "Regenerated after focus cleared";
+    return "This cast was regenerated after your focus was cleared.";
   }
 
   if (dailyFocus) {
-    return "Focus-guided daily cast";
+    return "This cast is being guided by an active focus.";
   }
 
-  return "Default daily cast";
+  return "This is today’s default cast.";
+}
+
+function SidebarPanel({ label, children, className = "" }) {
+  return (
+    <div className={`rounded-3xl border border-white/10 bg-white/5 p-5 ${className}`.trim()}>
+      <div className="text-xs uppercase tracking-[0.2em] text-cyan-200/70">
+        {label}
+      </div>
+      <div className="mt-3">{children}</div>
+    </div>
+  );
 }
 
 export default function DailySidebar({
@@ -34,36 +45,49 @@ export default function DailySidebar({
   const postureTone = selectedCast?.engagement?.tone
     ? ` · ${selectedCast.engagement.tone}`
     : "";
+
   const dailyFocus = selectedCast?.metadata?.dailyFocus || "";
   const generationLabel = formatGenerationSource(selectedCast);
+  const isPremium = Boolean(capabilities?.isPremium);
+  const historyLimit = capabilities?.historyLimit ?? 3;
 
   return (
     <div className={`space-y-6 ${className}`.trim()}>
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-        <div className="text-xs uppercase tracking-[0.2em] text-cyan-200/70">
-          Access
-        </div>
-        <div className="mt-2 text-lg font-semibold text-white">
-          {capabilities?.isPremium ? "Premium" : "Free"}
-        </div>
-        <div className="mt-2 text-sm leading-6 text-white/75">
-          Free users can view today’s cast and the most recent{" "}
-          {capabilities?.historyLimit ?? 3} saved cards.
-        </div>
-      </div>
-
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+      <SidebarPanel label="Membership">
         <div className="flex items-center justify-between gap-3">
-          <div className="text-xs uppercase tracking-[0.2em] text-cyan-200/70">
-            Cast Source
+          <div className="text-lg font-semibold text-white">
+            {isPremium ? "Premium" : "Free"}
           </div>
-          <div className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-cyan-200/80">
-            {dailyFocus ? "Focused" : "Default"}
+          <div
+            className={`rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] ${
+              isPremium
+                ? "border-fuchsia-400/20 bg-fuchsia-500/10 text-fuchsia-200/80"
+                : "border-white/10 bg-white/5 text-white/60"
+            }`}
+          >
+            {isPremium ? "Expanded" : "Standard"}
           </div>
         </div>
 
-        <div className="mt-3 text-sm leading-6 text-white/80">
-          {generationLabel}
+        <div className="mt-3 text-sm leading-6 text-white/75">
+          {isPremium
+            ? "Premium users can explore a deeper reading history and expanded continuity."
+            : `Free users can view today’s cast and the most recent ${historyLimit} saved cards.`}
+        </div>
+      </SidebarPanel>
+
+      <SidebarPanel label="Today’s Lens">
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm leading-6 text-white/80">{generationLabel}</div>
+          <div
+            className={`rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] ${
+              dailyFocus
+                ? "border-cyan-400/20 bg-cyan-500/10 text-cyan-200/80"
+                : "border-white/10 bg-white/5 text-white/60"
+            }`}
+          >
+            {dailyFocus ? "Focused" : "Open"}
+          </div>
         </div>
 
         {dailyFocus ? (
@@ -76,36 +100,34 @@ export default function DailySidebar({
             </div>
           </div>
         ) : (
-          <div className="mt-3 text-sm text-white/55">
-            No explicit focus set for today.
+          <div className="mt-3 text-sm leading-6 text-white/55">
+            No explicit focus is shaping today’s cast yet.
           </div>
         )}
-      </div>
+      </SidebarPanel>
 
       <RecentDailyCasts
         casts={recentCasts}
-        historyLimit={capabilities?.historyLimit ?? 3}
+        historyLimit={historyLimit}
         canViewFullHistory={Boolean(capabilities?.canViewFullHistory)}
         onSelectCast={onSelectCast}
       />
 
-      {showAnalytics ? (
-        <DailyAnalyticsPanel dateKey={selectedCast?.dateKey} />
-      ) : null}
-
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-        <div className="text-xs uppercase tracking-[0.2em] text-cyan-200/70">
-          Today’s Posture
-        </div>
-        <div className="mt-2 text-sm leading-6 text-white/75">
-          {postureTitle}
+      <SidebarPanel label="Today’s Posture">
+        <div className="text-sm leading-6 text-white/75">
+          <span className="text-white">{postureTitle}</span>
           {postureTone}
         </div>
-        <div className="mt-3 text-sm text-white/60">
-          This stays subtle. It shapes how the cast speaks without turning the
-          user into a label.
+        <div className="mt-3 text-sm leading-6 text-white/60">
+          This stays subtle. It influences the tone of the reading without reducing you to a fixed label.
         </div>
-      </div>
+      </SidebarPanel>
+
+      {showAnalytics ? (
+        <div className="opacity-80">
+          <DailyAnalyticsPanel dateKey={selectedCast?.dateKey} />
+        </div>
+      ) : null}
     </div>
   );
 }

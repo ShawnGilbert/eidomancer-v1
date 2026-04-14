@@ -295,26 +295,73 @@ RETURN STRICT JSON:
 `;
 }
 
+function buildImagePrompt(coreCard, sections) {
+  const title = coreCard?.title || "";
+  const subtitle = coreCard?.subtitle || "";
+  const hook = coreCard?.hook || "";
+
+  const signal = sections.find((s) => s.type === "signal")?.content || "";
+  const pattern = sections.find((s) => s.type === "pattern")?.content || "";
+  const tension = sections.find((s) => s.type === "tension")?.content || "";
+
+  return `
+Create a tarot-style symbolic illustration for an Eidomancer core card.
+
+Card title: ${title}
+Card concept: ${subtitle}
+Card emotional tone: ${hook}
+
+Visual inspirations:
+- ${signal}
+- ${pattern}
+- ${tension}
+
+Style requirements:
+- vertical tarot card composition
+- cinematic lighting
+- high contrast
+- symbolic rather than literal
+- mystical but grounded
+- centered focal subject
+- dark or atmospheric background
+- subtle luminous accents
+- no text, captions, letters, or typography inside the image
+
+The final image should feel like a dramatic, shareable tarot card illustration.
+`.trim();
+}
+
 // -------------------------
 // API
 // -------------------------
 
-async function callLLM(prompt) {
+async function callLLM({ prompt = null, imagePrompt = null }) {
+  const body = {};
+
+  if (typeof prompt === "string" && prompt.trim()) {
+    body.prompt = prompt.trim();
+  }
+
+  if (typeof imagePrompt === "string" && imagePrompt.trim()) {
+    body.imagePrompt = imagePrompt.trim();
+  }
+
   const res = await fetch("http://localhost:3001/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify(body),
   });
 
   const text = await res.text();
 
-  if (!res.ok) throw new Error("LLM failed");
+  if (!res.ok) {
+    throw new Error("LLM failed");
+  }
 
   try {
-    const data = JSON.parse(text);
-    return data.text || data.output || data.result || "";
+    return JSON.parse(text);
   } catch {
-    return text;
+    return { text };
   }
 }
 
@@ -371,6 +418,7 @@ function createCast({
   userContext,
   engagement,
   metadata,
+  imageUrl = "",
 }) {
   const map = new Map();
 
@@ -389,6 +437,8 @@ function createCast({
   const finalSections = SECTION_ORDER.map((t) => map.get(t));
   const echoSection = finalSections.find((s) => s.type === "echo");
 
+  const imagePrompt = buildImagePrompt(coreCard, finalSections);
+
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
     createdAt: new Date().toISOString(),
@@ -406,6 +456,8 @@ function createCast({
       title: coreCard?.title || title || "Untitled",
       subtitle: coreCard?.subtitle || "",
       hook: coreCard?.hook || "",
+      imagePrompt,
+      imageUrl: coreCard?.imageUrl || imageUrl || "",
     },
 
     shareables: {
@@ -439,6 +491,13 @@ function buildNoAIState(input, engagement = null, metadata = {}) {
     echo: "",
     engagement,
     metadata,
+    coreCard: {
+      title: "Connection Required",
+      subtitle: "Live AI access is needed",
+      hook: "The ritual waits for a signal.",
+      imagePrompt: "",
+      imageUrl: "",
+    },
     sections: [
       createSection("signal", "Eidomancer cannot generate a cast."),
       createSection("tension", "AI layer unavailable."),
@@ -538,14 +597,15 @@ export async function generateCast(input) {
     engagementProfile,
   });
 
-  // 🔁 NEW: retry logic
   const MAX_RETRIES = 5;
-  const RETRY_DELAY = 2000; // 2 seconds
+  const RETRY_DELAY = 2000;
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      const raw = await callLLM(prompt);
-      const parsed = tryParseJSON(raw);
+      const rawResponse = await callLLM({ prompt });
+      const rawText =
+        rawResponse?.text || rawResponse?.output || rawResponse?.result || "";
+      const parsed = tryParseJSON(rawText);
 
       if (parsed && parsed.sections) {
         const adaptedSections = (parsed.sections || []).map((section) => {
@@ -566,9 +626,29 @@ export async function generateCast(input) {
 
         const adaptedCoreCard = adaptCoreCard(parsed.coreCard, engagementProfile);
 
+        let imageUrl = "";
+
+        try {
+          const imagePrompt = buildImagePrompt(adaptedCoreCard, adaptedSections);
+
+          if (imagePrompt) {
+            const imageResponse = await callLLM({ imagePrompt });
+            imageUrl =
+              imageResponse?.imageUrl ||
+              imageResponse?.url ||
+              imageResponse?.image ||
+              "";
+          }
+        } catch (imageError) {
+          console.warn("Eidomancer image generation failed:", imageError);
+        }
+
         return createCast({
           ...parsed,
-          coreCard: adaptedCoreCard,
+          coreCard: {
+            ...adaptedCoreCard,
+            imageUrl,
+          },
           sections: adaptedSections,
           input: cleanedQuestion,
           question: cleanedQuestion,
@@ -576,18 +656,16 @@ export async function generateCast(input) {
           userContext: payload.userContext,
           engagement,
           metadata,
+          imageUrl,
         });
       }
 
-      // if bad response, retry
       throw new Error("Invalid AI response");
     } catch (err) {
-      // last attempt → fail
       if (attempt === MAX_RETRIES - 1) {
         return buildNoAIState(cleanedQuestion, engagement, metadata);
       }
 
-      // wait before retry
       await new Promise((res) => setTimeout(res, RETRY_DELAY));
     }
   }

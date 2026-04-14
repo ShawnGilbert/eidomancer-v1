@@ -5,39 +5,57 @@ function getSectionContent(cast, type) {
   return cast.sections.find((section) => section?.type === type)?.content || "";
 }
 
+function formatDateLabel(dateKey = "") {
+  if (!dateKey || dateKey === "Locked") return dateKey || "Recent";
+
+  const date = new Date(`${dateKey}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return dateKey;
+
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 function HistoryCard({ cast, isLocked = false, onSelect }) {
   const title = cast?.coreCard?.title || cast?.title || "Untitled Cast";
   const subtitle = cast?.coreCard?.subtitle || cast?.subtitle || "";
   const echo = cast?.echo || getSectionContent(cast, "echo") || "";
   const dailyFocus = cast?.metadata?.dailyFocus || "";
+  const dateLabel = formatDateLabel(cast?.dateKey);
 
   return (
     <button
       type="button"
       onClick={() => !isLocked && onSelect?.(cast)}
       disabled={isLocked}
-      className={`w-full rounded-2xl border p-4 text-left transition ${
+      className={`w-full rounded-2xl border p-4 text-left transition duration-200 ${
         isLocked
-          ? "cursor-not-allowed border-white/10 bg-white/5 opacity-60"
-          : "border-white/10 bg-white/5 hover:border-cyan-400/30 hover:bg-white/10"
+          ? "cursor-not-allowed border-white/10 bg-white/[0.04] opacity-70"
+          : "border-white/10 bg-white/[0.04] hover:border-cyan-400/30 hover:bg-white/[0.07]"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="text-xs uppercase tracking-[0.2em] text-cyan-200/70">
-          {cast?.dateKey || "Recent"}
+        <div className="text-[11px] uppercase tracking-[0.22em] text-cyan-200/65">
+          {dateLabel}
         </div>
 
         {!isLocked && dailyFocus ? (
-          <div className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-cyan-200/80">
+          <div className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-cyan-200/80">
             Focused
           </div>
         ) : null}
       </div>
 
-      <div className="mt-2 text-base font-semibold text-white">{title}</div>
+      <div className="mt-3 text-base font-semibold leading-6 text-white">
+        {title}
+      </div>
 
       {subtitle ? (
-        <div className="mt-1 text-sm text-white/70">{subtitle}</div>
+        <div className="mt-1 text-sm leading-5 text-white/68">
+          {subtitle}
+        </div>
       ) : null}
 
       {!isLocked && dailyFocus ? (
@@ -51,8 +69,15 @@ function HistoryCard({ cast, isLocked = false, onSelect }) {
         </div>
       ) : null}
 
-      <div className="mt-3 text-sm text-white/75 line-clamp-3">
-        {isLocked ? "Premium unlock: view deeper recent history." : echo || "No echo available."}
+      <div className="mt-3">
+        <div className="text-[10px] uppercase tracking-[0.18em] text-white/40">
+          Remember this
+        </div>
+        <div className="mt-1 line-clamp-3 text-sm leading-6 text-white/74">
+          {isLocked
+            ? "Unlock premium to revisit a deeper history of past casts."
+            : echo || "No echo available yet."}
+        </div>
       </div>
     </button>
   );
@@ -66,17 +91,26 @@ export default function RecentDailyCasts({
   className = "",
 }) {
   const visibleHistory = Array.isArray(casts) ? casts.slice(0, historyLimit) : [];
-  const hiddenHistoryCount = Math.max(0, (casts?.length || 0) - visibleHistory.length);
+  const hiddenHistoryCount = Math.max(
+    0,
+    (casts?.length || 0) - visibleHistory.length
+  );
 
   return (
-    <div className={`rounded-3xl border border-white/10 bg-white/5 p-5 ${className}`.trim()}>
-      <div className="flex items-center justify-between">
+    <div
+      className={`rounded-3xl border border-white/10 bg-white/5 p-5 ${className}`.trim()}
+    >
+      <div className="flex items-center justify-between gap-3">
         <div className="text-xs uppercase tracking-[0.2em] text-cyan-200/70">
           Recent Casts
         </div>
-        <div className="text-xs text-white/50">
+        <div className="text-xs text-white/45">
           {visibleHistory.length}/{casts?.length || 0}
         </div>
+      </div>
+
+      <div className="mt-2 text-sm leading-6 text-white/58">
+        Return to the most recent readings and notice what is repeating.
       </div>
 
       <div className="mt-4 space-y-3">
@@ -89,12 +123,14 @@ export default function RecentDailyCasts({
             />
           ))
         ) : (
-          <div className="text-sm text-white/60">No recent casts yet.</div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/60">
+            No recent casts yet.
+          </div>
         )}
 
         {!canViewFullHistory && hiddenHistoryCount > 0 ? (
           <HistoryCard
-            cast={{ dateKey: "Locked", title: "Premium History" }}
+            cast={{ dateKey: "Locked", title: "Deeper History" }}
             isLocked
           />
         ) : null}

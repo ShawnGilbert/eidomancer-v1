@@ -2,31 +2,31 @@ import React from "react";
 
 const FRAME_THEMES = {
   signal: {
-    accent: "rgba(168, 85, 247, 0.75)", // purple
+    accent: "rgba(168, 85, 247, 0.75)",
     glow: "rgba(168, 85, 247, 0.18)",
     wash: "from-violet-500/12 via-fuchsia-500/6 to-cyan-400/10",
     rootStyle: "neural",
   },
   tension: {
-    accent: "rgba(251, 146, 60, 0.78)", // orange
+    accent: "rgba(251, 146, 60, 0.78)",
     glow: "rgba(251, 146, 60, 0.2)",
     wash: "from-orange-500/14 via-rose-500/8 to-yellow-400/10",
     rootStyle: "lightning",
   },
   pattern: {
-    accent: "rgba(96, 165, 250, 0.78)", // blue
+    accent: "rgba(96, 165, 250, 0.78)",
     glow: "rgba(96, 165, 250, 0.18)",
     wash: "from-sky-500/12 via-cyan-500/6 to-indigo-400/10",
     rootStyle: "geometric",
   },
   echo: {
-    accent: "rgba(232, 121, 249, 0.76)", // fuchsia
+    accent: "rgba(232, 121, 249, 0.76)",
     glow: "rgba(232, 121, 249, 0.18)",
     wash: "from-fuchsia-500/12 via-pink-500/8 to-violet-400/10",
     rootStyle: "flow",
   },
   action: {
-    accent: "rgba(74, 222, 128, 0.76)", // green
+    accent: "rgba(74, 222, 128, 0.76)",
     glow: "rgba(74, 222, 128, 0.18)",
     wash: "from-emerald-500/14 via-lime-500/8 to-cyan-400/10",
     rootStyle: "branch",
@@ -82,19 +82,22 @@ function buildRootPath(style = "geometric") {
 
 function CornerRoots({ accent, glow, rootStyle, flipX = false, flipY = false }) {
   const mainPath = buildRootPath(rootStyle);
+  const gradientId = `root-gradient-${flipX ? "x" : "n"}-${flipY ? "y" : "n"}-${accent.length}`;
 
   return (
     <svg
       viewBox="0 0 360 300"
-      className="absolute inset-0 h-full w-full pointer-events-none"
+      className="pointer-events-none absolute inset-0 h-full w-full"
       preserveAspectRatio="none"
       style={{
-        transform: `${flipX ? "scaleX(-1)" : ""} ${flipY ? "scaleY(-1)" : ""}`.trim() || undefined,
+        transform:
+          `${flipX ? "scaleX(-1)" : ""} ${flipY ? "scaleY(-1)" : ""}`.trim() ||
+          undefined,
         filter: `drop-shadow(0 0 8px ${glow})`,
       }}
     >
       <defs>
-        <linearGradient id={`root-gradient-${flipX ? "x" : "n"}-${flipY ? "y" : "n"}-${accent.length}`}>
+        <linearGradient id={gradientId}>
           <stop offset="0%" stopColor={accent} stopOpacity="0.95" />
           <stop offset="45%" stopColor={accent} stopOpacity="0.45" />
           <stop offset="100%" stopColor={accent} stopOpacity="0.04" />
@@ -104,7 +107,7 @@ function CornerRoots({ accent, glow, rootStyle, flipX = false, flipY = false }) 
       <path
         d={mainPath}
         fill="none"
-        stroke={`url(#root-gradient-${flipX ? "x" : "n"}-${flipY ? "y" : "n"}-${accent.length})`}
+        stroke={`url(#${gradientId})`}
         strokeWidth="2.4"
         strokeLinecap="round"
       />
@@ -146,7 +149,7 @@ function GhostGeometry({ accent }) {
   return (
     <svg
       viewBox="0 0 1000 1400"
-      className="absolute inset-0 h-full w-full pointer-events-none opacity-40"
+      className="pointer-events-none absolute inset-0 h-full w-full opacity-40"
       preserveAspectRatio="none"
     >
       <path
@@ -163,8 +166,24 @@ function GhostGeometry({ accent }) {
         strokeOpacity="0.05"
         strokeWidth="0.8"
       />
-      <line x1="500" y1="70" x2="500" y2="1330" stroke={accent} strokeOpacity="0.04" strokeWidth="0.8" />
-      <line x1="70" y1="700" x2="930" y2="700" stroke={accent} strokeOpacity="0.04" strokeWidth="0.8" />
+      <line
+        x1="500"
+        y1="70"
+        x2="500"
+        y2="1330"
+        stroke={accent}
+        strokeOpacity="0.04"
+        strokeWidth="0.8"
+      />
+      <line
+        x1="70"
+        y1="700"
+        x2="930"
+        y2="700"
+        stroke={accent}
+        strokeOpacity="0.04"
+        strokeWidth="0.8"
+      />
     </svg>
   );
 }
@@ -173,15 +192,18 @@ export default function CardFrame({
   children,
   dominantType = "signal",
   className = "",
+  mode = "default",
 }) {
   const theme = FRAME_THEMES[dominantType] || FRAME_THEMES.default;
+  const isPortrait = mode === "portrait";
 
   return (
     <div
       className={[
-        "relative overflow-hidden rounded-[2rem] border",
-        "bg-slate-950/92 text-slate-100 shadow-2xl",
-        "backdrop-blur-md",
+        "relative overflow-hidden border bg-slate-950/92 text-slate-100 shadow-2xl backdrop-blur-md",
+        isPortrait
+          ? "mx-auto aspect-[0.72] w-full max-w-[420px] rounded-[2.2rem]"
+          : "rounded-[2rem]",
         className,
       ].join(" ")}
       style={{
@@ -202,16 +224,36 @@ export default function CardFrame({
 
       <div className="absolute inset-0">
         <div className="absolute left-0 top-0 h-[28%] w-[34%]">
-          <CornerRoots accent={theme.accent} glow={theme.glow} rootStyle={theme.rootStyle} />
+          <CornerRoots
+            accent={theme.accent}
+            glow={theme.glow}
+            rootStyle={theme.rootStyle}
+          />
         </div>
         <div className="absolute right-0 top-0 h-[28%] w-[34%]">
-          <CornerRoots accent={theme.accent} glow={theme.glow} rootStyle={theme.rootStyle} flipX />
+          <CornerRoots
+            accent={theme.accent}
+            glow={theme.glow}
+            rootStyle={theme.rootStyle}
+            flipX
+          />
         </div>
-        <div className="absolute left-0 bottom-0 h-[28%] w-[34%]">
-          <CornerRoots accent={theme.accent} glow={theme.glow} rootStyle={theme.rootStyle} flipY />
+        <div className="absolute bottom-0 left-0 h-[28%] w-[34%]">
+          <CornerRoots
+            accent={theme.accent}
+            glow={theme.glow}
+            rootStyle={theme.rootStyle}
+            flipY
+          />
         </div>
-        <div className="absolute right-0 bottom-0 h-[28%] w-[34%]">
-          <CornerRoots accent={theme.accent} glow={theme.glow} rootStyle={theme.rootStyle} flipX flipY />
+        <div className="absolute bottom-0 right-0 h-[28%] w-[34%]">
+          <CornerRoots
+            accent={theme.accent}
+            glow={theme.glow}
+            rootStyle={theme.rootStyle}
+            flipX
+            flipY
+          />
         </div>
       </div>
 
@@ -219,9 +261,7 @@ export default function CardFrame({
       <div className="pointer-events-none absolute inset-x-[8%] top-[5.5%] h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
       <div className="pointer-events-none absolute inset-x-[8%] bottom-[5.5%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-      <div className="relative z-10">
-        {children}
-      </div>
+      <div className="relative z-10 h-full">{children}</div>
     </div>
   );
 }

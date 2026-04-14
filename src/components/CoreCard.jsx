@@ -1,3 +1,5 @@
+// D:\eidomancer\src\components\CoreCard.jsx
+
 import CardFrame from "./CardFrame";
 
 const VALID_TYPES = new Set(["signal", "tension", "pattern", "poem", "echo"]);
@@ -22,67 +24,108 @@ function getCoreCard(cast) {
   const title = normalizeText(cast.coreCard.title);
   const subtitle = normalizeText(cast.coreCard.subtitle);
   const hook = normalizeText(cast.coreCard.hook);
-
-  if (!title && !subtitle && !hook) return null;
+  const imageUrl = normalizeText(cast.coreCard.imageUrl);
+  if (!title && !subtitle && !hook && !imageUrl) return null;
 
   return {
     title: title || "Core Card",
     subtitle,
     hook,
+    imageUrl,
   };
 }
 
-function getQuestionText(cast) {
-  if (typeof cast?.question === "string" && cast.question.trim()) {
-    return cast.question.trim();
+function getTypeAccent(dominantType) {
+  switch (dominantType) {
+    case "tension":
+      return { sigil: "✦" };
+    case "pattern":
+      return { sigil: "⬡" };
+    case "poem":
+      return { sigil: "☽" };
+    case "echo":
+      return { sigil: "✧" };
+    case "signal":
+    default:
+      return { sigil: "◈" };
   }
-
-  if (typeof cast?.input === "string" && cast.input.trim()) {
-    return cast.input.trim();
-  }
-
-  return "";
 }
 
-export default function CoreCard({ cast, title = "Core Card" }) {
+export default function CoreCard({ cast, className = "" }) {
   const core = getCoreCard(cast);
-
   if (!core) return null;
 
   const dominantType = getDominantType(cast);
-  const questionText = getQuestionText(cast);
+  const accent = getTypeAccent(dominantType);
+
+  const hasImage = Boolean(core.imageUrl);
 
   return (
-    <CardFrame dominantType={dominantType} className="p-6 md:p-8">
-      <div className="text-center">
-        <div className="text-[11px] uppercase tracking-[0.34em] text-slate-300/70">
-          {title}
+    <div
+      id="eidomancer-core-card"
+      data-export-target="core-card"
+      className={className}
+    >
+      <CardFrame dominantType={dominantType} mode="portrait">
+        <div className="relative flex h-full flex-col overflow-hidden">
+
+          {/* IMAGE LAYER */}
+          {hasImage ? (
+            <div className="absolute inset-0">
+              <img
+                src={core.imageUrl}
+                alt={core.title}
+                className="h-full w-full object-cover"
+              />
+
+              {/* dark overlay for readability */}
+              <div className="absolute inset-0 bg-black/55" />
+            </div>
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-[#0b1622] to-[#020817]" />
+          )}
+
+          {/* CONTENT */}
+          <div className="relative z-10 flex h-full flex-col px-5 pb-5 pt-10 md:px-6 md:pb-6 md:pt-12 text-center">
+
+            {/* TOP SIGIL */}
+            <div className="flex items-center justify-center gap-4 text-white/70">
+              <span className="text-lg">{accent.sigil}</span>
+              <span className="text-[10px] uppercase tracking-[0.35em] text-white/40">
+                Eidomancer
+              </span>
+              <span className="text-lg">{accent.sigil}</span>
+            </div>
+
+            {/* TITLE */}
+            <h3 className="mx-auto mt-10 max-w-[12ch] text-3xl font-semibold leading-tight tracking-tight text-white md:text-4xl">
+              {core.title}
+            </h3>
+
+            {/* SUBTITLE */}
+            {core.subtitle ? (
+              <p className="mx-auto mt-4 max-w-[22ch] text-sm leading-6 text-white/85">
+                {core.subtitle}
+              </p>
+            ) : null}
+
+            {/* HOOK */}
+            {core.hook ? (
+              <p className="mx-auto mt-6 max-w-[22ch] text-sm italic leading-7 text-white/90">
+                {core.hook}
+              </p>
+            ) : null}
+
+            {/* FOOT */}
+            <div className="mt-auto pt-6">
+              <div className="rounded-xl bg-black/40 px-4 py-3 text-xs uppercase tracking-[0.2em] text-white/50">
+                Remember This
+              </div>
+            </div>
+
+          </div>
         </div>
-
-        <div className="mt-4 flex items-center justify-center gap-6 text-violet-200/90">
-          <span className="text-xl">✦</span>
-          <span className="text-sm">◌</span>
-          <span className="text-xl">✦</span>
-        </div>
-
-        <h3 className="mt-5 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-          {core.title}
-        </h3>
-
-        {core.subtitle ? (
-          <p className="mt-3 text-base text-slate-300/85">{core.subtitle}</p>
-        ) : null}
-
-        {core.hook ? (
-          <p className="mt-3 text-sm italic text-violet-100/80">{core.hook}</p>
-        ) : null}
-
-        {questionText ? (
-          <p className="mt-5 text-sm text-slate-300/85">
-            <span className="text-slate-400">Question:</span> {questionText}
-          </p>
-        ) : null}
-      </div>
-    </CardFrame>
+      </CardFrame>
+    </div>
   );
 }
