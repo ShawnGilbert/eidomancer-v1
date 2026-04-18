@@ -1,6 +1,7 @@
 // D:\eidomancer\src\lib\dailyCast.js
 
-import { generateCast } from "./castEngine";
+import { generateResonance } from "./resonanceEngine";
+import { generateCastFromSeed, buildSeed } from "./castEngine";
 import { detectEngagementMode, engagementModeProfiles } from "./engagementMode";
 import { buildDailyPromptBundle } from "./dailyCastPrompts";
 
@@ -48,10 +49,11 @@ function buildDailySeedText({
   recentCasts = [],
   engagementMode,
   profile,
+  resonance,
 }) {
   const recentTitles = recentCasts
     .slice(0, 3)
-    .map((cast) => cast?.coreCard?.title || cast?.title)
+    .map((cast) => cast?.coreCard?.title || cast?.title || cast?.coreCard?.name)
     .filter(Boolean)
     .join(" | ");
 
@@ -67,7 +69,14 @@ function buildDailySeedText({
     `THEME:${theme}`,
     question ? `QUESTION:${question}` : "QUESTION:daily reflection",
     recentTitles ? `RECENT:${recentTitles}` : "RECENT:none",
-  ].join(" :: ");
+    resonance?.resonance ? `RESONANCE:${resonance.resonance}` : "",
+    resonance?.genre ? `GENRE:${resonance.genre}` : "",
+    resonance?.signal ? `SIGNAL_CLASS:${resonance.signal}` : "",
+    resonance?.pattern ? `PATTERN_CLASS:${resonance.pattern}` : "",
+    resonance?.tension ? `TENSION_CLASS:${resonance.tension}` : "",
+  ]
+    .filter(Boolean)
+    .join(" :: ");
 }
 
 function buildDailyMetadata({
@@ -75,6 +84,7 @@ function buildDailyMetadata({
   engagementDetection,
   recentCasts = [],
   seedText,
+  resonance,
 }) {
   return {
     castType: "daily",
@@ -84,13 +94,17 @@ function buildDailyMetadata({
     engagementMode: engagementDetection?.mode || "seeker",
     engagementConfidence: engagementDetection?.confidence ?? 0.25,
     engagementScores: engagementDetection?.scores || {},
+    resonance: resonance?.resonance || null,
+    resonanceGenre: resonance?.genre || null,
+    resonanceSignal: resonance?.signal || null,
+    resonancePattern: resonance?.pattern || null,
+    resonanceTension: resonance?.tension || null,
   };
 }
 
 function looksLikeSentence(text = "") {
   const value = safeText(text);
   if (!value) return false;
-
   if (/[.!?]$/.test(value)) return true;
 
   if (
@@ -101,9 +115,7 @@ function looksLikeSentence(text = "") {
     return true;
   }
 
-  if (value.split(" ").length > 8) return true;
-
-  return false;
+  return value.split(" ").length > 8;
 }
 
 function buildDailyCoreCardHook(existingHook = "", dateKey = "") {
@@ -113,32 +125,75 @@ function buildDailyCoreCardHook(existingHook = "", dateKey = "") {
     return `You have drawn the card that governs ${dateKey || "today"}.`;
   }
 
-  if (/^you have drawn/i.test(hook)) {
-    return hook;
-  }
-
-  if (looksLikeSentence(hook)) {
-    return hook;
-  }
+  if (/^you have drawn/i.test(hook)) return hook;
+  if (looksLikeSentence(hook)) return hook;
 
   return `You have drawn ${/^the\b/i.test(hook) ? hook : `the ${hook}`}.`;
 }
 
-function tagCastAsDaily(cast, { dateKey, metadata, seedText }) {
+function inferSuggestedCardName({
+  question = "",
+  sourceText = "",
+  userContext = "",
+  resonance = null,
+}) {
+  const source = [question, sourceText, userContext].join(" ").toLowerCase();
+
+  if (/\b(how now brown cow|absurd|playful|nonsense|joke|weird)\b/.test(source)) {
+    return "The Trickster Prompt";
+  }
+
+  if (/\b(bug|broken|error|glitch|fix|debug|failure|wrong)\b/.test(source)) {
+    return "The Fault in the Pattern";
+  }
+
+  if (
+    /\b(exhausted|tired|burnout|burned out|nothing left|overwhelmed|fatigue)\b/.test(
+      source
+    )
+  ) {
+    return "The Exhausted Signal";
+  }
+
+  if (/\b(confused|lost|uncertain|adrift|compass|direction)\b/.test(source)) {
+    return "The Fading Compass";
+  }
+
+  if (/\b(algorithm|market|metrics|performance|value|worth)\b/.test(source)) {
+    return "The Measured Self";
+  }
+
+  if (resonance?.signal === "absurd") return "The Trickster Prompt";
+  if (resonance?.signal === "conflict") return "The Fault in the Pattern";
+
+  return "";
+}
+
+function tagCastAsDaily(cast, { dateKey, metadata, seedText, engagement }) {
   if (!cast || typeof cast !== "object") return cast;
+
+  const coreCardName =
+    cast?.coreCard?.name || cast?.cardName || cast?.title || "Untitled Cast";
 
   const tagged = {
     ...cast,
     castType: "daily",
     dateKey,
+    title: cast?.title || coreCardName,
     metadata: {
       ...(cast.metadata || {}),
       ...metadata,
+    },
+    engagement: {
+      ...(cast.engagement || {}),
+      ...(engagement || {}),
     },
   };
 
   tagged.coreCard = {
     ...(cast.coreCard || {}),
+    name: coreCardName,
+    title: cast?.coreCard?.title || coreCardName,
     hook: buildDailyCoreCardHook(cast?.coreCard?.hook, dateKey),
   };
 
@@ -184,10 +239,12 @@ export async function generateDailyCast(input) {
   const dateKey = getDateKey(payload.date);
   const recentCasts = summarizeRecentHistory(payload.history, 7);
 
-  const engagementDetection = detectEngagementMode(
-    payload.question,
-    recentCasts
-  );
+  // Raw user input is the authoritative focus for meaning generation.
+  const rawQuestion = safeText(payload.question);
+  const rawSourceText = safeText(payload.sourceText);
+  const rawUserContext = safeText(payload.userContext);
+
+  const engagementDetection = detectEngagementMode(rawQuestion, recentCasts);
 
   const engagementProfile =
     engagementModeProfiles[engagementDetection.mode] ||
@@ -202,41 +259,82 @@ export async function generateDailyCast(input) {
     adviceStyle: engagementProfile.adviceStyle,
   };
 
-  const promptBundle = buildDailyPrompt({
+  // Still build this for future scaffolding, but do not trust it as the primary question source.
+  buildDailyPrompt({
     dateKey,
-    question: payload.question,
-    sourceText: payload.sourceText,
-    userContext: payload.userContext,
+    question: rawQuestion,
+    sourceText: rawSourceText,
+    userContext: rawUserContext,
     recentCasts,
     engagement,
     profile: payload.profile,
   });
 
+  const resonanceSeed = buildSeed({
+    question: rawQuestion,
+    transcript: rawSourceText,
+    notes: rawUserContext,
+  });
+
+  const resonance = generateResonance({
+    sections: [
+      { type: "question", content: rawQuestion },
+      { type: "source", content: rawSourceText },
+      { type: "context", content: rawUserContext },
+      { type: "gist", content: resonanceSeed.gist || "" },
+    ],
+  });
+
   const seedText = buildDailySeedText({
     dateKey,
-    question: payload.question,
+    question: rawQuestion,
     recentCasts,
     engagementMode: engagement.mode,
     profile: payload.profile,
+    resonance,
   });
 
-  const cast = await generateCast({
-    question: promptBundle.question,
-    sourceText: promptBundle.sourceText,
-    userContext: promptBundle.userContext,
-    history: recentCasts,
+  const suggestedCardName = inferSuggestedCardName({
+    question: rawQuestion,
+    sourceText: rawSourceText,
+    userContext: rawUserContext,
+    resonance,
   });
+
+  const seed = {
+    question: rawQuestion,
+    sourceText: [
+      rawQuestion ? `PRIMARY QUESTION:\n${rawQuestion}` : "",
+      rawQuestion ? `FOCUS REPEATED:\n${rawQuestion}` : "",
+      rawQuestion ? `USER IS SPECIFICALLY ASKING:\n${rawQuestion}` : "",
+      rawQuestion ? `DO NOT IGNORE THIS FOCUS:\n${rawQuestion}` : "",
+      seedText,
+      rawSourceText ? `SOURCE TEXT:\n${rawSourceText}` : "",
+      rawUserContext ? `USER CONTEXT:\n${rawUserContext}` : "",
+      resonanceSeed.gist ? `GIST:\n${resonanceSeed.gist}` : "",
+      Array.isArray(resonanceSeed.themes) && resonanceSeed.themes.length
+        ? `THEMES:\n${resonanceSeed.themes.join("\n")}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
+    suggestedCardName,
+  };
+
+  const cast = await generateCastFromSeed(seed);
 
   const metadata = buildDailyMetadata({
     dateKey,
     engagementDetection,
     recentCasts,
     seedText,
+    resonance,
   });
 
   return tagCastAsDaily(cast, {
     dateKey,
     metadata,
     seedText,
+    engagement,
   });
 }

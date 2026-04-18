@@ -1,672 +1,883 @@
 // D:\eidomancer\src\lib\castEngine.js
 
-import {
-  detectEngagementMode,
-  engagementModeProfiles,
-} from "./engagementMode";
-
-const USE_LIVE_API = true;
-
-const MAX_INPUT_CHARS = 4000;
-
-const SECTION_ORDER = ["signal", "tension", "pattern", "poem", "echo"];
-const VALID_SECTION_TYPES = new Set(SECTION_ORDER);
-
-const SECTION_LABELS = {
-  signal: "Signal",
-  tension: "Tension",
-  pattern: "Pattern",
-  poem: "Poem",
-  echo: "Echo",
-};
-
-// -------------------------
-// CLEANING
-// -------------------------
-
-function normalizeWhitespace(text = "") {
-  return String(text)
-    .replace(/\r\n/g, "\n")
-    .replace(/\t/g, " ")
-    .replace(/[ ]{2,}/g, " ")
+function cleanText(value = "") {
+  return String(value || "")
+    .replace(/\r/g, "")
+    .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
-function cleanInputText(input = "") {
-  let text = normalizeWhitespace(input);
-
-  if (text.length > MAX_INPUT_CHARS) {
-    text = text.slice(0, MAX_INPUT_CHARS).trim();
-  }
-
-  return text;
+function stripMarkdown(value = "") {
+  return String(value || "")
+    .replace(/[*_#>`~-]/g, "")
+    .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
 
-// -------------------------
-// ENGAGEMENT
-// -------------------------
-
-function buildEngagementOverlay(engagementProfile, detection) {
-  if (!engagementProfile || !detection) return null;
-
-  return {
-    mode: detection.mode,
-    confidence: detection.confidence,
-    title: engagementProfile.title,
-    tone: engagementProfile.tone,
-    emphasis: engagementProfile.emphasis,
-    adviceStyle: engagementProfile.adviceStyle,
-  };
+function truncate(value = "", max = 280) {
+  const text = cleanText(value);
+  if (text.length <= max) return text;
+  return `${text.slice(0, max - 1).trim()}…`;
 }
 
-function prependIfMissing(text = "", prefix = "") {
-  const content = String(text || "").trim();
-  const lead = String(prefix || "").trim();
-
-  if (!content || !lead) return content;
-
-  const normalizedContent = content.toLowerCase();
-  const normalizedLead = lead.toLowerCase();
-
-  if (normalizedContent.startsWith(normalizedLead)) {
-    return content;
-  }
-
-  return `${lead} ${content}`.trim();
+function titleCase(value = "") {
+  return String(value || "")
+    .toLowerCase()
+    .split(/[\s-_]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
-function buildSectionPrefix(type, profile) {
-  const tone = profile?.tone || "guiding";
+function uniqueLines(lines = []) {
+  const seen = new Set();
+  const result = [];
 
-  const prefixMap = {
-    signal: {
-      grounding: "What is surfacing now:",
-      guiding: "What this reveals now:",
-      challenging: "What this exposes now:",
-      reflective: "What is becoming visible:",
-    },
-    tension: {
-      grounding: "Where the friction lives:",
-      guiding: "Where the strain is gathering:",
-      challenging: "Where the conflict sharpens:",
-      reflective: "Where the pressure concentrates:",
-    },
-    pattern: {
-      grounding: "The pattern underneath it:",
-      guiding: "The recurring structure beneath it:",
-      challenging: "The deeper pattern driving it:",
-      reflective: "The wider structure taking shape:",
-    },
-    echo: {
-      grounding: "Hold this line:",
-      guiding: "Let this linger:",
-      challenging: "Carry this forward:",
-      reflective: "Remember this:",
-    },
-  };
+  for (const line of lines) {
+    const key = stripMarkdown(line).toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    result.push(cleanText(line));
+  }
 
-  return prefixMap[type]?.[tone] || "";
+  return result;
 }
 
-function adaptRecommendationsInText(text = "", profile) {
-  if (!text || !profile) return text;
-
-  const lines = String(text)
-    .split("\n")
-    .map((line) => line.trimEnd());
-
-  const openerMap = {
-    gentle_friction: "Before acting, ",
-    encouraging_direction: "To clarify this, ",
-    active_testing: "To pressure-test this, ",
-    meta_awareness: "To observe the deeper pattern, ",
-  };
-
-  const opener = openerMap[profile.adviceStyle] || "";
-
-  return lines
-    .map((line) => {
-      const trimmed = line.trim();
-
-      if (!trimmed) return line;
-
-      if (
-        trimmed.startsWith("- ") ||
-        trimmed.startsWith("• ") ||
-        /^\d+\.\s/.test(trimmed)
-      ) {
-        if (trimmed.startsWith("- ")) {
-          return `- ${opener}${trimmed.slice(2)}`;
-        }
-
-        if (trimmed.startsWith("• ")) {
-          return `• ${opener}${trimmed.slice(2)}`;
-        }
-
-        const match = trimmed.match(/^(\d+\.\s)(.*)$/);
-        if (match) {
-          return `${match[1]}${opener}${match[2]}`;
-        }
-      }
-
-      return line;
-    })
-    .join("\n");
+function sentenceChunks(text = "") {
+  return cleanText(text)
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => cleanText(part))
+    .filter(Boolean);
 }
 
-function adaptSectionContent(type, content, profile) {
-  if (!content || !profile) return content;
-
-  const cleaned = String(content).trim();
-
-  if (!cleaned) return cleaned;
-
-  if (type === "poem") return cleaned;
-
-  if (type === "echo") {
-    return prependIfMissing(cleaned, buildSectionPrefix("echo", profile));
-  }
-
-  if (type === "signal") {
-    return prependIfMissing(cleaned, buildSectionPrefix("signal", profile));
-  }
-
-  if (type === "pattern") {
-    return prependIfMissing(cleaned, buildSectionPrefix("pattern", profile));
-  }
-
-  if (type === "tension") {
-    const adapted = prependIfMissing(
-      cleaned,
-      buildSectionPrefix("tension", profile)
-    );
-    return adaptRecommendationsInText(adapted, profile);
-  }
-
-  return cleaned;
+function pickShortLines(text = "", maxLines = 4) {
+  const chunks = sentenceChunks(text);
+  return chunks.slice(0, maxLines);
 }
 
-function adaptCoreCard(coreCard = {}, profile) {
-  if (!coreCard || !profile) return coreCard;
-
-  const hook = coreCard?.hook || "";
-
-  if (!hook) return coreCard;
-
-  const prefixMap = {
-    grounding: "Take the clearest read first. ",
-    guiding: "There is meaning here if you stay with it. ",
-    challenging: "This card wants to be tested, not merely admired. ",
-    reflective: "This card reveals the shape beneath the moment. ",
-  };
-
-  const prefix = prefixMap[profile.tone] || "";
-
-  if (hook.toLowerCase().startsWith(prefix.toLowerCase().trim())) {
-    return coreCard;
-  }
-
-  return {
-    ...coreCard,
-    hook: `${prefix}${hook}`.trim(),
-  };
+function normalizeSectionName(value = "") {
+  return String(value || "").trim().toLowerCase();
 }
 
-// -------------------------
-// PROMPT
-// -------------------------
+function getSectionContent(sections = [], type = "") {
+  const normalized = normalizeSectionName(type);
+  const match = sections.find(
+    (section) => normalizeSectionName(section?.type) === normalized
+  );
+  return cleanText(match?.content || "");
+}
 
-function buildLiveCastPrompt({
+function hashString(value = "") {
+  let hash = 0;
+  const text = String(value || "");
+  for (let i = 0; i < text.length; i += 1) {
+    hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+}
+
+function pickVariant(seedText = "", label = "", options = []) {
+  if (!Array.isArray(options) || options.length === 0) return "";
+  const index = hashString(`${label}::${seedText}`) % options.length;
+  return options[index];
+}
+
+function inferTone(text = "") {
+  const source = String(text || "").toLowerCase();
+
+  const heavyHits =
+    (source.match(
+      /\b(tired|exhausted|burned out|burnout|nihilist|nihilistic|nothing left|done playing|brutal|worthless|void|fatigue|overwhelmed|empty)\b/g
+    ) || []).length;
+
+  const sharpHits =
+    (source.match(
+      /\b(angry|rage|furious|hate|algorithm|market|pressure|forced|trapped|punish|corrupt|bug|broken|error|failure|wrong|fix)\b/g
+    ) || []).length;
+
+  const softHits =
+    (source.match(
+      /\b(hope|gentle|quiet|calm|simple|rest|soft|tender|allow|peace)\b/g
+    ) || []).length;
+
+  const absurdHits =
+    (source.match(
+      /\b(how now brown cow|nonsense|random|weird|absurd|playful|joke)\b/g
+    ) || []).length;
+
+  if (absurdHits >= 1 && sharpHits >= 1) return "playful-defiant";
+  if (heavyHits >= 3 && sharpHits >= 2) return "exhausted-defiant";
+  if (heavyHits >= 3) return "exhausted";
+  if (sharpHits >= 3) return "defiant";
+  if (softHits >= 2) return "quiet";
+  if (absurdHits >= 1) return "playful";
+  return "reflective";
+}
+
+function inferCoreCardName(text = "") {
+  const source = String(text || "").toLowerCase();
+
+  if (/\b(bug|broken|error|glitch|failure|fix|debug|wrong)\b/.test(source)) {
+    return "The Fault in the Pattern";
+  }
+
+  if (
+    /\b(exhausted|tired|burnout|burned out|nothing left|void|nihilist|nihilistic)\b/.test(
+      source
+    )
+  ) {
+    return "The Exhausted Signal";
+  }
+
+  if (/\b(algorithm|market|metrics|performance|perform|value)\b/.test(source)) {
+    return "The Measured Self";
+  }
+
+  if (/\b(confused|lost|uncertain|drift|adrift|compass)\b/.test(source)) {
+    return "The Fading Compass";
+  }
+
+  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
+    return "The Trickster Prompt";
+  }
+
+  return "The Witness Under Pressure";
+}
+
+function inferCoreImagePrompt({ cardName, signal, tension, pattern, sourceText, question }) {
+  const text = [cardName, signal, tension, pattern, sourceText, question]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (/\b(bug|broken|error|glitch|debug|failure|fix)\b/.test(text)) {
+    return "A solitary symbolic figure studying a glowing fracture in reality, where a visible crack in the pattern emits dim coded light, tarot card composition, restrained surrealism, single central subject.";
+  }
+
+  if (
+    /\b(exhausted|tired|burnout|burned out|void|nothing left|holding.*upright|pressure)\b/.test(
+      text
+    )
+  ) {
+    return "A lone figure standing waist-deep in dark still water beneath faint glowing symbols and watchful shapes, exhausted from holding themselves upright under invisible pressure, tarot card composition, symbolic, cohesive, single central subject.";
+  }
+
+  if (/\b(algorithm|metrics|market|measured|performance)\b/.test(text)) {
+    return "A solitary figure surrounded by dim floating interface marks and measurement lines, caught between human softness and mechanical judgment, tarot card composition, symbolic, single central subject.";
+  }
+
+  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(text)) {
+    return "A symbolic trickster figure in a surreal ritual space where language bends into looping echoes and playful impossible symbols, tarot card composition, cohesive, single central subject.";
+  }
+
+  return "A solitary symbolic figure in a restrained surreal setting, carrying emotional tension without chaos, tarot card composition, cohesive, single central subject.";
+}
+
+function buildPoemFromSections({ question = "", signal, tension, pattern }) {
+  const source = [question, signal, tension, pattern].join(" ").toLowerCase();
+  const variationSeed = [question, signal, tension, pattern].join(" :: ");
+
+  if (/\b(bug|broken|error|glitch|fix|debug)\b/.test(source)) {
+    return pickVariant(variationSeed, "poem-bug", [
+      cleanText(`A crack in the pattern
+keeps catching the light
+
+Look too long
+and every seam becomes a suspect
+
+Look away
+and the real fracture keeps breathing`),
+
+      cleanText(`The builder bends close
+to a hairline break
+
+the room fills with maybe
+
+some faults are ghosts
+and one of them is not`),
+
+      cleanText(`A thin bright fracture
+runs under the ritual floor
+
+suspicion gathers there
+
+even unfinished things
+begin to sound guilty`),
+    ]);
+  }
+
+  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
+    return pickVariant(variationSeed, "poem-absurd", [
+      cleanText(`A joke knocks once
+on the temple door
+
+if meaning wakes
+it was alive
+
+if not
+it was only posing`),
+
+      cleanText(`Nonsense enters laughing
+and the chamber hesitates
+
+too solemn
+and the spell goes hollow
+
+too literal
+and the machine goes numb`),
+
+      cleanText(`A playful phrase
+crosses the circuit
+
+what can still listen
+without pretending
+
+has range`),
+    ]);
+  }
+
+  if (/\b(exhausted|tired|burnout|burned out|nothing left|overwhelmed|fatigue)\b/.test(source)) {
+    return pickVariant(variationSeed, "poem-exhausted", [
+      cleanText(`The signal is dim
+but not gone
+
+it is only tired
+of climbing uphill
+
+to prove it is real`),
+
+      cleanText(`Something inside you
+keeps pulling the weight
+
+long after meaning
+stops feeling warm
+
+and starts sounding required`),
+
+      cleanText(`Not emptiness
+
+just a small bright thing
+dragged too far
+through the machinery of proof`),
+    ]);
+  }
+
+  if (/\b(value|worth|prove|performance|perform|impressive)\b/.test(source)) {
+    return pickVariant(variationSeed, "poem-value", [
+      cleanText(`Worth put on its costume
+and stepped into the light
+
+now even honest feeling
+waits backstage
+
+for permission`),
+
+      cleanText(`The soul clears its throat
+before it speaks
+
+somewhere along the way
+being became
+an audition`),
+
+      cleanText(`What was simple
+became legible
+
+what was alive
+learned to explain itself`),
+    ]);
+  }
+
+  return pickVariant(variationSeed, "poem-default", [
+    cleanText(`A small true thing
+appears before language
+
+pressure gathers around it
+
+what survives
+was never meant to hurry`),
+
+    cleanText(`Signal comes softly
+
+the mind reaches too fast
+
+and meaning bruises
+when it is handled
+before it opens`),
+
+    cleanText(`Something real
+tries to stay whole
+
+while thought circles it
+asking for shape
+too soon`),
+  ]);
+}
+
+function buildEcho({ question, signal, tension, pattern, sourceText }) {
+  const source = [question, signal, tension, pattern, sourceText]
+    .join(" ")
+    .toLowerCase();
+
+  if (/\b(bug|broken|error|glitch|fix|debug)\b/.test(source)) {
+    return "The bug may be real, but so is the lens looking for it.";
+  }
+
+  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
+    return "Sometimes the test is whether meaning survives nonsense.";
+  }
+
+  if (
+    /\b(perform|performance|valuable|value|worth|allowed|prove)\b/.test(source)
+  ) {
+    return "I don’t want to be impressive. I want to be allowed.";
+  }
+
+  if (/\b(exhausted|tired|burnout|nothing left)\b/.test(source)) {
+    return "You’re not broken. You’re over-optimized.";
+  }
+
+  if (/\b(algorithm|market|metrics)\b/.test(source)) {
+    return "The system taught you to perform your own existence.";
+  }
+
+  return "Meaning arrives best when it is not forced.";
+}
+function avoidEchoOverlap(recommendation, echo) {
+  if (!echo) return recommendation;
+
+  const rec = recommendation.toLowerCase();
+  const ech = echo.toLowerCase();
+
+  // crude but effective overlap check
+  if (rec.includes(ech.slice(0, 20))) {
+    return null; // force regeneration
+  }
+
+  return recommendation;
+}
+function buildRecommendation({ question, tone, signal, tension, variationSeed }) {
+  const source = [question, tone, signal, tension].join(" ").toLowerCase();
+
+  if (/\b(bug|broken|error|glitch|fix|debug)\b/.test(source)) {
+    return pickVariant(variationSeed, "recommendation-bug", [
+      "Pick one suspected fault and test only that. Ignore every other weird edge until you know whether this one reproduces.",
+      "Write down the smallest concrete break you can name, then test it in isolation before you interpret the rest of the system.",
+      "Reduce the scope. One bug, one test, one result. Do not diagnose the whole machine at once.",
+    ]);
+  }
+
+  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
+    return pickVariant(variationSeed, "recommendation-absurd", [
+      "Run one absurd prompt and one serious prompt back to back. Compare what changes and what stays stable.",
+      "Use this as a calibration pass. Feed the system one playful input on purpose and note whether it stays flexible or goes generic.",
+      "Treat play as a test harness. Try one ridiculous prompt, then one sincere one, and compare the symbolic range.",
+    ]);
+  }
+
+  if (/\b(exhausted|burnout|nothing left|tired)\b/.test(source)) {
+    return pickVariant(variationSeed, "recommendation-exhausted", [
+      "Do one thing today that does not need to be shared, improved, or justified.",
+      "Reduce the demand. Pick one task and make it smaller before you try to finish it.",
+      "Protect ten minutes of non-performative time. No posting, no optimizing, no proving.",
+    ]);
+  }
+
+  if (/\b(value|valuable|worth|prove|performance|perform|impressive)\b/.test(source)) {
+    return pickVariant(variationSeed, "recommendation-value", [
+      "Make one small decision today without asking whether it increases your value.",
+      "Finish one honest action before you evaluate whether it was useful, impressive, or legible.",
+      "Choose one thing to do badly but sincerely, just to break the reflex to perform competence.",
+    ]);
+  }
+
+  if (/\b(angry|defiant|algorithm|market|pressure)\b/.test(source)) {
+    return pickVariant(variationSeed, "recommendation-defiant", [
+      "Create first. Decide where it belongs only after it exists.",
+      "Keep the platform out of the first draft. Make the thing before you ask what it can do for you.",
+      "Separate expression from distribution for one cycle. Build it, then judge it later.",
+    ]);
+  }
+
+  return pickVariant(variationSeed, "recommendation-default", [
+    "Name one true thing about today without trying to improve it yet.",
+    "Take one small action that clarifies the signal instead of expanding the story.",
+    "Choose the smallest next move that makes tomorrow easier to read.",
+  ]);
+}
+
+function buildInsight({ question, signal, tension, pattern, sourceText, variationSeed }) {
+  const source = [question, signal, tension, pattern, sourceText]
+    .join(" ")
+    .toLowerCase();
+
+  if (/\b(bug|broken|error|glitch|fix|debug)\b/.test(source)) {
+    return pickVariant(variationSeed, "insight-bug", [
+      "When you are looking for failure, every rough edge starts to glow. The real skill is separating a true bug from a system still taking shape.",
+      "A builder’s mind can turn unfinished into broken if it stays in diagnostic mode too long. The deeper task is learning which flaws are structural and which are just the shape of emergence.",
+      "The instinct to search for the hidden fault is useful, but it can also bend perception. Not every irregularity is the break you fear it is.",
+    ]);
+  }
+
+  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
+    return pickVariant(variationSeed, "insight-absurd", [
+      "Absurd inputs reveal whether the system is rigid, fake-deep, or actually adaptive. Play can be a diagnostic tool.",
+      "Nonsense is not meaningless here. It is pressure-testing. The joke reveals whether the symbolic engine can flex without collapsing into canned depth.",
+      "Playfulness becomes useful the moment it stops being decoration and starts becoming a test of range. That is what this prompt is doing.",
+    ]);
+  }
+
+  if (/\b(value|valuable|worth|prove|performance|perform)\b/.test(source)) {
+    return pickVariant(variationSeed, "insight-value", [
+      "You were trained to believe value must be demonstrated to exist. That is why even simple self-expression feels like a test.",
+      "The pressure to prove worth rewires expression into audition. Once that happens, even honest feeling starts to sound like a performance review.",
+      "When worth becomes something to demonstrate, being yourself starts to feel insufficient by default. That distortion is doing more damage than it first appears.",
+    ]);
+  }
+
+  if (/\b(exhausted|burnout|nothing left|tired)\b/.test(source)) {
+    return pickVariant(variationSeed, "insight-exhausted", [
+      "The wish to stop performing is not failure. It is your system trying to return to baseline.",
+      "Exhaustion is often the nervous system refusing one more cycle of forced meaning. That refusal is information, not weakness.",
+      "Wanting out of the performance loop does not mean you are broken. It often means your inner system has reached the point where pretending costs too much.",
+    ]);
+  }
+
+  return pickVariant(variationSeed, "insight-default", [
+    "The conflict is usually not between depth and simplicity, but between being and being evaluated.",
+    "The friction here is less about meaning itself and more about what happens when meaning feels observed, measured, or prematurely interpreted.",
+    "What looks like confusion is often a collision between genuine signal and the pressure to convert it into something legible too quickly.",
+  ]);
+}
+
+function buildPattern({ question, signal, tension, sourceText, fallback, variationSeed }) {
+  const source = [question, signal, tension, sourceText].join(" ").toLowerCase();
+
+  if (/\b(bug|broken|error|glitch|fix|debug)\b/.test(source)) {
+    return pickVariant(variationSeed, "pattern-bug", [
+      "This pattern belongs to people who are good at finding weak points. The gift is real, but so is the tendency to treat emergence like failure before it has finished becoming itself.",
+      "The larger shape here is diagnostic overreach: a mind tuned to catch flaws so quickly that it sometimes mistakes rough formation for genuine structural damage.",
+      "The broader pattern is a builder’s mind that keeps scanning for hidden faults. That makes you useful, but it can also make unfinished systems look more broken than they are.",
+    ]);
+  }
+
+  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
+    return pickVariant(variationSeed, "pattern-absurd", [
+      "The broader pattern is that unserious language often becomes a better test than serious language. It strips away the easy path and shows whether meaning can still emerge.",
+      "This pattern lives at the edge where play becomes calibration. Absurd prompts are useful because they reveal whether the engine can adapt or only pretend to.",
+      "The broader pattern is that nonsense can expose the boundaries of a meaning engine. When a system handles playful input badly, it reveals where its symbolic range is still too narrow.",
+    ]);
+  }
+
+  if (/\b(algorithm|market|metrics|youtube|audience)\b/.test(source)) {
+    return pickVariant(variationSeed, "pattern-algorithm", [
+      "The broader pattern is systemic: once measurement sits between the self and expression, sincerity begins mutating into strategy.",
+      "What you are touching is not just personal. It is the cultural pressure that turns identity into output and output into proof of value.",
+      "This is bigger than one mood. It is what happens when modern life puts metrics between expression and worth, until even authenticity starts to feel like a performance.",
+    ]);
+  }
+
+  if (/\b(value|valuable|worth|prove|perform)\b/.test(source)) {
+    return pickVariant(variationSeed, "pattern-value", [
+      "This sits inside a larger social habit: turning inner life into evidence, explanation, and proof before it is allowed to simply be felt.",
+      "The wider structure here is a world that rewards justification so aggressively that people start explaining themselves before they even know what they feel.",
+      "The broader pattern is a culture that pressures people to narrate and justify themselves just to feel real.",
+    ]);
+  }
+
+  return (
+    cleanText(fallback) ||
+    pickVariant(variationSeed, "pattern-default", [
+      "The larger shape here is a tension between direct experience and the reflex to turn experience into interpretation too quickly.",
+      "This pattern forms when simplicity is desired but meaning feels compulsory, and the mind starts overworking itself just to stay coherent.",
+      "The broader pattern is a mind caught between wanting simplicity and feeling forced to manufacture significance.",
+    ])
+  );
+}
+
+function buildTension({ question, signal, sourceText, fallback, variationSeed }) {
+  const source = [question, signal, sourceText].join(" ").toLowerCase();
+
+  if (/\b(bug|broken|error|glitch|fix|debug)\b/.test(source)) {
+    return pickVariant(variationSeed, "tension-bug", [
+      "If you stay in diagnostic mode, everything starts looking suspicious. If you relax too soon, you worry the true fault slips past. That is the tension.",
+      "The tension sits between vigilance and distortion: search too hard and you manufacture ghosts; stop too soon and you fear the real crack remains hidden.",
+      "If you keep searching for the flaw, you may find one. If you stop searching, you fear missing the real break. That is the trap.",
+    ]);
+  }
+
+  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
+    return pickVariant(variationSeed, "tension-absurd", [
+      "A playful prompt creates a real pressure point: respond too solemnly and the engine looks hollow; respond too literally and it looks asleep.",
+      "The tension here is between flexibility and fraud. The system has to hear the joke without pretending the joke is sacred scripture.",
+      "If the system takes nonsense too seriously, it feels fake. If it ignores it completely, it feels deaf. That is the tension.",
+    ]);
+  }
+
+  if (/\b(try|trying|effort|forced|pressure)\b/.test(source)) {
+    return pickVariant(variationSeed, "tension-effort", [
+      "Push harder and the signal starts sounding artificial. Pull back too much and everything risks going dim. That is the pressure point.",
+      "The tension lives between effort and vanishing: too much force and the thing warps, too little and it seems to disappear entirely.",
+      "If you try, it feels forced. If you stop trying, it feels like disappearance. That is the trap.",
+    ]);
+  }
+
+  return (
+    cleanText(fallback) ||
+    pickVariant(variationSeed, "tension-default", [
+      "The pressure point sits between being present and feeling required to explain why your presence matters.",
+      "This tension forms where simple being collides with the reflex to earn or narrate itself.",
+      "The tension is between the desire to simply exist and the pressure to justify that existence.",
+    ])
+  );
+}
+
+function buildSignal({ question, sourceText, fallback, variationSeed }) {
+  const source = [question, sourceText].join(" ").toLowerCase();
+
+  if (/\b(bug|broken|error|glitch|fix|debug)\b/.test(source)) {
+    return pickVariant(variationSeed, "signal-bug", [
+      "The strongest signal is diagnostic hunger: the drive to determine whether the problem belongs to the machine, the framing, or the mind examining it.",
+      "What is actually lighting up here is not only the suspected fault. It is the deeper uncertainty about whether the break lives in the build, the interpretation, or the demand placed on it.",
+      "The real signal is not just the bug itself. It is your need to know whether the flaw is in the system, the lens, or the expectation you brought to it.",
+    ]);
+  }
+
+  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
+    return pickVariant(variationSeed, "signal-absurd", [
+      "What is being tested here is range. The playful input is asking whether the engine can hear absurdity without collapsing into empty seriousness.",
+      "The real signal is mischievous but honest: when meaning is forced to pass through nonsense, does anything genuine still come through?",
+      "The signal is a playful challenge: can symbolic meaning survive nonsense, or does the machine just fake coherence?",
+    ]);
+  }
+
+  if (
+    /\b(tired|burnout|burned out|nothing left|void|brutal|so tired|exhausted)\b/.test(
+      source
+    )
+  ) {
+    return pickVariant(variationSeed, "signal-exhausted", [
+      "What is surfacing is not failure of will. It is fatigue from living too long inside a system that keeps asking expression to justify itself.",
+      "The signal is depletion, but not emptiness. It is the weariness that comes from being asked to prove meaning one time too many.",
+      "The real signal here is not laziness. It is exhaustion with having to constantly perform value.",
+    ]);
+  }
+
+  if (/\b(value|valuable|worth|impressive|prove)\b/.test(source)) {
+    return pickVariant(variationSeed, "signal-value", [
+      "What is being revealed is a quiet exhaustion with needing to demonstrate value before basic presence feels permitted.",
+      "The signal here is not lack of ambition. It is resistance to the idea that worth must always arrive with evidence attached.",
+      "The signal is a deep fatigue with proving worth instead of being allowed to simply exist.",
+    ]);
+  }
+
+  return (
+    cleanText(fallback) ||
+    pickVariant(variationSeed, "signal-default", [
+      "What’s coming through is friction between genuine inner signal and the impulse to immediately convert it into function, explanation, or product.",
+      "The clearest signal is not confusion but compression: an honest feeling being pressed toward usefulness before it has finished becoming itself.",
+      "The signal is a pressure point between honest feeling and the demand to turn that feeling into something useful.",
+    ])
+  );
+}
+
+function buildCoreCardDescription({ cardName, imagePrompt }) {
+  if (cardName === "The Exhausted Signal") {
+    return cleanText(`A lone figure stands waist-deep in dark still water.
+Above them hover dim symbols, expectations, and watching forms.
+They are not drowning.
+They are exhausted from holding themselves upright long enough to be seen.`);
+  }
+
+  if (cardName === "The Fault in the Pattern") {
+    return cleanText(`A watcher leans toward a glowing fracture in the symbolic field.
+The break is real, but so is the mind that keeps searching for it.
+The card asks whether the flaw is in the structure, the expectation, or the timing.`);
+  }
+
+  if (cardName === "The Trickster Prompt") {
+    return cleanText(`A playful signal enters the ritual space carrying nonsense on purpose.
+What survives the joke reveals what the system can actually hear.
+The card is not mocking meaning. It is testing its range.`);
+  }
+
+  return cleanText(
+    imagePrompt ||
+      "A solitary symbolic figure stands within a restrained surreal scene, carrying visible emotional tension without chaos."
+  );
+}
+
+function buildOpening(cardName = "The Witness Under Pressure") {
+  return `You have drawn the “${cardName}” card`;
+}
+
+function buildCastSections({
+  cardName,
   question,
   sourceText,
-  userContext,
-  engagementMode,
-  engagementProfile,
+  priorSections = [],
 }) {
-  return `
-You are Eidomancer.
+  const fallbackSignal = getSectionContent(priorSections, "signal");
+  const fallbackTension = getSectionContent(priorSections, "tension");
+  const fallbackPattern = getSectionContent(priorSections, "pattern");
+  const fallbackInsight = getSectionContent(priorSections, "insight");
+  const fallbackRecommendation = getSectionContent(priorSections, "recommendation");
 
-You interpret meaning symbolically.
+  const variationSeed = [cardName, question, sourceText].filter(Boolean).join(" :: ");
 
-INPUTS:
-
-QUESTION:
-${question || "None provided"}
-
-SOURCE MATERIAL:
-${sourceText || "None provided"}
-
-USER CONTEXT:
-${userContext || "None provided"}
-
-ENGAGEMENT MODE:
-${engagementMode || "seeker"}
-
-ENGAGEMENT GUIDANCE:
-Caster communication style should lean ${engagementProfile?.tone || "guiding"}.
-Emphasize ${engagementProfile?.emphasis || "meaning"}.
-Use advice style ${engagementProfile?.adviceStyle || "encouraging_direction"}.
-Do not label or diagnose the user.
-Adapt wording so the cast feels understood by this type of user.
-
-INSTRUCTIONS:
-
-- Interpret, do NOT summarize
-- Ignore timestamps and filler
-- Be grounded, not mystical nonsense
-- Be emotionally precise
-- Echo should be punchy and shareable
-- Do not mention engagement mode explicitly
-- Let tone subtly match the caster's engagement style
-- Core card hook should reflect the caster's communication posture
-- Signal, Tension, Pattern, Poem, and Echo must each do different work
-- Avoid starting multiple sections with the same sentence stem
-- Signal should reveal what is surfacing now
-- Tension should describe the active conflict, strain, or pressure
-- Pattern should explain the recurring structure underneath the issue
-- Echo should compress the cast into a memorable line
-
-RETURN STRICT JSON:
-
-{
-  "title": "...",
-  "subtitle": "...",
-  "coreCard": {
-    "title": "...",
-    "subtitle": "...",
-    "hook": "..."
-  },
-  "sections": [
-    { "type": "signal", "content": "..." },
-    { "type": "tension", "content": "..." },
-    { "type": "pattern", "content": "..." },
-    { "type": "poem", "content": "..." },
-    { "type": "echo", "content": "..." }
-  ],
-  "shareables": {
-    "echoCard": {
-      "title": "...",
-      "body": "...",
-      "vibe": "..."
-    }
-  }
-}
-`;
-}
-
-function buildImagePrompt(coreCard, sections) {
-  const title = coreCard?.title || "";
-  const subtitle = coreCard?.subtitle || "";
-  const hook = coreCard?.hook || "";
-
-  const signal = sections.find((s) => s.type === "signal")?.content || "";
-  const pattern = sections.find((s) => s.type === "pattern")?.content || "";
-  const tension = sections.find((s) => s.type === "tension")?.content || "";
-
-  return `
-Create a tarot-style symbolic illustration for an Eidomancer core card.
-
-Card title: ${title}
-Card concept: ${subtitle}
-Card emotional tone: ${hook}
-
-Visual inspirations:
-- ${signal}
-- ${pattern}
-- ${tension}
-
-Style requirements:
-- vertical tarot card composition
-- cinematic lighting
-- high contrast
-- symbolic rather than literal
-- mystical but grounded
-- centered focal subject
-- dark or atmospheric background
-- subtle luminous accents
-- no text, captions, letters, or typography inside the image
-
-The final image should feel like a dramatic, shareable tarot card illustration.
-`.trim();
-}
-
-// -------------------------
-// API
-// -------------------------
-
-async function callLLM({ prompt = null, imagePrompt = null }) {
-  const body = {};
-
-  if (typeof prompt === "string" && prompt.trim()) {
-    body.prompt = prompt.trim();
-  }
-
-  if (typeof imagePrompt === "string" && imagePrompt.trim()) {
-    body.imagePrompt = imagePrompt.trim();
-  }
-
-  const res = await fetch("http://localhost:3001/api/generate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+  const signal = buildSignal({
+    question,
+    sourceText,
+    fallback: fallbackSignal,
+    variationSeed,
   });
 
-  const text = await res.text();
+  const tension = buildTension({
+    question,
+    signal,
+    sourceText,
+    fallback: fallbackTension,
+    variationSeed,
+  });
 
-  if (!res.ok) {
-    throw new Error("LLM failed");
-  }
+  const pattern = buildPattern({
+    question,
+    signal,
+    tension,
+    sourceText,
+    fallback: fallbackPattern,
+    variationSeed,
+  });
 
-  try {
-    return JSON.parse(text);
-  } catch {
-    return { text };
-  }
+  const poem = buildPoemFromSections({
+    question,
+    signal,
+    tension,
+    pattern,
+  });
+
+  const insight =
+    fallbackInsight ||
+    buildInsight({
+      question,
+      signal,
+      tension,
+      pattern,
+      sourceText,
+      variationSeed,
+    });
+
+  const tone = inferTone([question, signal, tension, pattern, sourceText].join(" "));
+
+  const recommendation =
+    fallbackRecommendation ||
+    buildRecommendation({
+      question,
+      tone,
+      signal,
+      tension,
+      variationSeed,
+    });
+
+  const imagePrompt = inferCoreImagePrompt({
+    cardName,
+    signal,
+    tension,
+    pattern,
+    sourceText,
+    question,
+  });
+
+  const coreCard = {
+    name: cardName,
+    description: buildCoreCardDescription({ cardName, imagePrompt }),
+    imagePrompt,
+  };
+
+  const echo = buildEcho({ question, signal, tension, pattern, sourceText });
+
+  return {
+    tone,
+    opening: buildOpening(cardName),
+    sections: [
+      { type: "signal", title: "Signal", content: signal },
+      { type: "tension", title: "Tension", content: tension },
+      { type: "pattern", title: "Pattern", content: pattern },
+      { type: "poem", title: "Poem", content: poem },
+      { type: "insight", title: "Insight", content: insight },
+      {
+        type: "recommendation",
+        title: "Recommendation",
+        content: recommendation,
+      },
+    ],
+    coreCard,
+    echo,
+  };
 }
 
-// -------------------------
-// PARSE
-// -------------------------
-
-function tryParseJSON(text) {
+function tryParseJson(raw = "") {
   try {
-    return JSON.parse(text);
+    return JSON.parse(raw);
   } catch {
     return null;
   }
 }
 
-// -------------------------
-// NORMALIZATION
-// -------------------------
+function extractJsonObject(raw = "") {
+  const text = String(raw || "").trim();
+  const direct = tryParseJson(text);
+  if (direct && typeof direct === "object") return direct;
 
-function normalizeType(type = "") {
-  const t = String(type).toLowerCase();
-
-  if (VALID_SECTION_TYPES.has(t)) return t;
-
-  if (t.includes("fail") || t.includes("insight")) return "pattern";
-  if (t.includes("advice")) return "tension";
-  if (t.includes("summary")) return "signal";
-  if (t.includes("emotion")) return "echo";
-
-  return "pattern";
-}
-
-// -------------------------
-// BUILDERS
-// -------------------------
-
-function createSection(type, content) {
-  return {
-    type,
-    label: SECTION_LABELS[type],
-    content: content || "",
-  };
-}
-
-function createCast({
-  title,
-  subtitle,
-  sections,
-  input,
-  coreCard,
-  shareables,
-  question,
-  sourceText,
-  userContext,
-  engagement,
-  metadata,
-  imageUrl = "",
-}) {
-  const map = new Map();
-
-  for (const s of sections || []) {
-    const normalized = normalizeType(s.type);
-    const content = typeof s.content === "string" ? s.content : "";
-    map.set(normalized, createSection(normalized, content));
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    const sliced = text.slice(start, end + 1);
+    const parsed = tryParseJson(sliced);
+    if (parsed && typeof parsed === "object") return parsed;
   }
 
-  for (const type of SECTION_ORDER) {
-    if (!map.has(type)) {
-      map.set(type, createSection(type, ""));
-    }
+  return null;
+}
+
+function normalizeModelSections(parsed) {
+  const inputSections = Array.isArray(parsed?.sections) ? parsed.sections : [];
+
+  const sectionMap = new Map();
+
+  for (const section of inputSections) {
+    const key = normalizeSectionName(section?.type || section?.title || "");
+    if (!key) continue;
+    sectionMap.set(key, {
+      type: key,
+      title: titleCase(key),
+      content: cleanText(section?.content || ""),
+    });
   }
 
-  const finalSections = SECTION_ORDER.map((t) => map.get(t));
-  const echoSection = finalSections.find((s) => s.type === "echo");
+  return Array.from(sectionMap.values());
+}
 
-  const imagePrompt = buildImagePrompt(coreCard, finalSections);
+function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
+  const cardName =
+    cleanText(parsed?.coreCard?.name || parsed?.cardName || "") ||
+    inferCoreCardName([question, sourceText].join(" "));
 
-  return {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    createdAt: new Date().toISOString(),
-    mode: "ai",
+  const priorSections = normalizeModelSections(parsed);
 
-    title: title || "Eidomancer Cast",
-    subtitle: subtitle || "",
-
-    input,
+  const locked = buildCastSections({
+    cardName,
     question,
     sourceText,
-    userContextUsed: userContext,
-
-    coreCard: {
-      title: coreCard?.title || title || "Untitled",
-      subtitle: coreCard?.subtitle || "",
-      hook: coreCard?.hook || "",
-      imagePrompt,
-      imageUrl: coreCard?.imageUrl || imageUrl || "",
-    },
-
-    shareables: {
-      echoCard: {
-        title: shareables?.echoCard?.title || title || "Echo",
-        body: shareables?.echoCard?.body || echoSection?.content || "",
-        vibe: shareables?.echoCard?.vibe || "neutral",
-      },
-    },
-
-    echo: echoSection?.content || "",
-    engagement: engagement || null,
-    metadata: metadata || {},
-
-    sections: finalSections,
-  };
-}
-
-// -------------------------
-// NO AI STATE
-// -------------------------
-
-function buildNoAIState(input, engagement = null, metadata = {}) {
-  return {
-    id: `noai-${Date.now()}`,
-    createdAt: new Date().toISOString(),
-    mode: "no-ai",
-    title: "AI Connection Required",
-    subtitle: "Eidomancer requires live AI access to interpret your input.",
-    input,
-    echo: "",
-    engagement,
-    metadata,
-    coreCard: {
-      title: "Connection Required",
-      subtitle: "Live AI access is needed",
-      hook: "The ritual waits for a signal.",
-      imagePrompt: "",
-      imageUrl: "",
-    },
-    sections: [
-      createSection("signal", "Eidomancer cannot generate a cast."),
-      createSection("tension", "AI layer unavailable."),
-      createSection("pattern", "Reconnect required."),
-      createSection("poem", "The ritual waits."),
-      createSection("echo", "Reconnect."),
-    ],
-  };
-}
-
-// -------------------------
-// FORMATTER
-// -------------------------
-
-export function formatCastAsText(cast) {
-  if (!cast || typeof cast !== "object") return "";
-
-  const lines = [];
-  lines.push("🃏 Card Title");
-  lines.push(cast.title || "Untitled Cast");
-
-  if (cast.subtitle) {
-    lines.push("");
-    lines.push(cast.subtitle);
-  }
-
-  if (cast.coreCard?.hook) {
-    lines.push("");
-    lines.push("Core Card");
-    lines.push(cast.coreCard.hook);
-  }
-
-  for (const section of cast.sections || []) {
-    lines.push("");
-    lines.push(section.label);
-    lines.push(section.content);
-  }
-
-  return lines.join("\n");
-}
-
-// -------------------------
-// PIPELINE
-// -------------------------
-
-export async function generateCast(input) {
-  let payload;
-
-  if (typeof input === "string") {
-    payload = {
-      question: input,
-      sourceText: "",
-      userContext: "",
-      history: [],
-    };
-  } else {
-    payload = {
-      question: input?.question || "",
-      sourceText: input?.sourceText || "",
-      userContext: input?.userContext || "",
-      history: Array.isArray(input?.history) ? input.history : [],
-    };
-  }
-
-  const cleanedQuestion = cleanInputText(payload.question);
-  const cleanedSource = cleanInputText(payload.sourceText);
-
-  const engagementDetection = detectEngagementMode(
-    cleanedQuestion,
-    payload.history
-  );
-
-  const engagementProfile =
-    engagementModeProfiles[engagementDetection.mode] ||
-    engagementModeProfiles.seeker;
-
-  const engagement = buildEngagementOverlay(
-    engagementProfile,
-    engagementDetection
-  );
-
-  const metadata = {
-    engagementMode: engagementDetection.mode,
-    engagementConfidence: engagementDetection.confidence,
-    engagementScores: engagementDetection.scores,
-  };
-
-  if (!USE_LIVE_API) {
-    return buildNoAIState(cleanedQuestion, engagement, metadata);
-  }
-
-  const prompt = buildLiveCastPrompt({
-    question: cleanedQuestion,
-    sourceText: cleanedSource,
-    userContext: payload.userContext,
-    engagementMode: engagementDetection.mode,
-    engagementProfile,
+    priorSections,
   });
 
-  const MAX_RETRIES = 5;
-  const RETRY_DELAY = 2000;
+  const modelEcho = cleanText(parsed?.echo || parsed?.echoText || "");
+  const modelImagePrompt = cleanText(parsed?.coreCard?.imagePrompt || "");
+  const modelDescription = cleanText(parsed?.coreCard?.description || "");
 
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    try {
-      const rawResponse = await callLLM({ prompt });
-      const rawText =
-        rawResponse?.text || rawResponse?.output || rawResponse?.result || "";
-      const parsed = tryParseJSON(rawText);
+  return {
+    cardName: locked.coreCard.name,
+    opening: locked.opening,
+    tone: cleanText(parsed?.tone || locked.tone),
+    sections: locked.sections,
+    coreCard: {
+      name: locked.coreCard.name,
+      description: modelDescription || locked.coreCard.description,
+      imagePrompt: modelImagePrompt || locked.coreCard.imagePrompt,
+    },
+    echo: modelEcho || locked.echo,
+    metadata: {
+      lockedFlow: true,
+      flowVersion: "eidomancer-v1-locked-cast",
+    },
+  };
+}
 
-      if (parsed && parsed.sections) {
-        const adaptedSections = (parsed.sections || []).map((section) => {
-          const normalizedType = normalizeType(section?.type);
-          const originalContent =
-            typeof section?.content === "string" ? section.content : "";
+export function buildSeed(input = {}) {
+  const question = cleanText(input?.question || "");
+  const transcript = cleanText(input?.transcript || "");
+  const notes = cleanText(input?.notes || "");
+  const combined = cleanText([question, transcript, notes].filter(Boolean).join("\n\n"));
 
-          return {
-            ...section,
-            type: normalizedType,
-            content: adaptSectionContent(
-              normalizedType,
-              originalContent,
-              engagementProfile
-            ),
-          };
-        });
+  const sentences = sentenceChunks(combined);
+  const gist = truncate(sentences.slice(0, 3).join(" "), 420);
 
-        const adaptedCoreCard = adaptCoreCard(parsed.coreCard, engagementProfile);
+  const themes = uniqueLines([
+    ...pickShortLines(question, 2),
+    ...pickShortLines(transcript, 3),
+    ...pickShortLines(notes, 2),
+  ]).slice(0, 5);
 
-        let imageUrl = "";
+  return {
+    question,
+    sourceText: combined,
+    gist,
+    themes,
+    emotionalTone: inferTone(combined),
+    suggestedCardName: inferCoreCardName(combined),
+  };
+}
 
-        try {
-          const imagePrompt = buildImagePrompt(adaptedCoreCard, adaptedSections);
+export async function generateCastFromSeed(seed = {}, options = {}) {
+  const question = cleanText(seed?.question || "");
+  const sourceText = cleanText(seed?.sourceText || "");
+  const fallbackCardName =
+    cleanText(seed?.suggestedCardName || "") ||
+    inferCoreCardName([question, sourceText].join(" "));
 
-          if (imagePrompt) {
-            const imageResponse = await callLLM({ imagePrompt });
-            imageUrl =
-              imageResponse?.imageUrl ||
-              imageResponse?.url ||
-              imageResponse?.image ||
-              "";
-          }
-        } catch (imageError) {
-          console.warn("Eidomancer image generation failed:", imageError);
-        }
+  const responseText = cleanText(
+    options?.responseText || options?.rawText || options?.modelText || ""
+  );
 
-        return createCast({
-          ...parsed,
-          coreCard: {
-            ...adaptedCoreCard,
-            imageUrl,
-          },
-          sections: adaptedSections,
-          input: cleanedQuestion,
-          question: cleanedQuestion,
-          sourceText: cleanedSource,
-          userContext: payload.userContext,
-          engagement,
-          metadata,
-          imageUrl,
-        });
-      }
+  const parsed = extractJsonObject(responseText);
 
-      throw new Error("Invalid AI response");
-    } catch (err) {
-      if (attempt === MAX_RETRIES - 1) {
-        return buildNoAIState(cleanedQuestion, engagement, metadata);
-      }
-
-      await new Promise((res) => setTimeout(res, RETRY_DELAY));
-    }
+  if (parsed) {
+    return normalizeCastResponse(parsed, sourceText, question);
   }
+
+  const locked = buildCastSections({
+    cardName: fallbackCardName,
+    question,
+    sourceText,
+    priorSections: [],
+  });
+
+  return {
+    cardName: locked.coreCard.name,
+    opening: locked.opening,
+    tone: locked.tone,
+    sections: locked.sections,
+    coreCard: locked.coreCard,
+    echo: locked.echo,
+    metadata: {
+      lockedFlow: true,
+      flowVersion: "eidomancer-v1-locked-cast",
+      usedFallback: true,
+    },
+  };
+}
+
+export function formatCastForDisplay(cast = {}) {
+  const opening = cleanText(cast?.opening || "");
+  const sections = Array.isArray(cast?.sections) ? cast.sections : [];
+  const coreCardName = cleanText(cast?.coreCard?.name || cast?.cardName || "");
+  const coreCardDescription = cleanText(cast?.coreCard?.description || "");
+  const echo = cleanText(cast?.echo || "");
+
+  const body = [
+    opening,
+    ...sections.map((section) =>
+      `## ${section?.title || titleCase(section?.type || "")}\n${cleanText(section?.content || "")}`
+    ),
+    coreCardName
+      ? `## Core Card\n**${coreCardName}**\n${coreCardDescription}`
+      : "",
+    echo ? `## Echo\n${echo}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  return cleanText(body);
 }

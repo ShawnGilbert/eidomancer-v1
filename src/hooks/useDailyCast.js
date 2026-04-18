@@ -1,6 +1,6 @@
 // D:\eidomancer\src\hooks\useDailyCast.js
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { generateDailyCast, getDateKey } from "../lib/dailyCast";
 import {
   getTodayDailyCast,
@@ -25,6 +25,17 @@ export default function useDailyCast() {
   const [focusValue, setFocusValue] = useState("");
   const [inputResetKey, setInputResetKey] = useState(0);
 
+  const generationRef = useRef(0);
+
+  function startGeneration() {
+    generationRef.current += 1;
+    return generationRef.current;
+  }
+
+  function isCurrentGeneration(token) {
+    return token === generationRef.current;
+  }
+
   useEffect(() => {
     detectReturnEvent();
     pruneDailyFocusEntries(30);
@@ -34,6 +45,8 @@ export default function useDailyCast() {
     let cancelled = false;
 
     async function loadDailyCast() {
+      const token = startGeneration();
+
       setStatus("loading");
       setError("");
 
@@ -47,7 +60,7 @@ export default function useDailyCast() {
           (stored?.metadata?.dailyFocus || "").trim() === savedFocus.trim();
 
         if (stored && storedMatchesFocus) {
-          if (!cancelled) {
+          if (!cancelled && isCurrentGeneration(token)) {
             setSelectedCast(stored);
             setRecentCasts(getRecentDailyCasts(7));
             setStatus("ready");
@@ -65,7 +78,7 @@ export default function useDailyCast() {
             focusApplied: Boolean(savedFocus),
           });
 
-          // Do not return; allow background refresh.
+          // Intentionally continue so the app can refresh in the background.
         }
 
         const history = getRecentDailyCasts(7);
@@ -79,6 +92,8 @@ export default function useDailyCast() {
             theme: "The Emergent Ones",
           },
         });
+
+        if (cancelled || !isCurrentGeneration(token)) return;
 
         const castWithFocus = {
           ...generated,
@@ -115,13 +130,11 @@ export default function useDailyCast() {
           focusApplied: Boolean(savedFocus),
         });
 
-        if (!cancelled) {
-          setSelectedCast(castWithFocus);
-          setRecentCasts(getRecentDailyCasts(7));
-          setStatus("ready");
-        }
+        setSelectedCast(castWithFocus);
+        setRecentCasts(getRecentDailyCasts(7));
+        setStatus("ready");
       } catch (err) {
-        if (!cancelled) {
+        if (!cancelled && isCurrentGeneration(token)) {
           setError(err?.message || "Failed to load daily cast.");
           setStatus("error");
         }
@@ -142,8 +155,11 @@ export default function useDailyCast() {
 
     let cancelled = false;
     let retryTimer = null;
+    const retryToken = startGeneration();
 
     async function retryCast() {
+      if (cancelled || !isCurrentGeneration(retryToken)) return;
+
       const dateKey = getDateKey();
       const savedFocus = getDailyFocus(dateKey);
 
@@ -162,10 +178,10 @@ export default function useDailyCast() {
           },
         });
 
+        if (cancelled || !isCurrentGeneration(retryToken)) return;
+
         if (generated?.mode === "no-ai") {
-          if (!cancelled) {
-            retryTimer = window.setTimeout(retryCast, 3000);
-          }
+          retryTimer = window.setTimeout(retryCast, 3000);
           return;
         }
 
@@ -205,14 +221,12 @@ export default function useDailyCast() {
           focusApplied: Boolean(savedFocus),
         });
 
-        if (!cancelled) {
-          setSelectedCast(castWithFocus);
-          setRecentCasts(getRecentDailyCasts(7));
-          setStatus("ready");
-          setError("");
-        }
+        setSelectedCast(castWithFocus);
+        setRecentCasts(getRecentDailyCasts(7));
+        setStatus("ready");
+        setError("");
       } catch {
-        if (!cancelled) {
+        if (!cancelled && isCurrentGeneration(retryToken)) {
           retryTimer = window.setTimeout(retryCast, 3000);
         }
       }
@@ -273,7 +287,12 @@ export default function useDailyCast() {
   }
 
   function handleSelectRecentCast(cast) {
+    if (!cast) return;
+
+    startGeneration();
     setSelectedCast(cast);
+    setStatus("ready");
+    setError("");
 
     logEvent("history_opened", {
       dateKey: cast?.dateKey || null,
@@ -296,6 +315,7 @@ export default function useDailyCast() {
   }
 
   async function regenerateForFocus(nextFocus = "") {
+    const token = startGeneration();
     const dateKey = getDateKey();
     const normalizedFocus = String(nextFocus || "").trim();
 
@@ -322,6 +342,8 @@ export default function useDailyCast() {
           theme: "The Emergent Ones",
         },
       });
+
+      if (!isCurrentGeneration(token)) return;
 
       const castWithFocus = {
         ...generated,
@@ -363,12 +385,13 @@ export default function useDailyCast() {
       setRecentCasts(getRecentDailyCasts(7));
       setStatus("ready");
 
-      // Clear the draft box after a successful cast submit.
       setFocusValue("");
       setInputResetKey((key) => key + 1);
     } catch (err) {
-      setError(err?.message || "Failed to regenerate daily cast.");
-      setStatus("error");
+      if (isCurrentGeneration(token)) {
+        setError(err?.message || "Failed to regenerate daily cast.");
+        setStatus("error");
+      }
     }
   }
 
