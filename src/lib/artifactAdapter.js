@@ -41,7 +41,8 @@ export function castToArtifact(cast) {
     },
 
      coreImageUrl:
-  cast?.coreCard?.imageUrl || "/artifacts/metronome_core.png",
+  cast?.coreCard?.imageUrl ||
+  `${window.location.origin}/metronome_core.png`,
 
     cast: {
       signal: getSection(cast, "signal"),
