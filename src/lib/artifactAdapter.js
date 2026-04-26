@@ -40,7 +40,8 @@ export function castToArtifact(cast) {
         "No explicit input was provided for this cast.",
     },
 
-    coreImageUrl: cast?.coreCard?.imageUrl || "",
+     coreImageUrl:
+  cast?.coreCard?.imageUrl || "/artifacts/metronome_core.png",
 
     cast: {
       signal: getSection(cast, "signal"),
