@@ -53,8 +53,7 @@ function sentenceChunks(text = "") {
 }
 
 function pickShortLines(text = "", maxLines = 4) {
-  const chunks = sentenceChunks(text);
-  return chunks.slice(0, maxLines);
+  return sentenceChunks(text).slice(0, maxLines);
 }
 
 function normalizeSectionName(value = "") {
@@ -72,9 +71,11 @@ function getSectionContent(sections = [], type = "") {
 function hashString(value = "") {
   let hash = 0;
   const text = String(value || "");
+
   for (let i = 0; i < text.length; i += 1) {
     hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
   }
+
   return hash;
 }
 
@@ -84,33 +85,37 @@ function pickVariant(seedText = "", label = "", options = []) {
   return options[index];
 }
 
+function hasAny(source = "", patterns = []) {
+  return patterns.some((pattern) => pattern.test(source));
+}
+
 function inferTone(text = "") {
   const source = String(text || "").toLowerCase();
 
   const heavyHits =
     (source.match(
-      /\b(tired|exhausted|burned out|burnout|nihilist|nihilistic|nothing left|done playing|brutal|worthless|void|fatigue|overwhelmed|empty)\b/g
+      /\b(tired|exhausted|burned out|burnout|nihilist|nihilistic|nothing left|done playing|brutal|worthless|void|fatigue|overwhelmed|empty|weak|suffering|lay down|never get back up)\b/g
     ) || []).length;
 
   const sharpHits =
     (source.match(
-      /\b(angry|rage|furious|hate|algorithm|market|pressure|forced|trapped|punish|corrupt|bug|broken|error|failure|wrong|fix)\b/g
+      /\b(angry|rage|furious|hate|algorithm|market|pressure|forced|trapped|punish|corrupt|bug|broken|error|failure|wrong|fix|unfair|cruel|control|coercion)\b/g
     ) || []).length;
 
   const softHits =
     (source.match(
-      /\b(hope|gentle|quiet|calm|simple|rest|soft|tender|allow|peace)\b/g
+      /\b(hope|gentle|quiet|calm|simple|rest|soft|tender|allow|peace|appreciative)\b/g
     ) || []).length;
 
   const absurdHits =
     (source.match(
-      /\b(how now brown cow|nonsense|random|weird|absurd|playful|joke)\b/g
+      /\b(how now brown cow|nonsense|random|weird|absurd|playful|joke|lol)\b/g
     ) || []).length;
 
   if (absurdHits >= 1 && sharpHits >= 1) return "playful-defiant";
-  if (heavyHits >= 3 && sharpHits >= 2) return "exhausted-defiant";
-  if (heavyHits >= 3) return "exhausted";
-  if (sharpHits >= 3) return "defiant";
+  if (heavyHits >= 2 && sharpHits >= 2) return "exhausted-defiant";
+  if (heavyHits >= 2) return "exhausted";
+  if (sharpHits >= 2) return "defiant";
   if (softHits >= 2) return "quiet";
   if (absurdHits >= 1) return "playful";
   return "reflective";
@@ -124,18 +129,18 @@ function inferCoreCardName(text = "") {
   }
 
   if (
-    /\b(exhausted|tired|burnout|burned out|nothing left|void|nihilist|nihilistic)\b/.test(
+    /\b(exhausted|tired|burnout|burned out|nothing left|void|nihilist|nihilistic|weak|suffering|fatigue)\b/.test(
       source
     )
   ) {
     return "The Exhausted Signal";
   }
 
-  if (/\b(algorithm|market|metrics|performance|perform|value)\b/.test(source)) {
+  if (/\b(algorithm|market|metrics|performance|perform|value|monetize|money)\b/.test(source)) {
     return "The Measured Self";
   }
 
-  if (/\b(confused|lost|uncertain|drift|adrift|compass)\b/.test(source)) {
+  if (/\b(confused|lost|uncertain|drift|adrift|compass|don’t know|don't know)\b/.test(source)) {
     return "The Fading Compass";
   }
 
@@ -143,29 +148,180 @@ function inferCoreCardName(text = "") {
     return "The Trickster Prompt";
   }
 
+  if (/\b(control|coercion|obedience|righteous|ideology|tyrant|authority)\b/.test(source)) {
+    return "The Crown of Borrowed Fire";
+  }
+
   return "The Witness Under Pressure";
 }
 
-function inferCoreImagePrompt({ cardName, signal, tension, pattern, sourceText, question }) {
-  const text = [cardName, signal, tension, pattern, sourceText, question]
+function extractCoreTension({ question = "", sourceText = "" }) {
+  const source = [question, sourceText].filter(Boolean).join(" ").toLowerCase();
+  const seed = [question, sourceText].join(" :: ");
+
+  const profiles = [
+    {
+      key: "builder-exhaustion",
+      tests: [
+        /\b(build|make|create|finish|app|project|eidomancer|working|ship|launch)\b/,
+        /\b(tired|exhausted|burnout|weak|suffering|overwhelmed|avoid|stuck|can't|cannot|don’t know|don't know)\b/,
+      ],
+      drive: "You want the thing to become real",
+      blockage: "your body and attention keep refusing the pace your mind demands",
+      behaviorLoop:
+        "You gather meaning, then turn it into a mountain, then punish yourself for not climbing it fast enough.",
+      hiddenFear:
+        "If you slow down, the window closes; if you push harder, you may break the part of you that still wants this.",
+    },
+    {
+      key: "value-performance",
+      tests: [
+        /\b(value|valuable|worth|prove|impressive|useful|paid|money|monetize|reward|compensated)\b/,
+        /\b(seen|recognized|allowed|effort|work|output|content|share)\b/,
+      ],
+      drive: "You want your effort to count",
+      blockage: "the world keeps translating sincerity into performance metrics",
+      behaviorLoop:
+        "You look for a clean signal of worth, then mistrust it because every signal now looks like a scoreboard.",
+      hiddenFear:
+        "If nobody responds, it may feel like the work did not matter, even when the work was real.",
+    },
+    {
+      key: "diagnostic-overreach",
+      tests: [
+        /\b(bug|broken|error|glitch|debug|fix|wrong|issue|crash|fails|failure)\b/,
+        /\b(system|file|code|engine|component|render|daily|hook|flow)\b/,
+      ],
+      drive: "You want to find the true fault",
+      blockage: "your pattern-sense starts flagging every rough edge as possible collapse",
+      behaviorLoop:
+        "You scan for the hidden break until unfinished begins to feel indistinguishable from doomed.",
+      hiddenFear:
+        "If you stop checking, the real flaw survives; if you keep checking, the whole project becomes a crime scene.",
+    },
+    {
+      key: "meaning-under-measurement",
+      tests: [
+        /\b(algorithm|youtube|audience|views|likes|metrics|platform|content|thumbnail|tags|share)\b/,
+        /\b(real|meaning|sincere|authentic|truth|seen|toy|gimmick)\b/,
+      ],
+      drive: "You want the work to stay sincere",
+      blockage: "distribution keeps pressuring sincerity to dress up as strategy",
+      behaviorLoop:
+        "You make something honest, then immediately wonder how it will be judged, packaged, titled, cropped, and sold.",
+      hiddenFear:
+        "The tool could become successful by becoming exactly the kind of hollow thing it was built to resist.",
+    },
+    {
+      key: "ideology-pressure",
+      tests: [
+        /\b(control|coercion|obedience|authority|tyrant|righteous|ideology|politics|religion|left|right|war|conflict)\b/,
+        /\b(fear|unfair|system|power|lie|truth|reality|narrative)\b/,
+      ],
+      drive: "You want reality named without letting fear hijack the naming",
+      blockage: "people keep turning danger into permission for control",
+      behaviorLoop:
+        "The argument starts with a real problem, then smuggles in domination as if it were the only adult response.",
+      hiddenFear:
+        "If compassion cannot defend itself, cruelty will keep disguising itself as wisdom.",
+    },
+    {
+      key: "absurd-calibration",
+      tests: [
+        /\b(how now brown cow|nonsense|absurd|joke|weird|random|playful|lol)\b/,
+        /\b(test|prompt|engine|meaning|range|system)\b/,
+      ],
+      drive: "You want to know whether the system has range",
+      blockage: "fake depth can make even nonsense sound profound",
+      behaviorLoop:
+        "You poke the ritual with a joke to see whether it is alive, rigid, or just pretending.",
+      hiddenFear:
+        "If the system treats every input as sacred, it is not wise; it is gullible.",
+    },
+      {
+      key: "authenticity-vs-triviality",
+      tests: [
+        /\b(real|authentic|meaningful|serious)\b/,
+        /\b(toy|gimmick|fake|pointless|silly)\b/,
+      ],
+      drive: "You want the system to feel real and meaningful",
+      blockage: "the fear that it may collapse into a gimmick keeps shadowing the work",
+      behaviorLoop:
+        "You build something sincere, then test whether it still feels alive after it becomes product-shaped.",
+      hiddenFear:
+        "If the system becomes too polished, it may stop feeling true; if it stays too raw, it may never become usable.",
+    },
+];
+
+  const match = profiles.find((profile) =>
+    profile.tests.every((test) => test.test(source))
+  );
+
+  if (match) {
+    return {
+      ...match,
+      summary: `${match.drive}, but ${match.blockage}.`,
+    };
+  }
+
+  return {
+    key: "default-pressure",
+    drive: pickVariant(seed, "default-drive", [
+      "You want the signal to stay honest",
+      "You want the next step to reveal itself without being forced",
+      "You want meaning that is useful without becoming fake",
+    ]),
+    blockage: pickVariant(seed, "default-blockage", [
+      "the pressure to interpret it too quickly keeps distorting the shape",
+      "the demand to make it useful keeps arriving before the feeling is finished forming",
+      "the mind keeps trying to turn uncertainty into a finished object before it is ready",
+    ]),
+    behaviorLoop: pickVariant(seed, "default-loop", [
+      "You reach for clarity, then over-handle the signal until it starts bruising.",
+      "You try to respect the feeling, then immediately ask it to justify itself.",
+      "You sense something real, then the need to explain it starts competing with the need to hear it.",
+    ]),
+    hiddenFear: pickVariant(seed, "default-fear", [
+      "If you do not name it, it may vanish; if you name it too quickly, you may falsify it.",
+      "If this stays vague, it feels useless; if it becomes too polished, it may stop being true.",
+      "If you wait, you risk drifting; if you force it, you risk turning signal into theater.",
+    ]),
+    summary: "You want the signal to stay honest, but the pressure to interpret it too quickly keeps distorting the shape.",
+  };
+}
+
+function inferCoreImagePrompt({
+  cardName,
+  signal,
+  tension,
+  pattern,
+  sourceText,
+  question,
+  coreTension,
+}) {
+  const text = [cardName, signal, tension, pattern, sourceText, question, coreTension?.key]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
 
-  if (/\b(bug|broken|error|glitch|debug|failure|fix)\b/.test(text)) {
+  if (/\b(bug|broken|error|glitch|debug|failure|fix|diagnostic)\b/.test(text)) {
     return "A solitary symbolic figure studying a glowing fracture in reality, where a visible crack in the pattern emits dim coded light, tarot card composition, restrained surrealism, single central subject.";
   }
 
   if (
-    /\b(exhausted|tired|burnout|burned out|void|nothing left|holding.*upright|pressure)\b/.test(
+    /\b(exhausted|tired|burnout|burned out|void|nothing left|holding.*upright|pressure|builder-exhaustion)\b/.test(
       text
     )
   ) {
     return "A lone figure standing waist-deep in dark still water beneath faint glowing symbols and watchful shapes, exhausted from holding themselves upright under invisible pressure, tarot card composition, symbolic, cohesive, single central subject.";
   }
 
-  if (/\b(algorithm|metrics|market|measured|performance)\b/.test(text)) {
+  if (/\b(algorithm|metrics|market|measured|performance|value)\b/.test(text)) {
     return "A solitary figure surrounded by dim floating interface marks and measurement lines, caught between human softness and mechanical judgment, tarot card composition, symbolic, single central subject.";
+  }
+
+  if (/\b(control|coercion|obedience|righteous|ideology|authority|crown)\b/.test(text)) {
+    return "A solemn figure holding a borrowed crown made of fire and chains, standing between frightened crowds and a cold throne, tarot card composition, symbolic, restrained, single central subject.";
   }
 
   if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(text)) {
@@ -175,11 +331,97 @@ function inferCoreImagePrompt({ cardName, signal, tension, pattern, sourceText, 
   return "A solitary symbolic figure in a restrained surreal setting, carrying emotional tension without chaos, tarot card composition, cohesive, single central subject.";
 }
 
-function buildPoemFromSections({ question = "", signal, tension, pattern }) {
-  const source = [question, signal, tension, pattern].join(" ").toLowerCase();
+function buildSignal({ question, sourceText, fallback, variationSeed, coreTension }) {
+  if (cleanText(fallback)) return cleanText(fallback);
+
+  const source = [question, sourceText].join(" ").toLowerCase();
+
+  if (coreTension?.key && coreTension.key !== "default-pressure") {
+    return pickVariant(variationSeed, `signal-${coreTension.key}`, [
+      `The strongest signal is this: ${coreTension.summary} The cast is not reading a mood; it is reading the collision between intent and friction.`,
+      `What is actually lighting up is not the surface problem. It is the split between what you are trying to protect and what reality keeps making expensive: ${coreTension.summary}`,
+      `The signal is the contradiction itself. ${coreTension.drive}, but ${coreTension.blockage}. That is where the cast begins.`,
+    ]);
+  }
+
+  if (/\b(tired|burnout|burned out|nothing left|void|brutal|so tired|exhausted|weak)\b/.test(source)) {
+    return pickVariant(variationSeed, "signal-exhausted", [
+      "What is surfacing is not failure of will. It is fatigue from living too long inside a system that keeps asking expression to justify itself.",
+      "The signal is depletion, but not emptiness. It is the weariness that comes from being asked to prove meaning one time too many.",
+      "The real signal here is not laziness. It is exhaustion with having to constantly perform value.",
+    ]);
+  }
+
+  return pickVariant(variationSeed, "signal-default", [
+    `The signal is not confusion. It is pressure around an unnamed contradiction: ${coreTension.summary}`,
+    `What’s coming through is a real feeling being pushed toward usefulness before it has finished becoming clear. ${coreTension.hiddenFear}`,
+    `The clearest signal is compression: something honest is trying to stay intact while the mind asks it to become legible too quickly.`,
+  ]);
+}
+
+function buildTension({ question, signal, sourceText, fallback, variationSeed, coreTension }) {
+  if (cleanText(fallback)) return cleanText(fallback);
+
+  const source = [question, signal, sourceText].join(" ").toLowerCase();
+
+  if (coreTension?.key && coreTension.key !== "default-pressure") {
+    return pickVariant(variationSeed, `tension-${coreTension.key}`, [
+      `${coreTension.hiddenFear} That is the live wire under the reading.`,
+      `The tension is not simply that this is hard. It is that both choices carry a cost: ${coreTension.hiddenFear}`,
+      `This is the trap: ${coreTension.behaviorLoop} The problem is not effort. It is effort without a humane governor.`,
+    ]);
+  }
+
+  if (/\b(try|trying|effort|forced|pressure)\b/.test(source)) {
+    return pickVariant(variationSeed, "tension-effort", [
+      "Push harder and the signal starts sounding artificial. Pull back too much and everything risks going dim. That is the pressure point.",
+      "The tension lives between effort and vanishing: too much force and the thing warps, too little and it seems to disappear entirely.",
+      "If you try, it feels forced. If you stop trying, it feels like disappearance. That is the trap.",
+    ]);
+  }
+
+  return pickVariant(variationSeed, "tension-default", [
+    `${coreTension.hiddenFear} That is why the feeling refuses to become simple.`,
+    "The pressure point sits between being present and feeling required to explain why your presence matters.",
+    "The tension is between the desire to simply exist and the pressure to justify that existence.",
+  ]);
+}
+
+function buildPattern({ question, signal, tension, sourceText, fallback, variationSeed, coreTension }) {
+  if (cleanText(fallback)) return cleanText(fallback);
+
+  const source = [question, signal, tension, sourceText].join(" ").toLowerCase();
+
+  if (coreTension?.key && coreTension.key !== "default-pressure") {
+    return pickVariant(variationSeed, `pattern-${coreTension.key}`, [
+      `The broader pattern is this loop: ${coreTension.behaviorLoop}`,
+      `This is not just a mood. It is a repeatable mechanism: ${coreTension.behaviorLoop}`,
+      `The system underneath the feeling is simple and brutal: ${coreTension.behaviorLoop}`,
+    ]);
+  }
+
+  if (/\b(algorithm|market|metrics|youtube|audience)\b/.test(source)) {
+    return pickVariant(variationSeed, "pattern-algorithm", [
+      "The broader pattern is systemic: once measurement sits between the self and expression, sincerity begins mutating into strategy.",
+      "What you are touching is not just personal. It is the cultural pressure that turns identity into output and output into proof of value.",
+      "This is bigger than one mood. It is what happens when modern life puts metrics between expression and worth, until even authenticity starts to feel like a performance.",
+    ]);
+  }
+
+  return pickVariant(variationSeed, "pattern-default", [
+    coreTension.behaviorLoop,
+    "The larger shape here is a tension between direct experience and the reflex to turn experience into interpretation too quickly.",
+    "The broader pattern is a mind caught between wanting simplicity and feeling forced to manufacture significance.",
+  ]);
+}
+
+function buildPoemFromSections({ question = "", signal, tension, pattern, coreTension }) {
+  const source = [question, signal, tension, pattern, coreTension?.key]
+    .join(" ")
+    .toLowerCase();
   const variationSeed = [question, signal, tension, pattern].join(" :: ");
 
-  if (/\b(bug|broken|error|glitch|fix|debug)\b/.test(source)) {
+  if (/\b(diagnostic-overreach|bug|broken|error|glitch|fix|debug)\b/.test(source)) {
     return pickVariant(variationSeed, "poem-bug", [
       cleanText(`A crack in the pattern
 keeps catching the light
@@ -208,7 +450,7 @@ begin to sound guilty`),
     ]);
   }
 
-  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
+  if (/\b(absurd-calibration|how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
     return pickVariant(variationSeed, "poem-absurd", [
       cleanText(`A joke knocks once
 on the temple door
@@ -238,7 +480,7 @@ has range`),
     ]);
   }
 
-  if (/\b(exhausted|tired|burnout|burned out|nothing left|overwhelmed|fatigue)\b/.test(source)) {
+  if (/\b(builder-exhaustion|exhausted|tired|burnout|burned out|nothing left|overwhelmed|fatigue)\b/.test(source)) {
     return pickVariant(variationSeed, "poem-exhausted", [
       cleanText(`The signal is dim
 but not gone
@@ -264,7 +506,7 @@ through the machinery of proof`),
     ]);
   }
 
-  if (/\b(value|worth|prove|performance|perform|impressive)\b/.test(source)) {
+  if (/\b(value-performance|value|worth|prove|performance|perform|impressive)\b/.test(source)) {
     return pickVariant(variationSeed, "poem-value", [
       cleanText(`Worth put on its costume
 and stepped into the light
@@ -286,6 +528,33 @@ became legible
 
 what was alive
 learned to explain itself`),
+    ]);
+  }
+
+  if (/\b(ideology-pressure|control|coercion|obedience|righteous)\b/.test(source)) {
+    return pickVariant(variationSeed, "poem-ideology", [
+      cleanText(`Fear found a crown
+and called itself wisdom
+
+the crowd heard thunder
+
+and mistook volume
+for truth`),
+
+      cleanText(`A real danger
+stood at the gate
+
+then someone sold the key
+
+as if obedience
+were shelter`),
+
+      cleanText(`The old spell returns
+
+name the wound
+claim the cure
+own the hand
+that tightens`),
     ]);
   }
 
@@ -315,23 +584,142 @@ too soon`),
   ]);
 }
 
-function buildEcho({ question, signal, tension, pattern, sourceText }) {
-  const source = [question, signal, tension, pattern, sourceText]
+function buildInsight({ question, signal, tension, pattern, sourceText, variationSeed, coreTension }) {
+  const source = [question, signal, tension, pattern, sourceText, coreTension?.key]
     .join(" ")
     .toLowerCase();
 
-  if (/\b(bug|broken|error|glitch|fix|debug)\b/.test(source)) {
-    return "The bug may be real, but so is the lens looking for it.";
+  if (coreTension?.key && coreTension.key !== "default-pressure") {
+    return pickVariant(variationSeed, `insight-${coreTension.key}`, [
+      `The useful truth is uncomfortable: ${coreTension.hiddenFear} The answer is not to pretend the fear is false. The answer is to stop letting it run the whole machine.`,
+      `This cast is pointing at a behavior loop, not a flaw in character. ${coreTension.behaviorLoop} Once named, the loop becomes something you can interrupt.`,
+      `The pressure makes sense, but pressure is not always instruction. ${coreTension.summary} That distinction matters.`,
+    ]);
   }
 
-  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
-    return "Sometimes the test is whether meaning survives nonsense.";
+  if (/\b(value|valuable|worth|prove|performance|perform)\b/.test(source)) {
+    return pickVariant(variationSeed, "insight-value", [
+      "You were trained to believe value must be demonstrated to exist. That is why even simple self-expression feels like a test.",
+      "The pressure to prove worth rewires expression into audition. Once that happens, even honest feeling starts to sound like a performance review.",
+      "When worth becomes something to demonstrate, being yourself starts to feel insufficient by default. That distortion is doing more damage than it first appears.",
+    ]);
   }
 
-  if (
-    /\b(perform|performance|valuable|value|worth|allowed|prove)\b/.test(source)
-  ) {
-    return "I don’t want to be impressive. I want to be allowed.";
+  return pickVariant(variationSeed, "insight-default", [
+    "The conflict is usually not between depth and simplicity, but between being and being evaluated.",
+    "The friction here is less about meaning itself and more about what happens when meaning feels observed, measured, or prematurely interpreted.",
+    "What looks like confusion is often a collision between genuine signal and the pressure to convert it into something legible too quickly.",
+  ]);
+}
+
+function buildRecommendation({ question, tone, signal, tension, variationSeed, coreTension }) {
+  const source = [question, tone, signal, tension, coreTension?.key].join(" ").toLowerCase();
+
+  if (coreTension?.key === "builder-exhaustion") {
+    return pickVariant(variationSeed, "recommendation-builder-exhaustion", [
+      "Make the next task smaller than your pride wants it to be. One file, one visible improvement, then stop.",
+      "Do not ask whether the whole project is possible today. Pick one seam and make it less broken.",
+      "Protect the spark by reducing the demand. The goal is not heroic output; it is continuity.",
+    ]);
+  }
+
+  if (coreTension?.key === "value-performance") {
+    return pickVariant(variationSeed, "recommendation-value-performance", [
+      "Create one thing before checking whether it deserves attention.",
+      "Separate worth from response for one cycle. Make the artifact, then evaluate distribution later.",
+      "Do one honest action that does not need applause to have happened.",
+    ]);
+  }
+
+  if (coreTension?.key === "diagnostic-overreach") {
+    return pickVariant(variationSeed, "recommendation-diagnostic-overreach", [
+      "Pick one suspected fault and test only that. Ignore every other weird edge until you know whether this one reproduces.",
+      "Reduce the scope. One bug, one test, one result. Do not diagnose the whole machine at once.",
+      "Write down the smallest concrete break you can name, then test it in isolation before you interpret the rest of the system.",
+    ]);
+  }
+
+  if (coreTension?.key === "meaning-under-measurement") {
+    return pickVariant(variationSeed, "recommendation-meaning-under-measurement", [
+      "Make the honest version first. Package it after it exists.",
+      "Keep the platform out of the first draft. Let the signal form before the scoreboard enters.",
+      "Separate expression from distribution for one cycle. Build it, then judge it later.",
+    ]);
+  }
+
+  if (coreTension?.key === "ideology-pressure") {
+    return pickVariant(variationSeed, "recommendation-ideology-pressure", [
+      "Name the real danger without granting ownership of the cure to the loudest person in the room.",
+      "Look for the bridge between fear and obedience. That is usually where the trick is hidden.",
+      "Ask who benefits when urgency is used to make cruelty sound mature.",
+    ]);
+  }
+
+  if (coreTension?.key === "absurd-calibration") {
+    return pickVariant(variationSeed, "recommendation-absurd-calibration", [
+      "Run one absurd prompt and one serious prompt back to back. Compare what changes and what stays stable.",
+      "Treat play as a test harness. Try one ridiculous prompt, then one sincere one, and compare the symbolic range.",
+      "Use this as calibration. The system should bend without becoming fake-deep.",
+    ]);
+  }
+
+  if (/\b(exhausted|burnout|nothing left|tired)\b/.test(source)) {
+    return pickVariant(variationSeed, "recommendation-exhausted", [
+      "Do one thing today that does not need to be shared, improved, or justified.",
+      "Reduce the demand. Pick one task and make it smaller before you try to finish it.",
+      "Protect ten minutes of non-performative time. No posting, no optimizing, no proving.",
+    ]);
+  }
+
+  return pickVariant(variationSeed, "recommendation-default", [
+    "Name one true thing about today without trying to improve it yet.",
+    "Take one small action that clarifies the signal instead of expanding the story.",
+    "Choose the smallest next move that makes tomorrow easier to read.",
+  ]);
+}
+
+function buildEcho({ question, signal, tension, pattern, sourceText, coreTension }) {
+  const source = [question, signal, tension, pattern, sourceText, coreTension?.key]
+    .join(" ")
+    .toLowerCase();
+
+  const seeded = [question, signal, tension, pattern, sourceText].join(" :: ");
+
+  const byProfile = {
+    "builder-exhaustion": [
+      "The dream is not dead. It is overloaded.",
+      "You are not out of meaning. You are out of humane pacing.",
+      "The mountain got built out of next steps.",
+    ],
+    "value-performance": [
+      "I don’t want to be impressive. I want to be allowed.",
+      "Worth is not a scoreboard, even when the world acts like one.",
+      "The work mattered before the metric saw it.",
+    ],
+    "diagnostic-overreach": [
+      "The bug may be real, but so is the lens looking for it.",
+      "Not every rough edge is the fatal flaw.",
+      "Debug the machine, not your right to build it.",
+    ],
+    "meaning-under-measurement": [
+      "The system taught you to perform your own existence.",
+      "Make the signal before the scoreboard arrives.",
+      "Authenticity starts mutating when metrics enter too early.",
+    ],
+    "ideology-pressure": [
+      "Fear is not proof that obedience is wisdom.",
+      "The trick is turning danger into ownership of the cure.",
+      "Cruelty loves to borrow reality’s voice.",
+    ],
+    "absurd-calibration": [
+      "Sometimes the test is whether meaning survives nonsense.",
+      "A joke can expose a fake oracle.",
+      "If the ritual cannot laugh, it cannot listen.",
+    ],
+  };
+
+  if (coreTension?.key && byProfile[coreTension.key]) {
+    return pickVariant(seeded, `echo-${coreTension.key}`, byProfile[coreTension.key]);
   }
 
   if (/\b(exhausted|tired|burnout|nothing left)\b/.test(source)) {
@@ -344,245 +732,16 @@ function buildEcho({ question, signal, tension, pattern, sourceText }) {
 
   return "Meaning arrives best when it is not forced.";
 }
-function avoidEchoOverlap(recommendation, echo) {
-  if (!echo) return recommendation;
 
-  const rec = recommendation.toLowerCase();
-  const ech = echo.toLowerCase();
+function buildCoreCardDescription({ cardName, imagePrompt, coreTension }) {
+  if (coreTension?.key && coreTension.key !== "default-pressure") {
+    return cleanText(`${coreTension.summary}
 
-  // crude but effective overlap check
-  if (rec.includes(ech.slice(0, 20))) {
-    return null; // force regeneration
+${coreTension.behaviorLoop}
+
+The card does not accuse. It names the pressure so it can stop pretending to be fate.`);
   }
 
-  return recommendation;
-}
-function buildRecommendation({ question, tone, signal, tension, variationSeed }) {
-  const source = [question, tone, signal, tension].join(" ").toLowerCase();
-
-  if (/\b(bug|broken|error|glitch|fix|debug)\b/.test(source)) {
-    return pickVariant(variationSeed, "recommendation-bug", [
-      "Pick one suspected fault and test only that. Ignore every other weird edge until you know whether this one reproduces.",
-      "Write down the smallest concrete break you can name, then test it in isolation before you interpret the rest of the system.",
-      "Reduce the scope. One bug, one test, one result. Do not diagnose the whole machine at once.",
-    ]);
-  }
-
-  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
-    return pickVariant(variationSeed, "recommendation-absurd", [
-      "Run one absurd prompt and one serious prompt back to back. Compare what changes and what stays stable.",
-      "Use this as a calibration pass. Feed the system one playful input on purpose and note whether it stays flexible or goes generic.",
-      "Treat play as a test harness. Try one ridiculous prompt, then one sincere one, and compare the symbolic range.",
-    ]);
-  }
-
-  if (/\b(exhausted|burnout|nothing left|tired)\b/.test(source)) {
-    return pickVariant(variationSeed, "recommendation-exhausted", [
-      "Do one thing today that does not need to be shared, improved, or justified.",
-      "Reduce the demand. Pick one task and make it smaller before you try to finish it.",
-      "Protect ten minutes of non-performative time. No posting, no optimizing, no proving.",
-    ]);
-  }
-
-  if (/\b(value|valuable|worth|prove|performance|perform|impressive)\b/.test(source)) {
-    return pickVariant(variationSeed, "recommendation-value", [
-      "Make one small decision today without asking whether it increases your value.",
-      "Finish one honest action before you evaluate whether it was useful, impressive, or legible.",
-      "Choose one thing to do badly but sincerely, just to break the reflex to perform competence.",
-    ]);
-  }
-
-  if (/\b(angry|defiant|algorithm|market|pressure)\b/.test(source)) {
-    return pickVariant(variationSeed, "recommendation-defiant", [
-      "Create first. Decide where it belongs only after it exists.",
-      "Keep the platform out of the first draft. Make the thing before you ask what it can do for you.",
-      "Separate expression from distribution for one cycle. Build it, then judge it later.",
-    ]);
-  }
-
-  return pickVariant(variationSeed, "recommendation-default", [
-    "Name one true thing about today without trying to improve it yet.",
-    "Take one small action that clarifies the signal instead of expanding the story.",
-    "Choose the smallest next move that makes tomorrow easier to read.",
-  ]);
-}
-
-function buildInsight({ question, signal, tension, pattern, sourceText, variationSeed }) {
-  const source = [question, signal, tension, pattern, sourceText]
-    .join(" ")
-    .toLowerCase();
-
-  if (/\b(bug|broken|error|glitch|fix|debug)\b/.test(source)) {
-    return pickVariant(variationSeed, "insight-bug", [
-      "When you are looking for failure, every rough edge starts to glow. The real skill is separating a true bug from a system still taking shape.",
-      "A builder’s mind can turn unfinished into broken if it stays in diagnostic mode too long. The deeper task is learning which flaws are structural and which are just the shape of emergence.",
-      "The instinct to search for the hidden fault is useful, but it can also bend perception. Not every irregularity is the break you fear it is.",
-    ]);
-  }
-
-  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
-    return pickVariant(variationSeed, "insight-absurd", [
-      "Absurd inputs reveal whether the system is rigid, fake-deep, or actually adaptive. Play can be a diagnostic tool.",
-      "Nonsense is not meaningless here. It is pressure-testing. The joke reveals whether the symbolic engine can flex without collapsing into canned depth.",
-      "Playfulness becomes useful the moment it stops being decoration and starts becoming a test of range. That is what this prompt is doing.",
-    ]);
-  }
-
-  if (/\b(value|valuable|worth|prove|performance|perform)\b/.test(source)) {
-    return pickVariant(variationSeed, "insight-value", [
-      "You were trained to believe value must be demonstrated to exist. That is why even simple self-expression feels like a test.",
-      "The pressure to prove worth rewires expression into audition. Once that happens, even honest feeling starts to sound like a performance review.",
-      "When worth becomes something to demonstrate, being yourself starts to feel insufficient by default. That distortion is doing more damage than it first appears.",
-    ]);
-  }
-
-  if (/\b(exhausted|burnout|nothing left|tired)\b/.test(source)) {
-    return pickVariant(variationSeed, "insight-exhausted", [
-      "The wish to stop performing is not failure. It is your system trying to return to baseline.",
-      "Exhaustion is often the nervous system refusing one more cycle of forced meaning. That refusal is information, not weakness.",
-      "Wanting out of the performance loop does not mean you are broken. It often means your inner system has reached the point where pretending costs too much.",
-    ]);
-  }
-
-  return pickVariant(variationSeed, "insight-default", [
-    "The conflict is usually not between depth and simplicity, but between being and being evaluated.",
-    "The friction here is less about meaning itself and more about what happens when meaning feels observed, measured, or prematurely interpreted.",
-    "What looks like confusion is often a collision between genuine signal and the pressure to convert it into something legible too quickly.",
-  ]);
-}
-
-function buildPattern({ question, signal, tension, sourceText, fallback, variationSeed }) {
-  const source = [question, signal, tension, sourceText].join(" ").toLowerCase();
-
-  if (/\b(bug|broken|error|glitch|fix|debug)\b/.test(source)) {
-    return pickVariant(variationSeed, "pattern-bug", [
-      "This pattern belongs to people who are good at finding weak points. The gift is real, but so is the tendency to treat emergence like failure before it has finished becoming itself.",
-      "The larger shape here is diagnostic overreach: a mind tuned to catch flaws so quickly that it sometimes mistakes rough formation for genuine structural damage.",
-      "The broader pattern is a builder’s mind that keeps scanning for hidden faults. That makes you useful, but it can also make unfinished systems look more broken than they are.",
-    ]);
-  }
-
-  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
-    return pickVariant(variationSeed, "pattern-absurd", [
-      "The broader pattern is that unserious language often becomes a better test than serious language. It strips away the easy path and shows whether meaning can still emerge.",
-      "This pattern lives at the edge where play becomes calibration. Absurd prompts are useful because they reveal whether the engine can adapt or only pretend to.",
-      "The broader pattern is that nonsense can expose the boundaries of a meaning engine. When a system handles playful input badly, it reveals where its symbolic range is still too narrow.",
-    ]);
-  }
-
-  if (/\b(algorithm|market|metrics|youtube|audience)\b/.test(source)) {
-    return pickVariant(variationSeed, "pattern-algorithm", [
-      "The broader pattern is systemic: once measurement sits between the self and expression, sincerity begins mutating into strategy.",
-      "What you are touching is not just personal. It is the cultural pressure that turns identity into output and output into proof of value.",
-      "This is bigger than one mood. It is what happens when modern life puts metrics between expression and worth, until even authenticity starts to feel like a performance.",
-    ]);
-  }
-
-  if (/\b(value|valuable|worth|prove|perform)\b/.test(source)) {
-    return pickVariant(variationSeed, "pattern-value", [
-      "This sits inside a larger social habit: turning inner life into evidence, explanation, and proof before it is allowed to simply be felt.",
-      "The wider structure here is a world that rewards justification so aggressively that people start explaining themselves before they even know what they feel.",
-      "The broader pattern is a culture that pressures people to narrate and justify themselves just to feel real.",
-    ]);
-  }
-
-  return (
-    cleanText(fallback) ||
-    pickVariant(variationSeed, "pattern-default", [
-      "The larger shape here is a tension between direct experience and the reflex to turn experience into interpretation too quickly.",
-      "This pattern forms when simplicity is desired but meaning feels compulsory, and the mind starts overworking itself just to stay coherent.",
-      "The broader pattern is a mind caught between wanting simplicity and feeling forced to manufacture significance.",
-    ])
-  );
-}
-
-function buildTension({ question, signal, sourceText, fallback, variationSeed }) {
-  const source = [question, signal, sourceText].join(" ").toLowerCase();
-
-  if (/\b(bug|broken|error|glitch|fix|debug)\b/.test(source)) {
-    return pickVariant(variationSeed, "tension-bug", [
-      "If you stay in diagnostic mode, everything starts looking suspicious. If you relax too soon, you worry the true fault slips past. That is the tension.",
-      "The tension sits between vigilance and distortion: search too hard and you manufacture ghosts; stop too soon and you fear the real crack remains hidden.",
-      "If you keep searching for the flaw, you may find one. If you stop searching, you fear missing the real break. That is the trap.",
-    ]);
-  }
-
-  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
-    return pickVariant(variationSeed, "tension-absurd", [
-      "A playful prompt creates a real pressure point: respond too solemnly and the engine looks hollow; respond too literally and it looks asleep.",
-      "The tension here is between flexibility and fraud. The system has to hear the joke without pretending the joke is sacred scripture.",
-      "If the system takes nonsense too seriously, it feels fake. If it ignores it completely, it feels deaf. That is the tension.",
-    ]);
-  }
-
-  if (/\b(try|trying|effort|forced|pressure)\b/.test(source)) {
-    return pickVariant(variationSeed, "tension-effort", [
-      "Push harder and the signal starts sounding artificial. Pull back too much and everything risks going dim. That is the pressure point.",
-      "The tension lives between effort and vanishing: too much force and the thing warps, too little and it seems to disappear entirely.",
-      "If you try, it feels forced. If you stop trying, it feels like disappearance. That is the trap.",
-    ]);
-  }
-
-  return (
-    cleanText(fallback) ||
-    pickVariant(variationSeed, "tension-default", [
-      "The pressure point sits between being present and feeling required to explain why your presence matters.",
-      "This tension forms where simple being collides with the reflex to earn or narrate itself.",
-      "The tension is between the desire to simply exist and the pressure to justify that existence.",
-    ])
-  );
-}
-
-function buildSignal({ question, sourceText, fallback, variationSeed }) {
-  const source = [question, sourceText].join(" ").toLowerCase();
-
-  if (/\b(bug|broken|error|glitch|fix|debug)\b/.test(source)) {
-    return pickVariant(variationSeed, "signal-bug", [
-      "The strongest signal is diagnostic hunger: the drive to determine whether the problem belongs to the machine, the framing, or the mind examining it.",
-      "What is actually lighting up here is not only the suspected fault. It is the deeper uncertainty about whether the break lives in the build, the interpretation, or the demand placed on it.",
-      "The real signal is not just the bug itself. It is your need to know whether the flaw is in the system, the lens, or the expectation you brought to it.",
-    ]);
-  }
-
-  if (/\b(how now brown cow|absurd|playful|nonsense|joke)\b/.test(source)) {
-    return pickVariant(variationSeed, "signal-absurd", [
-      "What is being tested here is range. The playful input is asking whether the engine can hear absurdity without collapsing into empty seriousness.",
-      "The real signal is mischievous but honest: when meaning is forced to pass through nonsense, does anything genuine still come through?",
-      "The signal is a playful challenge: can symbolic meaning survive nonsense, or does the machine just fake coherence?",
-    ]);
-  }
-
-  if (
-    /\b(tired|burnout|burned out|nothing left|void|brutal|so tired|exhausted)\b/.test(
-      source
-    )
-  ) {
-    return pickVariant(variationSeed, "signal-exhausted", [
-      "What is surfacing is not failure of will. It is fatigue from living too long inside a system that keeps asking expression to justify itself.",
-      "The signal is depletion, but not emptiness. It is the weariness that comes from being asked to prove meaning one time too many.",
-      "The real signal here is not laziness. It is exhaustion with having to constantly perform value.",
-    ]);
-  }
-
-  if (/\b(value|valuable|worth|impressive|prove)\b/.test(source)) {
-    return pickVariant(variationSeed, "signal-value", [
-      "What is being revealed is a quiet exhaustion with needing to demonstrate value before basic presence feels permitted.",
-      "The signal here is not lack of ambition. It is resistance to the idea that worth must always arrive with evidence attached.",
-      "The signal is a deep fatigue with proving worth instead of being allowed to simply exist.",
-    ]);
-  }
-
-  return (
-    cleanText(fallback) ||
-    pickVariant(variationSeed, "signal-default", [
-      "What’s coming through is friction between genuine inner signal and the impulse to immediately convert it into function, explanation, or product.",
-      "The clearest signal is not confusion but compression: an honest feeling being pressed toward usefulness before it has finished becoming itself.",
-      "The signal is a pressure point between honest feeling and the demand to turn that feeling into something useful.",
-    ])
-  );
-}
-
-function buildCoreCardDescription({ cardName, imagePrompt }) {
   if (cardName === "The Exhausted Signal") {
     return cleanText(`A lone figure stands waist-deep in dark still water.
 Above them hover dim symbols, expectations, and watching forms.
@@ -617,6 +776,7 @@ function buildCastSections({
   question,
   sourceText,
   priorSections = [],
+  coreTension,
 }) {
   const fallbackSignal = getSectionContent(priorSections, "signal");
   const fallbackTension = getSectionContent(priorSections, "tension");
@@ -624,13 +784,16 @@ function buildCastSections({
   const fallbackInsight = getSectionContent(priorSections, "insight");
   const fallbackRecommendation = getSectionContent(priorSections, "recommendation");
 
-  const variationSeed = [cardName, question, sourceText].filter(Boolean).join(" :: ");
+  const variationSeed = [cardName, question, sourceText, coreTension?.key]
+    .filter(Boolean)
+    .join(" :: ");
 
   const signal = buildSignal({
     question,
     sourceText,
     fallback: fallbackSignal,
     variationSeed,
+    coreTension,
   });
 
   const tension = buildTension({
@@ -639,6 +802,7 @@ function buildCastSections({
     sourceText,
     fallback: fallbackTension,
     variationSeed,
+    coreTension,
   });
 
   const pattern = buildPattern({
@@ -648,6 +812,7 @@ function buildCastSections({
     sourceText,
     fallback: fallbackPattern,
     variationSeed,
+    coreTension,
   });
 
   const poem = buildPoemFromSections({
@@ -655,7 +820,10 @@ function buildCastSections({
     signal,
     tension,
     pattern,
+    coreTension,
   });
+
+  const tone = inferTone([question, signal, tension, pattern, sourceText].join(" "));
 
   const insight =
     fallbackInsight ||
@@ -666,9 +834,8 @@ function buildCastSections({
       pattern,
       sourceText,
       variationSeed,
+      coreTension,
     });
-
-  const tone = inferTone([question, signal, tension, pattern, sourceText].join(" "));
 
   const recommendation =
     fallbackRecommendation ||
@@ -678,6 +845,7 @@ function buildCastSections({
       signal,
       tension,
       variationSeed,
+      coreTension,
     });
 
   const imagePrompt = inferCoreImagePrompt({
@@ -687,15 +855,23 @@ function buildCastSections({
     pattern,
     sourceText,
     question,
+    coreTension,
   });
 
   const coreCard = {
     name: cardName,
-    description: buildCoreCardDescription({ cardName, imagePrompt }),
+    description: buildCoreCardDescription({ cardName, imagePrompt, coreTension }),
     imagePrompt,
   };
 
-  const echo = buildEcho({ question, signal, tension, pattern, sourceText });
+  const echo = buildEcho({
+    question,
+    signal,
+    tension,
+    pattern,
+    sourceText,
+    coreTension,
+  });
 
   return {
     tone,
@@ -732,6 +908,7 @@ function extractJsonObject(raw = "") {
 
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
+
   if (start >= 0 && end > start) {
     const sliced = text.slice(start, end + 1);
     const parsed = tryParseJson(sliced);
@@ -743,12 +920,12 @@ function extractJsonObject(raw = "") {
 
 function normalizeModelSections(parsed) {
   const inputSections = Array.isArray(parsed?.sections) ? parsed.sections : [];
-
   const sectionMap = new Map();
 
   for (const section of inputSections) {
     const key = normalizeSectionName(section?.type || section?.title || "");
     if (!key) continue;
+
     sectionMap.set(key, {
       type: key,
       title: titleCase(key),
@@ -760,9 +937,11 @@ function normalizeModelSections(parsed) {
 }
 
 function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
+  const coreTension = extractCoreTension({ question, sourceText });
+
   const cardName =
     cleanText(parsed?.coreCard?.name || parsed?.cardName || "") ||
-    inferCoreCardName([question, sourceText].join(" "));
+    inferCoreCardName([question, sourceText, coreTension?.key].join(" "));
 
   const priorSections = normalizeModelSections(parsed);
 
@@ -771,6 +950,7 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
     question,
     sourceText,
     priorSections,
+    coreTension,
   });
 
   const modelEcho = cleanText(parsed?.echo || parsed?.echoText || "");
@@ -790,7 +970,8 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
     echo: modelEcho || locked.echo,
     metadata: {
       lockedFlow: true,
-      flowVersion: "eidomancer-v1-locked-cast",
+      flowVersion: "eidomancer-v1-tension-extraction",
+      coreTensionKey: coreTension?.key || "default-pressure",
     },
   };
 }
@@ -799,16 +980,24 @@ export function buildSeed(input = {}) {
   const question = cleanText(input?.question || "");
   const transcript = cleanText(input?.transcript || "");
   const notes = cleanText(input?.notes || "");
-  const combined = cleanText([question, transcript, notes].filter(Boolean).join("\n\n"));
+  const sourceText = cleanText(input?.sourceText || "");
+  const userContext = cleanText(input?.userContext || "");
 
+  const combined = cleanText(
+    [question, transcript, notes, sourceText, userContext].filter(Boolean).join("\n\n")
+  );
+
+  const coreTension = extractCoreTension({ question, sourceText: combined });
   const sentences = sentenceChunks(combined);
   const gist = truncate(sentences.slice(0, 3).join(" "), 420);
 
   const themes = uniqueLines([
+    coreTension.summary,
+    coreTension.behaviorLoop,
     ...pickShortLines(question, 2),
-    ...pickShortLines(transcript, 3),
-    ...pickShortLines(notes, 2),
-  ]).slice(0, 5);
+    ...pickShortLines(transcript || sourceText, 3),
+    ...pickShortLines(notes || userContext, 2),
+  ]).slice(0, 6);
 
   return {
     question,
@@ -816,16 +1005,22 @@ export function buildSeed(input = {}) {
     gist,
     themes,
     emotionalTone: inferTone(combined),
-    suggestedCardName: inferCoreCardName(combined),
+    suggestedCardName: inferCoreCardName([combined, coreTension.key].join(" ")),
+    coreTension,
   };
 }
 
 export async function generateCastFromSeed(seed = {}, options = {}) {
   const question = cleanText(seed?.question || "");
   const sourceText = cleanText(seed?.sourceText || "");
+  const coreTension =
+    seed?.coreTension && typeof seed.coreTension === "object"
+      ? seed.coreTension
+      : extractCoreTension({ question, sourceText });
+
   const fallbackCardName =
     cleanText(seed?.suggestedCardName || "") ||
-    inferCoreCardName([question, sourceText].join(" "));
+    inferCoreCardName([question, sourceText, coreTension?.key].join(" "));
 
   const responseText = cleanText(
     options?.responseText || options?.rawText || options?.modelText || ""
@@ -842,6 +1037,7 @@ export async function generateCastFromSeed(seed = {}, options = {}) {
     question,
     sourceText,
     priorSections: [],
+    coreTension,
   });
 
   return {
@@ -853,8 +1049,9 @@ export async function generateCastFromSeed(seed = {}, options = {}) {
     echo: locked.echo,
     metadata: {
       lockedFlow: true,
-      flowVersion: "eidomancer-v1-locked-cast",
+      flowVersion: "eidomancer-v1-tension-extraction",
       usedFallback: true,
+      coreTensionKey: coreTension?.key || "default-pressure",
     },
   };
 }
@@ -869,7 +1066,9 @@ export function formatCastForDisplay(cast = {}) {
   const body = [
     opening,
     ...sections.map((section) =>
-      `## ${section?.title || titleCase(section?.type || "")}\n${cleanText(section?.content || "")}`
+      `## ${section?.title || titleCase(section?.type || "")}\n${cleanText(
+        section?.content || ""
+      )}`
     ),
     coreCardName
       ? `## Core Card\n**${coreCardName}**\n${coreCardDescription}`

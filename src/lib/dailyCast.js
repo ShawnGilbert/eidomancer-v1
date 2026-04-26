@@ -301,16 +301,13 @@ export async function generateDailyCast(input) {
     resonance,
   });
 
-  const seed = {
+    const seed = {
     question: rawQuestion,
     sourceText: [
-      rawQuestion ? `PRIMARY QUESTION:\n${rawQuestion}` : "",
-      rawQuestion ? `FOCUS REPEATED:\n${rawQuestion}` : "",
-      rawQuestion ? `USER IS SPECIFICALLY ASKING:\n${rawQuestion}` : "",
-      rawQuestion ? `DO NOT IGNORE THIS FOCUS:\n${rawQuestion}` : "",
+      rawQuestion ? `FOCUS:\n${rawQuestion}` : "",
       seedText,
-      rawSourceText ? `SOURCE TEXT:\n${rawSourceText}` : "",
-      rawUserContext ? `USER CONTEXT:\n${rawUserContext}` : "",
+      rawSourceText ? `SOURCE:\n${rawSourceText}` : "",
+      rawUserContext ? `CONTEXT:\n${rawUserContext}` : "",
       resonanceSeed.gist ? `GIST:\n${resonanceSeed.gist}` : "",
       Array.isArray(resonanceSeed.themes) && resonanceSeed.themes.length
         ? `THEMES:\n${resonanceSeed.themes.join("\n")}`

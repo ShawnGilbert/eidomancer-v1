@@ -1,9 +1,11 @@
-// D:\eidomancer\src\pages\DailyPage.jsx
+// D:\EidomancerProject\eidomancer-app\src\pages\DailyPage.jsx
 
 import { useMemo } from "react";
+import ArtifactViewer from "../components/artifact/ArtifactViewer";
 import DailyCastCard from "../components/daily/DailyCastCard";
 import DailyFocusInput from "../components/daily/DailyFocusInput";
 import DailySidebar from "../components/daily/DailySidebar";
+import { castToArtifact } from "../lib/artifactAdapter";
 import { getAccessTier, getFreemiumCapabilities } from "../lib/freemiumGate";
 import useDailyCast from "../hooks/useDailyCast";
 
@@ -26,6 +28,11 @@ export default function DailyPage() {
   const capabilities = useMemo(
     () => getFreemiumCapabilities(accessTier, 0),
     [accessTier]
+  );
+
+  const selectedArtifact = useMemo(
+    () => castToArtifact(selectedCast),
+    [selectedCast]
   );
 
   const isLoading = status === "loading";
@@ -57,7 +64,7 @@ export default function DailyPage() {
                 aiStatus === "connected"
                   ? "border-green-400/30 bg-green-500/15 text-green-300"
                   : aiStatus === "connecting"
-  ? "border-yellow-400/30 bg-yellow-500/15 text-yellow-300 animate-pulse"
+                  ? "border-yellow-400/30 bg-yellow-500/15 text-yellow-300 animate-pulse"
                   : "border-red-400/30 bg-red-500/15 text-red-300"
               }`}
             >
@@ -76,6 +83,12 @@ export default function DailyPage() {
             Deep enough to feel like it remembers you.
           </p>
         </div>
+
+        {selectedArtifact ? (
+          <div className="mb-8">
+            <ArtifactViewer artifact={selectedArtifact} />
+          </div>
+        ) : null}
 
         {status === "loading" && !selectedCast ? (
           <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center text-white/75">
