@@ -1,0 +1,319 @@
+// D:\EidomancerProject\eidomancer-app\src\components\artifact\ArtifactCard.jsx
+
+import { useRef, useState } from "react";
+import { toPng } from "html-to-image";
+
+const ARTIFACT_HISTORY_KEY = "eidomancer_artifact_history_v1";
+
+const sectionPositions = {
+  leftTop: "left-[4%] top-[26%]",
+  leftMiddle: "left-[4%] top-[47%]",
+  rightTop: "right-[4%] top-[26%]",
+  rightMiddle: "right-[4%] top-[47%]",
+  bottomCenter: "left-1/2 bottom-[8%] -translate-x-1/2",
+};
+
+function getArtifactInput(item) {
+  if (typeof item?.input === "string") return item.input;
+  return item?.input?.text || "";
+}
+
+function getArtifactFingerprint(item) {
+  const title = item?.title || "";
+  const input = getArtifactInput(item);
+
+  const day = new Date(item?.createdAt || item?.savedAt || Date.now())
+    .toISOString()
+    .slice(0, 10);
+
+  return `${title}::${input}::${day}`.toLowerCase();
+}
+
+export default function ArtifactCard({ artifact }) {
+  const artifactRef = useRef(null);
+  const [openSection, setOpenSection] = useState(null);
+  const [showInput, setShowInput] = useState(false);
+  const [status, setStatus] = useState("");
+
+  if (!artifact) return null;
+
+  const sections = artifact.sections || [];
+
+  function buildShareText() {
+    return [
+      artifact.title,
+      artifact.subtitle,
+      artifact.input ? `Input: ${getArtifactInput(artifact)}` : "",
+      "",
+      ...sections.map((section) => {
+        return `${section.title}: ${section.short || section.full || ""}`;
+      }),
+      "",
+      artifact.coreObject ? `Core Object: ${artifact.coreObject}` : "",
+      "",
+      "Generated with Eidomancer",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  async function copyCast() {
+    try {
+      await navigator.clipboard.writeText(buildShareText());
+      setStatus("Cast copied.");
+    } catch (error) {
+      console.error(error);
+      setStatus("Copy failed.");
+    }
+  }
+
+  async function downloadImage() {
+    if (!artifactRef.current) return;
+
+    try {
+      setStatus("Rendering image...");
+
+      const dataUrl = await toPng(artifactRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+        backgroundColor: "#020617",
+      });
+
+      const link = document.createElement("a");
+      link.download = `${artifact.title || "eidomancer-artifact"}.png`
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
+      link.href = dataUrl;
+      link.click();
+
+      setStatus("Image downloaded.");
+    } catch (error) {
+      console.error(error);
+      setStatus("Image download failed.");
+    }
+  }
+
+  function saveArtifact() {
+    try {
+      const existing = JSON.parse(
+        localStorage.getItem(ARTIFACT_HISTORY_KEY) || "[]"
+      );
+
+      const savedArtifact = {
+        ...artifact,
+        savedAt: new Date().toISOString(),
+      };
+
+      const savedFingerprint = getArtifactFingerprint(savedArtifact);
+
+      const alreadySaved = existing.some(
+        (item) => getArtifactFingerprint(item) === savedFingerprint
+      );
+
+      if (alreadySaved) {
+        setStatus("Already saved.");
+        return;
+      }
+
+      const updated = [savedArtifact, ...existing].slice(0, 30);
+
+      localStorage.setItem(ARTIFACT_HISTORY_KEY, JSON.stringify(updated));
+      setStatus("Artifact saved.");
+    } catch (error) {
+      console.error(error);
+      setStatus("Save failed.");
+    }
+  }
+
+  return (
+    <section className="mx-auto w-full max-w-5xl rounded-3xl border border-cyan-300/10 bg-slate-950 p-4 shadow-2xl shadow-cyan-950/30">
+      <div
+        ref={artifactRef}
+        className="relative overflow-hidden rounded-2xl border border-amber-300/20 bg-black"
+      >
+        <img
+          src={artifact.image}
+          alt={artifact.title || "Eidomancer artifact"}
+          className="block w-full"
+        />
+
+        <div className="absolute left-0 right-0 top-0 bg-gradient-to-b from-black/85 via-black/45 to-transparent px-6 py-5 text-center">
+          <p className="text-[10px] uppercase tracking-[0.45em] text-amber-300/70">
+            Eidomancer Artifact
+          </p>
+
+          <h2 className="mt-2 text-3xl font-bold text-white drop-shadow">
+            {artifact.title}
+          </h2>
+
+          {artifact.subtitle && (
+            <p className="mt-1 text-sm text-slate-200">{artifact.subtitle}</p>
+          )}
+        </div>
+
+        <div className="hidden md:block">
+          {sections.map((section) => {
+            const isOpen = openSection === section.id;
+            const positionClass =
+              sectionPositions[section.position] || sectionPositions.leftTop;
+
+            return (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => setOpenSection(isOpen ? null : section.id)}
+                className={`absolute ${positionClass} ${
+  isOpen
+  ? "z-30 scale-[1.03] border-cyan-300/80 bg-slate-950/95 shadow-[0_0_20px_rgba(34,211,238,0.25)]"
+  : "z-10 scale-100 border-amber-300/20 bg-black/50 opacity-70 hover:scale-[1.01] hover:opacity-100"
+} w-[25%] rounded-xl border p-3 text-left shadow-xl backdrop-blur-md transition-all duration-200 ease-out hover:border-cyan-300/70 hover:bg-slate-950/85`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.28em] text-amber-300">
+                    {section.title}
+                  </h3>
+
+                  <span className="text-[9px] text-slate-400">
+                    {isOpen ? "Close" : "Open"}
+                  </span>
+                </div>
+
+                <div className="mt-2 space-y-2">
+  <p className="text-xs leading-relaxed text-slate-100">
+    {section.short}
+  </p>
+
+  {isOpen && (
+  <div className="space-y-2 border-t border-white/10 pt-2">
+    <div className="text-[11px] leading-relaxed text-slate-300">
+      {section.full || "No deeper interpretation yet."}
+    </div>
+
+    {section.action && (
+      <div className="rounded-lg border border-emerald-300/20 bg-emerald-400/10 p-2 text-[11px] leading-relaxed text-emerald-100">
+        <span className="font-bold uppercase tracking-[0.18em]">
+          Next Move:
+        </span>{" "}
+        {section.action}
+      </div>
+    )}
+  </div>
+)}
+</div>
+              </button>
+            );
+          })}
+        </div>
+
+        {artifact.coreObject && (
+          <div className="absolute bottom-3 left-3 right-3 hidden rounded-xl border border-cyan-300/20 bg-black/75 p-3 backdrop-blur-md md:block">
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-300">
+              Core Object
+            </h3>
+
+            <p className="mt-1 text-xs leading-relaxed text-slate-200">
+              {artifact.coreObject}
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 grid gap-3 md:hidden">
+        {sections.map((section) => {
+          const isOpen = openSection === section.id;
+
+          return (
+            <button
+              key={section.id}
+              type="button"
+              onClick={() => setOpenSection(isOpen ? null : section.id)}
+              className="rounded-xl border border-white/10 bg-white/5 p-4 text-left"
+            >
+              <h3 className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">
+                {section.title}
+              </h3>
+
+              <div className="mt-2 space-y-2">
+  <p className="text-sm text-slate-200">{section.short}</p>
+
+  {isOpen && (
+  <div className="space-y-2 border-t border-white/10 pt-2">
+    <div className="text-[11px] leading-relaxed text-slate-300">
+      {section.full || "No deeper interpretation yet."}
+    </div>
+
+    {section.action && (
+      <div className="rounded-lg border border-emerald-300/20 bg-emerald-400/10 p-2 text-[11px] leading-relaxed text-emerald-100">
+        <span className="font-bold uppercase tracking-[0.18em]">
+          Next Move:
+        </span>{" "}
+        {section.action}
+      </div>
+    )}
+  </div>
+)}
+</div>
+            </button>
+          );
+        })}
+      </div>
+{sections.some((section) => section.action) && (
+  <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 p-4">
+    <h3 className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-300">
+      Guidance
+    </h3>
+    <p className="mt-2 text-sm leading-relaxed text-emerald-100">
+      {sections.find((section) => section.action)?.action}
+    </p>
+  </div>
+)}
+      <div className="mt-5 space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={copyCast}
+            className="rounded-xl bg-cyan-400/20 px-4 py-2 text-sm font-semibold text-cyan-100 hover:bg-cyan-400/30"
+          >
+            Copy Cast
+          </button>
+
+          <button
+            type="button"
+            onClick={downloadImage}
+            className="rounded-xl bg-purple-400/20 px-4 py-2 text-sm font-semibold text-purple-100 hover:bg-purple-400/30"
+          >
+            Download Image
+          </button>
+
+          <button
+            type="button"
+            onClick={saveArtifact}
+            className="rounded-xl bg-emerald-400/20 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-400/30"
+          >
+            Save Artifact
+          </button>
+
+          {artifact.input && (
+            <button
+              type="button"
+              onClick={() => setShowInput(!showInput)}
+              className="rounded-xl bg-amber-400/20 px-4 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-400/30"
+            >
+              {showInput ? "Hide Input" : "View Input"}
+            </button>
+          )}
+
+          {status && <span className="text-sm text-slate-400">{status}</span>}
+        </div>
+
+        {showInput && artifact.input && (
+          <div className="rounded-xl border border-amber-300/20 bg-black/70 p-4 text-sm leading-relaxed text-slate-200 backdrop-blur-md">
+            {getArtifactInput(artifact)}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}

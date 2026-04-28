@@ -1,13 +1,64 @@
 // D:\EidomancerProject\eidomancer-app\src\pages\DailyPage.jsx
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ArtifactViewer from "../components/artifact/ArtifactViewer";
+import SavedArtifactsPanel from "../components/artifact/SavedArtifactsPanel";
 import DailyCastCard from "../components/daily/DailyCastCard";
 import DailyFocusInput from "../components/daily/DailyFocusInput";
 import DailySidebar from "../components/daily/DailySidebar";
 import { castToArtifact } from "../lib/artifactAdapter";
 import { getAccessTier, getFreemiumCapabilities } from "../lib/freemiumGate";
 import useDailyCast from "../hooks/useDailyCast";
+
+const ARTIFACT_HISTORY_KEY = "eidomancer_artifact_history_v1";
+
+/* ---------- 🔥 DUPLICATE PROTECTION ---------- */
+
+function getArtifactInput(item) {
+  if (typeof item?.input === "string") return item.input;
+  return item?.input?.text || "";
+}
+
+function getArtifactFingerprint(item) {
+  const title = item?.title || "";
+  const input = getArtifactInput(item);
+
+  const day = new Date(item?.createdAt || item?.savedAt || Date.now())
+    .toISOString()
+    .slice(0, 10);
+
+  return `${title}::${input}::${day}`.toLowerCase();
+}
+
+function autoSaveArtifact(artifact, cast) {
+  if (!artifact) return false;
+
+  const savedArtifact = {
+    ...artifact,
+    source: "daily",
+    savedAt: new Date().toISOString(),
+  };
+
+  const existing = JSON.parse(
+    localStorage.getItem(ARTIFACT_HISTORY_KEY) || "[]"
+  );
+
+  const savedFingerprint = getArtifactFingerprint(savedArtifact);
+
+  const alreadySaved = existing.some(
+    (item) => getArtifactFingerprint(item) === savedFingerprint
+  );
+
+  if (alreadySaved) return false;
+
+  const updated = [savedArtifact, ...existing].slice(0, 30);
+
+  localStorage.setItem(ARTIFACT_HISTORY_KEY, JSON.stringify(updated));
+
+  return true;
+}
+
+/* ---------- COMPONENT ---------- */
 
 export default function DailyPage() {
   const {
@@ -24,6 +75,9 @@ export default function DailyPage() {
     clearFocus,
   } = useDailyCast();
 
+  const [manualArtifact, setManualArtifact] = useState(null);
+  const [savedRefreshKey, setSavedRefreshKey] = useState(0);
+
   const accessTier = useMemo(() => getAccessTier(null), []);
   const capabilities = useMemo(
     () => getFreemiumCapabilities(accessTier, 0),
@@ -35,12 +89,23 @@ export default function DailyPage() {
     [selectedCast]
   );
 
+  useEffect(() => {
+    if (!selectedArtifact || !selectedCast) return;
+
+    const saved = autoSaveArtifact(selectedArtifact, selectedCast);
+
+    if (saved) {
+      setSavedRefreshKey((value) => value + 1);
+    }
+  }, [selectedArtifact, selectedCast]);
+
+  const activeArtifact = manualArtifact || selectedArtifact;
+  const isViewingSaved = !!manualArtifact;
+
   const isLoading = status === "loading";
 
   const appliedFocus =
-    selectedCast?.metadata?.dailyFocus ||
-    selectedCast?.question ||
-    "";
+    selectedCast?.metadata?.dailyFocus || selectedCast?.question || "";
 
   let aiStatus = "connected";
 
@@ -53,6 +118,7 @@ export default function DailyPage() {
   return (
     <div className="min-h-screen bg-[#071019] text-white">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Header */}
         <div className="mb-8 rounded-3xl border border-cyan-400/20 bg-cyan-500/10 p-6 shadow-2xl shadow-cyan-900/20">
           <div className="flex items-center justify-between gap-4">
             <div className="text-xs uppercase tracking-[0.25em] text-cyan-200/75">
@@ -84,25 +150,54 @@ export default function DailyPage() {
           </p>
         </div>
 
-        {selectedArtifact ? (
-          <div className="mb-8">
-            <ArtifactViewer artifact={selectedArtifact} />
-          </div>
-        ) : null}
+        {/* Artifact + Saved */}
+        {activeArtifact && (
+          <div className="mb-8 space-y-4">
+            {isViewingSaved && (
+              <div className="flex items-center justify-between rounded-2xl border border-amber-400/30 bg-amber-500/10 px-4 py-3">
+                <div className="text-sm text-amber-200">
+                  Viewing saved artifact
+                </div>
 
-        {status === "loading" && !selectedCast ? (
+                <button
+                  onClick={() => setManualArtifact(null)}
+                  className="rounded-lg bg-amber-400/20 px-3 py-1 text-sm font-medium text-amber-100 hover:bg-amber-400/30"
+                >
+                  Back to Today
+                </button>
+              </div>
+            )}
+
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+              <ArtifactViewer artifact={activeArtifact} />
+
+              <SavedArtifactsPanel
+  key={savedRefreshKey}
+  activeArtifact={activeArtifact}
+  onSelectArtifact={(artifact) => {
+    setManualArtifact(artifact);
+  }}
+/>
+            </div>
+          </div>
+        )}
+
+        {/* Loading */}
+        {status === "loading" && !selectedCast && (
           <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center text-white/75">
             Generating today’s cast…
           </div>
-        ) : null}
+        )}
 
-        {status === "error" ? (
+        {/* Error */}
+        {status === "error" && (
           <div className="rounded-3xl border border-red-400/20 bg-red-500/10 p-8 text-center text-red-100">
             {error || "Something went wrong."}
           </div>
-        ) : null}
+        )}
 
-        {(status === "ready" || selectedCast) && selectedCast ? (
+        {/* Daily Cast */}
+        {(status === "ready" || selectedCast) && selectedCast && (
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
             <DailyCastCard
               cast={selectedCast}
@@ -128,7 +223,7 @@ export default function DailyPage() {
               />
             </div>
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );

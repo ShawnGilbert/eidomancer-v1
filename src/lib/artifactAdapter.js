@@ -13,6 +13,55 @@ function getSection(cast, type) {
   return cleanText(match?.content || "");
 }
 
+function buildSections(cast) {
+  const signal = getSection(cast, "signal");
+  const tension = getSection(cast, "tension");
+  const pattern = getSection(cast, "pattern");
+  const insight = getSection(cast, "insight");
+  const essence =
+    cleanText(cast?.echo) ||
+    getSection(cast, "recommendation") ||
+    getSection(cast, "guidance");
+
+  return [
+    {
+      id: "signal",
+      title: "Signal",
+      position: "leftTop",
+      short: signal,
+      full: signal,
+    },
+    {
+      id: "tension",
+      title: "Tension",
+      position: "rightTop",
+      short: tension,
+      full: tension,
+    },
+    {
+      id: "pattern",
+      title: "Pattern",
+      position: "leftMiddle",
+      short: pattern,
+      full: pattern,
+    },
+    {
+      id: "insight",
+      title: "Insight",
+      position: "rightMiddle",
+      short: insight,
+      full: insight,
+    },
+    {
+      id: "essence",
+      title: "Essence",
+      position: "bottomCenter",
+      short: essence,
+      full: essence,
+    },
+  ].filter((section) => section.short || section.full);
+}
+
 export function castToArtifact(cast) {
   if (!cast) return null;
 
@@ -24,46 +73,24 @@ export function castToArtifact(cast) {
   return {
     id: cast?.id || cast?.metadata?.id || `artifact-${Date.now()}`,
     title,
-    subtitle: cast?.echo || "An Eidomancer symbolic artifact",
+    subtitle: cleanText(cast?.echo) || "An Eidomancer symbolic artifact",
     createdAt: cast?.createdAt || new Date().toISOString(),
 
-    privacy: {
-      inputVisible: true,
-      censored: false,
-    },
+    image:
+      cast?.coreCard?.imageUrl ||
+      `${window.location.origin}/metronome_core.png`,
 
-    input: {
-      type: "daily-cast",
-      text:
-        cleanText(cast?.question) ||
-        cleanText(cast?.metadata?.dailyFocus) ||
-        "No explicit input was provided for this cast.",
-    },
+    input:
+      cleanText(cast?.question) ||
+      cleanText(cast?.metadata?.dailyFocus) ||
+      "No explicit input was provided for this cast.",
 
-     coreImageUrl:
-  cast?.coreCard?.imageUrl ||
-  `${window.location.origin}/metronome_core.png`,
+    coreObject:
+      cleanText(cast?.coreCard?.description) ||
+      cleanText(cast?.coreCard?.imagePrompt) ||
+      "No core object defined.",
 
-    cast: {
-      signal: getSection(cast, "signal"),
-      tension: getSection(cast, "tension"),
-      pattern: getSection(cast, "pattern"),
-      insight: getSection(cast, "insight"),
-      essence:
-        cleanText(cast?.echo) ||
-        getSection(cast, "recommendation") ||
-        getSection(cast, "guidance"),
-    },
-
-    structure: {
-      coreObject:
-        cleanText(cast?.coreCard?.description) ||
-        cleanText(cast?.coreCard?.imagePrompt) ||
-        "No core object defined.",
-      mood: cleanText(cast?.tone) || "reflective",
-      palette: [],
-      symbols: [],
-    },
+    sections: buildSections(cast),
 
     sourceCast: cast,
   };
