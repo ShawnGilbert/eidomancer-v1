@@ -1,24 +1,12 @@
 // D:\EidomancerProject\eidomancer-app\src\components\artifact\SavedArtifactsPanel.jsx
 
 import { useState } from "react";
-
-const ARTIFACT_HISTORY_KEY = "eidomancer_artifact_history_v1";
-
-function getArtifactInputPreview(artifact) {
-  if (typeof artifact?.input === "string") return artifact.input;
-  return artifact?.input?.text || artifact?.focus || "";
-}
-
-function getArtifactFingerprint(artifact) {
-  const title = artifact?.title || "";
-  const input = getArtifactInputPreview(artifact);
-
-  const day = new Date(artifact?.createdAt || artifact?.savedAt || Date.now())
-    .toISOString()
-    .slice(0, 10);
-
-  return `${title}::${input}::${day}`.toLowerCase();
-}
+import {
+  deleteSavedArtifact,
+  getArtifactFingerprint,
+  getArtifactInput,
+  loadSavedArtifacts,
+} from "../../lib/artifactStorage";
 
 export default function SavedArtifactsPanel({
   activeArtifact,
@@ -26,24 +14,12 @@ export default function SavedArtifactsPanel({
 }) {
   const [refresh, setRefresh] = useState(0);
 
-  function loadArtifacts() {
-    try {
-      return JSON.parse(localStorage.getItem(ARTIFACT_HISTORY_KEY) || "[]");
-    } catch {
-      return [];
-    }
-  }
-
   function deleteArtifact(index) {
-    const artifacts = loadArtifacts();
-    artifacts.splice(index, 1);
-
-    localStorage.setItem(ARTIFACT_HISTORY_KEY, JSON.stringify(artifacts));
-
+    deleteSavedArtifact(index);
     setRefresh((v) => v + 1);
   }
 
-  const savedArtifacts = loadArtifacts();
+  const savedArtifacts = loadSavedArtifacts();
   const activeFingerprint = activeArtifact
     ? getArtifactFingerprint(activeArtifact)
     : "";
@@ -59,7 +35,7 @@ export default function SavedArtifactsPanel({
       ) : (
         <div className="mt-4 space-y-3">
           {savedArtifacts.map((artifact, index) => {
-            const inputPreview = getArtifactInputPreview(artifact);
+            const inputPreview = getArtifactInput(artifact);
             const isActive =
               getArtifactFingerprint(artifact) === activeFingerprint;
 

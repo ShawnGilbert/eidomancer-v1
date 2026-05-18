@@ -2,8 +2,10 @@
 
 import { useRef, useState } from "react";
 import { toPng } from "html-to-image";
-
-const ARTIFACT_HISTORY_KEY = "eidomancer_artifact_history_v1";
+import {
+  getArtifactInput,
+  saveArtifact as saveStoredArtifact,
+} from "../../lib/artifactStorage";
 
 const sectionPositions = {
   leftTop: "left-[4%] top-[26%]",
@@ -12,22 +14,6 @@ const sectionPositions = {
   rightMiddle: "right-[4%] top-[47%]",
   bottomCenter: "left-1/2 bottom-[8%] -translate-x-1/2",
 };
-
-function getArtifactInput(item) {
-  if (typeof item?.input === "string") return item.input;
-  return item?.input?.text || "";
-}
-
-function getArtifactFingerprint(item) {
-  const title = item?.title || "";
-  const input = getArtifactInput(item);
-
-  const day = new Date(item?.createdAt || item?.savedAt || Date.now())
-    .toISOString()
-    .slice(0, 10);
-
-  return `${title}::${input}::${day}`.toLowerCase();
-}
 
 export default function ArtifactCard({ artifact }) {
   const artifactRef = useRef(null);
@@ -97,29 +83,13 @@ export default function ArtifactCard({ artifact }) {
 
   function saveArtifact() {
     try {
-      const existing = JSON.parse(
-        localStorage.getItem(ARTIFACT_HISTORY_KEY) || "[]"
-      );
+      const { saved, reason } = saveStoredArtifact(artifact);
 
-      const savedArtifact = {
-        ...artifact,
-        savedAt: new Date().toISOString(),
-      };
-
-      const savedFingerprint = getArtifactFingerprint(savedArtifact);
-
-      const alreadySaved = existing.some(
-        (item) => getArtifactFingerprint(item) === savedFingerprint
-      );
-
-      if (alreadySaved) {
+      if (!saved && reason === "duplicate") {
         setStatus("Already saved.");
         return;
       }
 
-      const updated = [savedArtifact, ...existing].slice(0, 30);
-
-      localStorage.setItem(ARTIFACT_HISTORY_KEY, JSON.stringify(updated));
       setStatus("Artifact saved.");
     } catch (error) {
       console.error(error);

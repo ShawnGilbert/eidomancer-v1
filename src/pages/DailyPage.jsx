@@ -7,56 +7,10 @@ import DailyCastCard from "../components/daily/DailyCastCard";
 import DailyFocusInput from "../components/daily/DailyFocusInput";
 import DailySidebar from "../components/daily/DailySidebar";
 import { castToArtifact } from "../lib/artifactAdapter";
+import { saveArtifact } from "../lib/artifactStorage";
 import { getAccessTier, getFreemiumCapabilities } from "../lib/freemiumGate";
 import useDailyCast from "../hooks/useDailyCast";
 
-const ARTIFACT_HISTORY_KEY = "eidomancer_artifact_history_v1";
-
-/* ---------- 🔥 DUPLICATE PROTECTION ---------- */
-
-function getArtifactInput(item) {
-  if (typeof item?.input === "string") return item.input;
-  return item?.input?.text || "";
-}
-
-function getArtifactFingerprint(item) {
-  const title = item?.title || "";
-  const input = getArtifactInput(item);
-
-  const day = new Date(item?.createdAt || item?.savedAt || Date.now())
-    .toISOString()
-    .slice(0, 10);
-
-  return `${title}::${input}::${day}`.toLowerCase();
-}
-
-function autoSaveArtifact(artifact, cast) {
-  if (!artifact) return false;
-
-  const savedArtifact = {
-    ...artifact,
-    source: "daily",
-    savedAt: new Date().toISOString(),
-  };
-
-  const existing = JSON.parse(
-    localStorage.getItem(ARTIFACT_HISTORY_KEY) || "[]"
-  );
-
-  const savedFingerprint = getArtifactFingerprint(savedArtifact);
-
-  const alreadySaved = existing.some(
-    (item) => getArtifactFingerprint(item) === savedFingerprint
-  );
-
-  if (alreadySaved) return false;
-
-  const updated = [savedArtifact, ...existing].slice(0, 30);
-
-  localStorage.setItem(ARTIFACT_HISTORY_KEY, JSON.stringify(updated));
-
-  return true;
-}
 
 /* ---------- COMPONENT ---------- */
 
@@ -92,7 +46,7 @@ export default function DailyPage() {
   useEffect(() => {
     if (!selectedArtifact || !selectedCast) return;
 
-    const saved = autoSaveArtifact(selectedArtifact, selectedCast);
+    const { saved } = saveArtifact(selectedArtifact, { source: "daily" });
 
     if (saved) {
       setSavedRefreshKey((value) => value + 1);
