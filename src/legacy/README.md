@@ -102,12 +102,12 @@ Likely an earlier app architecture based on global reducer state.
 
 Representative files:
 
-- `src/state/EidomancerContext.jsx`
-- `src/state/eidomancerReducer.js`
-- `src/state/initialState.js`
-- `src/components/cast/CastInputPanel.jsx`
-- `src/components/cast/CastResultPanel.jsx`
-- `src/components/archive/ArchivePanel.jsx`
+- `src/legacy/reducer-context-archive-shell/state/EidomancerContext.jsx`
+- `src/legacy/reducer-context-archive-shell/state/eidomancerReducer.js`
+- `src/legacy/reducer-context-archive-shell/state/initialState.js`
+- `src/legacy/reducer-context-archive-shell/components/cast/CastInputPanel.jsx`
+- `src/legacy/reducer-context-archive-shell/components/cast/CastResultPanel.jsx`
+- `src/legacy/reducer-context-archive-shell/components/archive/ArchivePanel.jsx`
 
 Observed design:
 
@@ -123,7 +123,8 @@ Overlap with current architecture:
 
 ### Generated Asset / Content Package System
 
-Dormant, but potentially valuable.
+Dormant, valuable, and intentionally preserved in place for now. This is not an
+archive candidate during stabilization.
 
 Representative files:
 
@@ -144,18 +145,45 @@ Observed design:
   - YouTube package
   - Specterr image prompt
   - Full package
+- Expands one cast into reusable media outputs that could be copied, shared,
+  prompted into image generation, or used as song/video packaging.
 
 Why it may matter:
 
 - This layer captures a strong future product direction: turning a symbolic cast
   into reusable creative artifacts.
 - It may be worth preserving as reference even if not restored soon.
+- `src/lib/packageGenerators.js` is especially valuable because it contains the
+  richest expression of this product idea: cast flattening, format-specific
+  prompts, image-format intent, lyrics, Suno prompt generation, YouTube metadata,
+  Specterr-safe prompt language, and a full export bundle.
+- The likely future version of this could become an "Expand Cast" or
+  "Generate Media Package" feature.
 
 Overlap with current architecture:
 
 - Current Daily Artifact flow already creates and saves visual artifacts.
 - This subsystem uses a broader asset-package model than the current artifact
   model.
+- Do not merge this subsystem into the active Daily Artifact flow casually. It
+  changes product scope from daily reflection/artifact preservation into
+  multi-format content production.
+
+Preserve in place for now:
+
+- `src/lib/packageGenerators.js`
+- `src/components/GeneratedOutputsPanel.jsx`
+- `src/components/PackageActionsPanel.jsx`
+- `src/components/ActiveCastCard.jsx`
+- `src/components/TarotSectionCard.jsx`
+- `src/data/sampleArtifact.js`
+- `src/data/starterPrompts.js`
+
+Lower-value duplicate candidates for later review:
+
+- `src/lib/imageFormats.js`
+- `src/lib/formatImage.js`
+- `src/components/OutputSection.jsx`
 
 ## Legacy Experimental Systems
 
@@ -225,7 +253,7 @@ Dormant or legacy storage:
   - Used by the dormant general question-to-cast workspace.
 
 - `eidomancer-archive-v1`
-  - Owned by `src/state/EidomancerContext.jsx`.
+  - Owned by `src/legacy/reducer-context-archive-shell/state/EidomancerContext.jsx`.
   - Used by the dormant reducer/context archive shell.
 
 - `eidomancer_card_` and `eidomancer_note_`
@@ -249,9 +277,7 @@ Dormant or legacy storage:
    - `src/lib/storage.js`
 
 3. Dormant reducer/context/archive app shell
-   - `src/state/*`
-   - `src/components/cast/*`
-   - `src/components/archive/ArchivePanel.jsx`
+   - `src/legacy/reducer-context-archive-shell/*`
 
 4. Older profile-based daily-card system
    - `src/legacy/profile-daily-card-prototype/generateDailyCast.js`
@@ -300,9 +326,7 @@ Likely safe to quarantine later after a confirmation pass:
 
 - `src/legacy/quarantined-dormant/*`
 - `src/legacy/profile-daily-card-prototype/*`
-- `src/components/cast/*`
-- `src/components/archive/ArchivePanel.jsx`
-- `src/state/*`
+- `src/legacy/reducer-context-archive-shell/*`
 - `server.mjs`
 - `src/App.css`
 - `src/assets/react.svg`
@@ -366,10 +390,9 @@ Avoid changing these until the surrounding behavior is tested and understood:
    - Mine it only if mood/energy/focus profiles, streaks, notes, or music prompt
      ideas return to the product.
 
-4. Quarantine the reducer/context archive shell.
-   - Candidates: `src/state/*`, `src/components/cast/*`,
-     `src/components/archive/ArchivePanel.jsx`.
-   - Treat malformed files carefully.
+4. Keep the reducer/context archive shell archived.
+   - Current location: `src/legacy/reducer-context-archive-shell/`.
+   - Treat malformed files carefully if this shell is ever inspected or restored.
 
 5. Evaluate the generated asset package system.
    - Decide whether to archive, revive, or adapt it into the current artifact
