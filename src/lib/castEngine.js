@@ -347,7 +347,18 @@ function inferCoreImagePrompt({
     return "A symbolic trickster figure in a surreal ritual space where language bends into looping echoes and playful impossible symbols, tarot card composition, cohesive, single central subject.";
   }
 
-  return "A solitary symbolic figure in a restrained surreal setting, carrying emotional tension without chaos, tarot card composition, cohesive, single central subject.";
+  return [
+    `${cardName || "An Eidomancer core card"}, tarot card composition`,
+    signal ? `central signal: ${signal}` : "",
+    tension ? `visible tension: ${tension}` : "",
+    pattern ? `environmental pattern: ${pattern}` : "",
+    question ? `emotional focus: ${question}` : "",
+    "single central symbolic object or figure",
+    "restrained surrealism",
+    "cohesive, legible, visually distinct from a metronome",
+  ]
+    .filter(Boolean)
+    .join(", ");
 }
 
 function buildSignal({ question, sourceText, fallback, variationSeed, coreTension }) {
