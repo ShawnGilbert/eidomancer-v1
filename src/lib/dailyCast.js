@@ -85,6 +85,13 @@ function buildDailyMetadata({
   recentCasts = [],
   seedText,
   resonance,
+  aiSource = "local-backend",
+  usedFallback = false,
+  fallbackReason = "",
+  aiRequestSucceeded = false,
+  aiResponseReceived = false,
+  aiResponseLength = 0,
+  aiResponseUsed = false,
 }) {
   return {
     castType: "daily",
@@ -99,7 +106,93 @@ function buildDailyMetadata({
     resonanceSignal: resonance?.signal || null,
     resonancePattern: resonance?.pattern || null,
     resonanceTension: resonance?.tension || null,
+    aiSource,
+    usedFallback,
+    fallbackReason,
+    aiRequestSucceeded,
+    aiResponseReceived,
+    aiResponseLength,
+    aiResponseUsed,
   };
+}
+
+function buildDailyModelPrompt(promptBundle = {}) {
+  return [
+    "You are Eidomancer, a symbolic reflection system.",
+    "Create one daily cast from the material below.",
+    "Return ONLY valid JSON with this exact shape:",
+    JSON.stringify(
+      {
+        cardName: "short evocative card name",
+        sections: [
+          { type: "signal", content: "what is happening beneath the surface" },
+          { type: "tension", content: "the central friction or cost" },
+          { type: "pattern", content: "the repeating structure" },
+          { type: "insight", content: "the useful recognition" },
+          { type: "recommendation", content: "one grounded next move" },
+        ],
+        coreCard: {
+          name: "short evocative card name",
+          description: "visual symbolic object description",
+          imagePrompt: "concise visual prompt",
+        },
+        echo: "one memorable line",
+      },
+      null,
+      2
+    ),
+    "",
+    "DAILY CAST MATERIAL",
+    "",
+    "Question / instructions:",
+    promptBundle.question || "",
+    "",
+    "Source text:",
+    promptBundle.sourceText || "",
+    "",
+    "User context and continuity:",
+    promptBundle.userContext || "",
+  ].join("\n");
+}
+
+async function requestDailyModelText(promptBundle) {
+  if (typeof fetch !== "function") {
+    throw new Error("Fetch is unavailable in this runtime.");
+  }
+
+  const response = await fetch("/api/generate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      prompt: buildDailyModelPrompt(promptBundle),
+    }),
+  });
+
+  let data = null;
+
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.error || `AI request failed with ${response.status}.`);
+  }
+
+  const text = safeText(data?.text);
+
+  if (!text) {
+    throw new Error("AI response did not include text.");
+  }
+
+  console.info("[Eidomancer] /api/generate daily cast response received", {
+    textLength: text.length,
+  });
+
+  return text;
 }
 
 function looksLikeSentence(text = "") {
@@ -259,8 +352,7 @@ export async function generateDailyCast(input) {
     adviceStyle: engagementProfile.adviceStyle,
   };
 
-  // Still build this for future scaffolding, but do not trust it as the primary question source.
-  buildDailyPrompt({
+  const promptBundle = buildDailyPrompt({
     dateKey,
     question: rawQuestion,
     sourceText: rawSourceText,
@@ -318,7 +410,46 @@ export async function generateDailyCast(input) {
     suggestedCardName,
   };
 
-  const cast = await generateCastFromSeed(seed);
+  let responseText = "";
+  let aiSource = "local-backend";
+  let usedFallback = false;
+  let fallbackReason = "";
+  let aiRequestSucceeded = false;
+  let aiResponseReceived = false;
+
+  try {
+    responseText = await requestDailyModelText(promptBundle);
+    aiRequestSucceeded = true;
+    aiResponseReceived = responseText.length > 0;
+  } catch (error) {
+    aiSource = "deterministic-fallback";
+    usedFallback = true;
+    fallbackReason = error?.message || "AI request failed.";
+    console.warn("[Eidomancer] /api/generate unavailable; using fallback", {
+      reason: fallbackReason,
+    });
+  }
+
+  const cast = await generateCastFromSeed(seed, { responseText });
+  const castUsedFallback = Boolean(cast?.metadata?.usedFallback);
+  const aiResponseUsed = aiResponseReceived && !castUsedFallback;
+
+  if (castUsedFallback) {
+    usedFallback = true;
+    fallbackReason =
+      fallbackReason ||
+      (responseText
+        ? "AI response could not be used as structured cast JSON."
+        : "Generated from deterministic fallback.");
+  }
+
+  console.info("[Eidomancer] Daily cast generation source", {
+    aiRequestSucceeded,
+    aiResponseReceived,
+    aiResponseUsed,
+    usedFallback,
+    fallbackReason,
+  });
 
   const metadata = buildDailyMetadata({
     dateKey,
@@ -326,12 +457,25 @@ export async function generateDailyCast(input) {
     recentCasts,
     seedText,
     resonance,
+    aiSource,
+    usedFallback,
+    fallbackReason,
+    aiRequestSucceeded,
+    aiResponseReceived,
+    aiResponseLength: responseText.length,
+    aiResponseUsed,
   });
 
-  return tagCastAsDaily(cast, {
+  const dailyCast = tagCastAsDaily(cast, {
     dateKey,
     metadata,
     seedText,
     engagement,
   });
+
+  if (usedFallback) {
+    dailyCast.mode = "no-ai";
+  }
+
+  return dailyCast;
 }
