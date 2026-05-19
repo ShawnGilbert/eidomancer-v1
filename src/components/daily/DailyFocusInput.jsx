@@ -12,6 +12,7 @@ export default function DailyFocusInput({
   className = "",
 }) {
   const [value, setValue] = useState(initialValue);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     setValue(initialValue || "");
@@ -19,6 +20,7 @@ export default function DailyFocusInput({
 
   useEffect(() => {
     setValue("");
+    setIsEditing(false);
   }, [resetKey]);
 
   function handleSubmit(event) {
@@ -34,11 +36,14 @@ export default function DailyFocusInput({
     if (isLoading) return;
 
     setValue("");
+    setIsEditing(false);
     onClear?.();
   }
 
   const hasTypedFocus = Boolean(value.trim());
   const hasAppliedFocus = Boolean(String(appliedFocus || "").trim());
+  const isCompact = hasAppliedFocus && !hasTypedFocus && !isEditing;
+  const textareaRows = isCompact ? 2 : 4;
 
   return (
     <div
@@ -52,12 +57,20 @@ export default function DailyFocusInput({
         Offer one question, tension, or area of attention. Keep it simple and real.
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+      <form onSubmit={handleSubmit} className="mt-3 space-y-3">
         <textarea
           value={value}
-          onChange={(event) => setValue(event.target.value)}
-          placeholder="What is pressing on you today?"
-          rows={4}
+          onChange={(event) => {
+            setValue(event.target.value);
+            setIsEditing(true);
+          }}
+          onFocus={() => setIsEditing(true)}
+          placeholder={
+            hasAppliedFocus
+              ? "Ask a new focus, or leave today's lens in place."
+              : "What is pressing on you today?"
+          }
+          rows={textareaRows}
           disabled={isLoading}
           className="w-full rounded-2xl border border-white/10 bg-[#0b1622] px-4 py-3 text-sm leading-6 text-white placeholder:text-white/35 outline-none transition focus:border-cyan-400/40 focus:bg-[#0d1927]"
         />
@@ -90,12 +103,12 @@ export default function DailyFocusInput({
         </div>
       </form>
 
-      <div className="mt-4 rounded-2xl border border-cyan-400/15 bg-cyan-500/10 px-4 py-3">
+      <div className="mt-3 rounded-2xl border border-cyan-400/15 bg-cyan-500/10 px-4 py-3">
         <div className="text-[11px] uppercase tracking-[0.2em] text-cyan-200/65">
           Current Lens
         </div>
 
-        <div className="mt-2 text-sm leading-6 text-white/85">
+        <div className="mt-1 max-h-12 overflow-hidden text-sm leading-6 text-white/85">
           {hasAppliedFocus
             ? appliedFocus
             : "No explicit focus is shaping the current cast."}

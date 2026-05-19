@@ -797,6 +797,50 @@ The card is not mocking meaning. It is testing its range.`);
   );
 }
 
+function buildCoreCardLore({
+  cardName,
+  description,
+  imagePrompt,
+  echo,
+  question,
+  coreTension,
+}) {
+  const focus = cleanText(question);
+  const symbolicImage = cleanText(imagePrompt);
+  const namedPressure =
+    coreTension?.summary ||
+    "This card names the pressure pattern moving under the surface of the day.";
+  const behaviorLoop =
+    coreTension?.behaviorLoop ||
+    "It appears when attention, expectation, and meaning begin to pull against each other.";
+
+  return {
+    archetypeMeaning: cleanText(
+      description ||
+        `${cardName} is an archetype of attention under pressure: a symbolic anchor for the moment when an inner pattern becomes visible enough to work with.`
+    ),
+    symbolicRole: cleanText(
+      symbolicImage
+        ? `Its symbolic role is carried by the image: ${symbolicImage}`
+        : `${cardName} serves as the day's primary symbolic anchor.`
+    ),
+    uprightMeaning: cleanText(
+      `${namedPressure} Read upright, it asks the Caster to treat the signal as information rather than identity.`
+    ),
+    shadowMeaning: cleanText(
+      `${behaviorLoop} In shadow, the card can become fixation: mistaking the pattern for the whole self.`
+    ),
+    whyItAppeared: cleanText(
+      focus
+        ? `It appeared because the focus "${focus}" touched the same pressure this card is built to reveal.`
+        : "It appeared as the daily field's strongest available symbolic anchor."
+    ),
+    casterInvitation: cleanText(
+      echo || "Let the symbol clarify the next movement without forcing the entire story to resolve."
+    ),
+  };
+}
+
 function buildOpening(cardName = "The Witness Under Pressure") {
   return `You have drawn the “${cardName}” card`;
 }
@@ -888,12 +932,6 @@ function buildCastSections({
     coreTension,
   });
 
-  const coreCard = {
-    name: cardName,
-    description: buildCoreCardDescription({ cardName, imagePrompt, coreTension }),
-    imagePrompt,
-  };
-
   const echo = buildEcho({
     question,
     signal,
@@ -902,6 +940,26 @@ function buildCastSections({
     sourceText,
     coreTension,
   });
+
+  const coreCardDescription = buildCoreCardDescription({
+    cardName,
+    imagePrompt,
+    coreTension,
+  });
+
+  const coreCard = {
+    name: cardName,
+    description: coreCardDescription,
+    imagePrompt,
+    lore: buildCoreCardLore({
+      cardName,
+      description: coreCardDescription,
+      imagePrompt,
+      echo,
+      question,
+      coreTension,
+    }),
+  };
 
   return {
     tone,
@@ -1004,6 +1062,13 @@ function getModelCoreCard(parsed = {}) {
       ? parsed.core_card
       : {};
 
+  const loreSource =
+    coreCard.lore && typeof coreCard.lore === "object"
+      ? coreCard.lore
+      : coreCard.meaning && typeof coreCard.meaning === "object"
+      ? coreCard.meaning
+      : {};
+
   return {
     name: cleanText(
       coreCard.name ||
@@ -1029,6 +1094,46 @@ function getModelCoreCard(parsed = {}) {
         parsed?.image_prompt ||
         ""
     ),
+    lore: {
+      archetypeMeaning: cleanText(
+        loreSource.archetypeMeaning ||
+          loreSource.archetype_meaning ||
+          loreSource.meaning ||
+          loreSource.archetype ||
+          ""
+      ),
+      symbolicRole: cleanText(
+        loreSource.symbolicRole ||
+          loreSource.symbolic_role ||
+          loreSource.role ||
+          ""
+      ),
+      uprightMeaning: cleanText(
+        loreSource.uprightMeaning ||
+          loreSource.upright_meaning ||
+          loreSource.upright ||
+          ""
+      ),
+      shadowMeaning: cleanText(
+        loreSource.shadowMeaning ||
+          loreSource.shadow_meaning ||
+          loreSource.shadow ||
+          ""
+      ),
+      whyItAppeared: cleanText(
+        loreSource.whyItAppeared ||
+          loreSource.why_it_appeared ||
+          loreSource.appearance ||
+          ""
+      ),
+      casterInvitation: cleanText(
+        loreSource.casterInvitation ||
+          loreSource.caster_invitation ||
+          loreSource.invitation ||
+          loreSource.ask ||
+          ""
+      ),
+    },
   };
 }
 
@@ -1053,6 +1158,24 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
   const modelEcho = cleanText(
     parsed?.echo || parsed?.echoText || getSectionContent(priorSections, "echo")
   );
+  const mergedCoreCardDescription =
+    modelCoreCard.description || locked.coreCard.description;
+  const mergedImagePrompt = modelCoreCard.imagePrompt || locked.coreCard.imagePrompt;
+  const modelLore = Object.fromEntries(
+    Object.entries(modelCoreCard.lore || {}).filter(([, value]) => value)
+  );
+  const coreCardLore = {
+    ...locked.coreCard.lore,
+    ...buildCoreCardLore({
+      cardName: locked.coreCard.name,
+      description: mergedCoreCardDescription,
+      imagePrompt: mergedImagePrompt,
+      echo: modelEcho || locked.echo,
+      question,
+      coreTension,
+    }),
+    ...modelLore,
+  };
   const usedModelSectionTypes = priorSections.map((section) => section.type);
   const fallbackSectionTypes = locked.sections
     .map((section) => section.type)
@@ -1061,6 +1184,7 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
     modelCoreCard.name ? "cardName" : "",
     modelCoreCard.description ? "coreCard.description" : "",
     modelCoreCard.imagePrompt ? "coreCard.imagePrompt" : "",
+    Object.keys(modelLore).length > 0 ? "coreCard.lore" : "",
     modelEcho ? "echo" : "",
   ].filter(Boolean);
 
@@ -1071,8 +1195,9 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
     sections: locked.sections,
     coreCard: {
       name: locked.coreCard.name,
-      description: modelCoreCard.description || locked.coreCard.description,
-      imagePrompt: modelCoreCard.imagePrompt || locked.coreCard.imagePrompt,
+      description: mergedCoreCardDescription,
+      imagePrompt: mergedImagePrompt,
+      lore: coreCardLore,
     },
     echo: modelEcho || locked.echo,
     metadata: {

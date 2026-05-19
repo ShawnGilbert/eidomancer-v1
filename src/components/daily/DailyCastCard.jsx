@@ -1,7 +1,6 @@
 // D:\eidomancer\src\components\daily\DailyCastCard.jsx
 
 import { useEffect, useMemo, useState } from "react";
-import CoreCard from "../CoreCard";
 import DailyShareButton from "./DailyShareButton";
 
 function getSectionContent(cast, type) {
@@ -176,8 +175,6 @@ export default function DailyCastCard({
         </div>
 
         <div className="space-y-5 p-6">
-          <CoreCard cast={cast} title="Core Card" />
-
           {dailyFocus ? (
             <SectionBlock title="Question / Focus" content={dailyFocus} tone="cyan" />
           ) : null}
