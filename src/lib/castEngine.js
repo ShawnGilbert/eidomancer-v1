@@ -985,11 +985,48 @@ function normalizeModelSections(parsed) {
   return Array.from(sectionMap.values());
 }
 
+function getModelCoreCard(parsed = {}) {
+  const coreCard =
+    parsed?.coreCard && typeof parsed.coreCard === "object"
+      ? parsed.coreCard
+      : parsed?.core_card && typeof parsed.core_card === "object"
+      ? parsed.core_card
+      : {};
+
+  return {
+    name: cleanText(
+      coreCard.name ||
+        coreCard.title ||
+        parsed?.cardName ||
+        parsed?.card_name ||
+        parsed?.card ||
+        parsed?.title ||
+        ""
+    ),
+    description: cleanText(
+      coreCard.description ||
+        coreCard.coreObject ||
+        coreCard.core_object ||
+        parsed?.coreObject ||
+        parsed?.core_object ||
+        ""
+    ),
+    imagePrompt: cleanText(
+      coreCard.imagePrompt ||
+        coreCard.image_prompt ||
+        parsed?.imagePrompt ||
+        parsed?.image_prompt ||
+        ""
+    ),
+  };
+}
+
 function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
   const coreTension = extractCoreTension({ question, sourceText });
+  const modelCoreCard = getModelCoreCard(parsed);
 
   const cardName =
-    cleanText(parsed?.coreCard?.name || parsed?.cardName || "") ||
+    modelCoreCard.name ||
     inferCoreCardName([question, sourceText, coreTension?.key].join(" "));
 
   const priorSections = normalizeModelSections(parsed);
@@ -1005,12 +1042,16 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
   const modelEcho = cleanText(
     parsed?.echo || parsed?.echoText || getSectionContent(priorSections, "echo")
   );
-  const modelImagePrompt = cleanText(parsed?.coreCard?.imagePrompt || "");
-  const modelDescription = cleanText(parsed?.coreCard?.description || "");
   const usedModelSectionTypes = priorSections.map((section) => section.type);
   const fallbackSectionTypes = locked.sections
     .map((section) => section.type)
     .filter((type) => !usedModelSectionTypes.includes(type));
+  const usedModelFields = [
+    modelCoreCard.name ? "cardName" : "",
+    modelCoreCard.description ? "coreCard.description" : "",
+    modelCoreCard.imagePrompt ? "coreCard.imagePrompt" : "",
+    modelEcho ? "echo" : "",
+  ].filter(Boolean);
 
   return {
     cardName: locked.coreCard.name,
@@ -1019,8 +1060,8 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
     sections: locked.sections,
     coreCard: {
       name: locked.coreCard.name,
-      description: modelDescription || locked.coreCard.description,
-      imagePrompt: modelImagePrompt || locked.coreCard.imagePrompt,
+      description: modelCoreCard.description || locked.coreCard.description,
+      imagePrompt: modelCoreCard.imagePrompt || locked.coreCard.imagePrompt,
     },
     echo: modelEcho || locked.echo,
     metadata: {
@@ -1028,8 +1069,10 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
       flowVersion: "eidomancer-v1-tension-extraction",
       coreTensionKey: coreTension?.key || "default-pressure",
       usedModelSections: usedModelSectionTypes,
+      usedModelFields,
       fallbackSections: fallbackSectionTypes,
-      usedFallback: usedModelSectionTypes.length === 0 && !modelEcho,
+      usedFallback:
+        usedModelSectionTypes.length === 0 && usedModelFields.length === 0,
     },
   };
 }

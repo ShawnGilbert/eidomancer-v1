@@ -116,10 +116,23 @@ function buildDailyMetadata({
   };
 }
 
-function buildDailyModelPrompt(promptBundle = {}) {
+function buildDailyModelPrompt(promptBundle = {}, context = {}) {
+  const focus = safeText(context.focus);
+  const dateKey = safeText(context.dateKey);
+  const recentTitles = Array.isArray(context.recentCasts)
+    ? context.recentCasts
+        .slice(0, 3)
+        .map((cast) => cast?.coreCard?.title || cast?.title || cast?.coreCard?.name)
+        .filter(Boolean)
+        .join(" | ")
+    : "";
+
   return [
     "You are Eidomancer, a symbolic reflection system.",
     "Create one daily cast from the material below.",
+    "The user's focus must strongly shape the card name and every section.",
+    "Avoid generic daily-reading language. Name the specific pressure, pattern, and leverage point in the focus.",
+    "If recent casts are present, do not repeat their card names or phrasing unless the focus clearly demands it.",
     "Return ONLY valid JSON with this exact shape:",
     JSON.stringify(
       {
@@ -144,6 +157,15 @@ function buildDailyModelPrompt(promptBundle = {}) {
     "",
     "DAILY CAST MATERIAL",
     "",
+    "Exact user focus:",
+    focus || "No explicit focus was provided. Generate an open daily cast.",
+    "",
+    "Date key:",
+    dateKey || "Unknown",
+    "",
+    "Recent cast titles to avoid repeating:",
+    recentTitles || "None",
+    "",
     "Question / instructions:",
     promptBundle.question || "",
     "",
@@ -155,7 +177,7 @@ function buildDailyModelPrompt(promptBundle = {}) {
   ].join("\n");
 }
 
-async function requestDailyModelText(promptBundle) {
+async function requestDailyModelText(promptBundle, context = {}) {
   if (typeof fetch !== "function") {
     throw new Error("Fetch is unavailable in this runtime.");
   }
@@ -166,7 +188,7 @@ async function requestDailyModelText(promptBundle) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      prompt: buildDailyModelPrompt(promptBundle),
+      prompt: buildDailyModelPrompt(promptBundle, context),
     }),
   });
 
@@ -418,7 +440,11 @@ export async function generateDailyCast(input) {
   let aiResponseReceived = false;
 
   try {
-    responseText = await requestDailyModelText(promptBundle);
+    responseText = await requestDailyModelText(promptBundle, {
+      focus: rawQuestion,
+      dateKey,
+      recentCasts,
+    });
     aiRequestSucceeded = true;
     aiResponseReceived = responseText.length > 0;
   } catch (error) {
