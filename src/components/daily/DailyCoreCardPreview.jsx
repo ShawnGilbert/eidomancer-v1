@@ -19,12 +19,222 @@ function getCoreDetails(cast) {
   };
 }
 
+function getSectionContent(cast, type) {
+  if (!cast || !Array.isArray(cast.sections)) return "";
+  return cast.sections.find((section) => section?.type === type)?.content || "";
+}
+
+function getBackContent(cast, details) {
+  const lore = cast?.coreCard?.lore || {};
+  const description = cast?.coreCard?.description || "";
+  const echo = cast?.echo || getSectionContent(cast, "echo");
+  const signal = getSectionContent(cast, "signal");
+  const pattern = getSectionContent(cast, "pattern");
+  const tension = getSectionContent(cast, "tension");
+  const guidance =
+    getSectionContent(cast, "recommendation") ||
+    getSectionContent(cast, "guidance") ||
+    getSectionContent(cast, "action");
+  const insight = getSectionContent(cast, "insight");
+  const focus = cast?.metadata?.dailyFocus || cast?.question || "";
+
+  return {
+    archetypeMeaning:
+      lore.archetypeMeaning || lore.archetype_meaning || description || details?.hook || "",
+    symbolicRole: lore.symbolicRole || lore.symbolic_role || "",
+    uprightMeaning: lore.uprightMeaning || lore.upright_meaning || "",
+    shadowMeaning: lore.shadowMeaning || lore.shadow_meaning || "",
+    whyItAppeared: lore.whyItAppeared || lore.why_it_appeared || "",
+    casterInvitation: lore.casterInvitation || lore.caster_invitation || "",
+    meaning: description || details?.hook || "",
+    echo,
+    guidance,
+    insight,
+    focus,
+    signal,
+    pattern,
+    tension,
+  };
+}
+
+function trimLine(value = "", fallback = "Undeclared") {
+  const text = String(value || "").trim();
+  if (!text) return fallback;
+  return text.length > 74 ? `${text.slice(0, 71).trim()}...` : text;
+}
+
+function getSignalStrength(cast) {
+  const aiUsed = cast?.metadata?.aiResponseUsed || cast?.metadata?.aiRequestSucceeded;
+  const fallback = cast?.metadata?.usedFallback || cast?.mode === "no-ai";
+
+  if (aiUsed && !fallback) return "Live";
+  if (fallback) return "Local";
+  return "Latent";
+}
+
+function DossierStat({ label, value }) {
+  return (
+    <div className="border-l border-cyan-300/25 px-3 py-1.5">
+      <div className="text-[9px] uppercase tracking-[0.18em] text-cyan-200/55">
+        {label}
+      </div>
+      <div className="mt-1 text-xs font-semibold leading-5 text-cyan-50/90">
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function DossierEntry({ label, children, accent = "cyan" }) {
+  const accentClass =
+    accent === "amber"
+      ? "text-amber-200/80"
+      : accent === "emerald"
+      ? "text-emerald-200/80"
+      : "text-cyan-200/80";
+
+  return (
+    <section className="border-t border-white/10 pt-3">
+      <div className={`flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] ${accentClass}`}>
+        <span className="text-sm leading-none">+</span>
+        <span>{label}</span>
+      </div>
+      <div className="mt-2 text-sm leading-6 text-white/82">{children}</div>
+    </section>
+  );
+}
+
+function CoreCardBack({ cast, details }) {
+  const dossier = getBackContent(cast, details);
+  const hasLore = [
+    dossier.archetypeMeaning,
+    dossier.symbolicRole,
+    dossier.uprightMeaning,
+    dossier.shadowMeaning,
+    dossier.whyItAppeared,
+    dossier.casterInvitation,
+  ].some((value) => String(value || "").trim());
+  const hasMeaning = hasLore || Object.values(dossier).some((value) =>
+    String(value || "").trim()
+  );
+  const archetype = details.subtitle || details.hook || dossier.archetypeMeaning;
+  const alignment = dossier.uprightMeaning ? "Upright / Shadow" : "Interpretive";
+  const momentum = dossier.casterInvitation ? "Invitational" : "Revealing";
+
+  return (
+    <div
+      id="eidomancer-core-card-back"
+      className="mx-auto w-full max-w-5xl overflow-hidden rounded-[2rem] border border-cyan-400/30 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),rgba(2,8,23,0.98)_38%,rgba(3,7,18,1))] p-5 text-slate-100 shadow-2xl shadow-cyan-950/40"
+    >
+      <div className="border border-cyan-300/15 p-4 sm:p-6">
+        <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+          <aside className="border-b border-cyan-300/20 pb-5 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-5">
+            <div className="flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.35em] text-cyan-200/55 lg:justify-start">
+              <span>Core Record</span>
+            </div>
+
+            <h3 className="mt-4 text-center text-3xl font-semibold leading-tight text-white lg:text-left">
+              {details.title}
+            </h3>
+
+            <div className="mx-auto mt-5 h-[170px] w-[122px] overflow-hidden rounded-[1.05rem] border border-cyan-300/20 shadow-xl shadow-cyan-950/35 lg:mx-0">
+              <div className="pointer-events-none w-[305px] origin-top-left scale-[0.4]">
+                <CoreCard cast={cast} />
+              </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-y-3 text-left lg:grid-cols-1">
+              <DossierStat label="Archetype" value={trimLine(archetype)} />
+              <DossierStat label="Signal" value={getSignalStrength(cast)} />
+              <DossierStat label="Alignment" value={alignment} />
+              <DossierStat label="Momentum" value={momentum} />
+            </div>
+          </aside>
+
+          <div className="min-w-0">
+            <div className="border-b border-cyan-300/25 pb-4">
+              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-cyan-200/55">
+                <span>Eidomancer Dossier</span>
+                <span className="h-px flex-1 bg-gradient-to-r from-cyan-200/35 to-transparent" />
+              </div>
+              <div className="mt-3 text-sm leading-6 text-white/58">
+                A lore sheet for the card's archetype, field behavior, and requested movement.
+              </div>
+            </div>
+
+            <div className="mt-5 max-h-[65vh] space-y-5 overflow-y-auto pr-1">
+              {hasMeaning ? (
+                <>
+                  <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+                    <div className="space-y-5">
+                      <DossierEntry label="Archetype Meaning">
+                        {dossier.archetypeMeaning || dossier.meaning || "Meaning has not resolved yet."}
+                      </DossierEntry>
+
+                      <DossierEntry label="Symbolic Role">
+                        {dossier.symbolicRole ||
+                          "This card serves as the primary symbolic anchor for the cast."}
+                      </DossierEntry>
+                    </div>
+
+                    <div className="space-y-5 border-y border-cyan-300/15 py-4 xl:border-x xl:border-y-0 xl:px-4 xl:py-0">
+                      <DossierEntry label="Upright Meaning" accent="emerald">
+                        {dossier.uprightMeaning || trimLine(dossier.insight, "The useful reading has not resolved yet.")}
+                      </DossierEntry>
+                      <DossierEntry label="Shadow Meaning" accent="amber">
+                        {dossier.shadowMeaning || trimLine(dossier.tension, "The shadow has not named itself yet.")}
+                      </DossierEntry>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-5 xl:grid-cols-2">
+                    <DossierEntry label="Why It Appeared">
+                      {dossier.whyItAppeared ||
+                        (dossier.focus
+                          ? `It appeared in response to the focus: ${dossier.focus}`
+                          : "It appeared as the day's strongest available symbolic anchor.")}
+                    </DossierEntry>
+
+                    <DossierEntry label="What It Asks of the Caster" accent="emerald">
+                      {dossier.casterInvitation ||
+                        dossier.echo ||
+                        dossier.guidance ||
+                        "Let the symbol clarify the next movement without forcing the entire story to resolve."}
+                    </DossierEntry>
+                  </div>
+
+                  <DossierEntry label="Supporting Context">
+                    {dossier.pattern ||
+                      dossier.signal ||
+                      dossier.focus ||
+                      "No additional cast context is needed for this card."}
+                  </DossierEntry>
+                </>
+              ) : (
+                <div className="border-y border-white/10 py-4 text-sm leading-6 text-white/70">
+                  No card-back meaning has been generated yet.
+                </div>
+              )}
+            </div>
+
+            <div className="mt-5 border-t border-cyan-300/20 pt-3 text-center text-xs uppercase tracking-[0.2em] text-white/45">
+              Treat As Symbolic Intelligence
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DailyCoreCardPreview({ cast, className = "" }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
   const details = getCoreDetails(cast);
 
   useEffect(() => {
     setIsExpanded(false);
+    setIsFlipped(false);
   }, [cast?.id, cast?.dateKey]);
 
   useEffect(() => {
@@ -51,7 +261,7 @@ export default function DailyCoreCardPreview({ cast, className = "" }) {
           Core Card
         </div>
         <div className="mt-3 text-sm leading-6 text-white/55">
-          Generate a cast to reveal today’s symbolic anchor.
+          Generate a cast to reveal today's symbolic anchor.
         </div>
       </div>
     );
@@ -96,18 +306,34 @@ export default function DailyCoreCardPreview({ cast, className = "" }) {
           onClick={() => setIsExpanded(false)}
         >
           <div
-            className="relative max-h-full w-full max-w-[460px] overflow-y-auto"
+            className={`relative max-h-full w-full overflow-y-auto ${
+              isFlipped ? "max-w-5xl" : "max-w-[460px]"
+            }`}
             onClick={(event) => event.stopPropagation()}
           >
-            <button
-              type="button"
-              onClick={() => setIsExpanded(false)}
-              className="mb-4 ml-auto block rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.18em] text-white/75 transition hover:bg-white/15"
-            >
-              Close
-            </button>
+            <div className="mb-4 flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsFlipped((value) => !value)}
+                className="rounded-full border border-cyan-400/25 bg-cyan-500/15 px-4 py-2 text-xs uppercase tracking-[0.18em] text-cyan-100/85 transition hover:bg-cyan-500/25"
+              >
+                {isFlipped ? "Show Front" : "Flip Card"}
+              </button>
 
-            <CoreCard cast={cast} />
+              <button
+                type="button"
+                onClick={() => setIsExpanded(false)}
+                className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.18em] text-white/75 transition hover:bg-white/15"
+              >
+                Close
+              </button>
+            </div>
+
+            {isFlipped ? (
+              <CoreCardBack cast={cast} details={details} />
+            ) : (
+              <CoreCard cast={cast} />
+            )}
           </div>
         </div>
       ) : null}
