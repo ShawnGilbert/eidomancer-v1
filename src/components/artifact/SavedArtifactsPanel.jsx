@@ -8,6 +8,8 @@ import {
   loadSavedArtifacts,
 } from "../../lib/artifactStorage";
 
+const MAX_SAVED_ARTIFACTS_DISPLAY = 5;
+
 export default function SavedArtifactsPanel({
   activeArtifact,
   onSelectArtifact,
@@ -20,6 +22,7 @@ export default function SavedArtifactsPanel({
   }
 
   const savedArtifacts = loadSavedArtifacts();
+  const visibleArtifacts = savedArtifacts.slice(0, MAX_SAVED_ARTIFACTS_DISPLAY);
   const activeFingerprint = activeArtifact
     ? getArtifactFingerprint(activeArtifact)
     : "";
@@ -30,11 +33,11 @@ export default function SavedArtifactsPanel({
         Saved Artifacts
       </h2>
 
-      {savedArtifacts.length === 0 ? (
+      {visibleArtifacts.length === 0 ? (
         <p className="mt-3 text-sm text-slate-400">No saved artifacts yet.</p>
       ) : (
         <div className="mt-4 space-y-3">
-          {savedArtifacts.map((artifact, index) => {
+          {visibleArtifacts.map((artifact, index) => {
             const inputPreview = getArtifactInput(artifact);
             const isActive =
               getArtifactFingerprint(artifact) === activeFingerprint;

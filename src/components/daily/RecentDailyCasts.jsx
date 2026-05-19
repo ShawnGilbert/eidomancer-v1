@@ -1,5 +1,7 @@
 // D:\eidomancer\src\components\daily\RecentDailyCasts.jsx
 
+const MAX_RECENT_CASTS_DISPLAY = 5;
+
 function getSectionContent(cast, type) {
   if (!cast || !Array.isArray(cast.sections)) return "";
   return cast.sections.find((section) => section?.type === type)?.content || "";
@@ -90,7 +92,10 @@ export default function RecentDailyCasts({
   onSelectCast,
   className = "",
 }) {
-  const visibleHistory = Array.isArray(casts) ? casts.slice(0, historyLimit) : [];
+  const displayLimit = Math.min(historyLimit, MAX_RECENT_CASTS_DISPLAY);
+  const visibleHistory = Array.isArray(casts)
+    ? casts.slice(0, displayLimit)
+    : [];
   const hiddenHistoryCount = Math.max(
     0,
     (casts?.length || 0) - visibleHistory.length
