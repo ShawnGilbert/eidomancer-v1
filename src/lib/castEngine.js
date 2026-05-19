@@ -841,6 +841,150 @@ function buildCoreCardLore({
   };
 }
 
+function pickVisualPalette(source = "") {
+  const text = cleanText(source).toLowerCase();
+
+  if (/\b(exhaust|tired|burnout|fatigue|drain)\b/.test(text)) {
+    return "deep blue, cold cyan, ash white, muted silver";
+  }
+
+  if (/\b(pattern|loop|cycle|system|algorithm|metric)\b/.test(text)) {
+    return "blue black, electric cyan, violet, glass green";
+  }
+
+  if (/\b(trick|joke|absurd|paradox|play)\b/.test(text)) {
+    return "black violet, fuchsia, amber, teal";
+  }
+
+  if (/\b(shadow|fear|threat|conflict|pressure)\b/.test(text)) {
+    return "blackened crimson, ember orange, dim gold, bruised blue";
+  }
+
+  return "deep blue, luminous cyan, ritual amber, violet shadow";
+}
+
+function buildCoreCardVisual({
+  cardName,
+  description,
+  imagePrompt,
+  lore,
+  question,
+  signal,
+  tension,
+  pattern,
+  insight,
+  echo,
+  coreTension,
+}) {
+  const source = [
+    cardName,
+    question,
+    description,
+    imagePrompt,
+    lore?.archetypeMeaning,
+    lore?.symbolicRole,
+    lore?.shadowMeaning,
+    signal,
+    tension,
+    pattern,
+    insight,
+    echo,
+    coreTension?.key,
+  ]
+    .filter(Boolean)
+    .join(" :: ");
+  const seed = hashString(source);
+  const subject =
+    imagePrompt ||
+    description ||
+    `${cardName} embodied as a single symbolic figure in an Eidomancer ritual field`;
+  const archetypeFigure = pickVariant(seed, "visual-figure", [
+    "solitary witness",
+    "threshold keeper",
+    "signal bearer",
+    "pattern reader",
+    "shadow cartographer",
+  ]);
+  const primaryMotif = pickVariant(seed, "visual-primary", [
+    "luminous signal",
+    "fractured halo",
+    "ritual aperture",
+    "coded thread",
+    "suspended symbolic object",
+  ]);
+  const secondaryMotifs = [
+    pickVariant(seed, "visual-secondary-a", [
+      "thin orbit lines",
+      "dim glyph field",
+      "soft circuit roots",
+      "broken reflection marks",
+      "watching light points",
+    ]),
+    pickVariant(seed, "visual-secondary-b", [
+      "distant threshold",
+      "pressure rings",
+      "weathered sigils",
+      "faint measurement grid",
+      "echo traces",
+    ]),
+  ];
+  const paletteHint = pickVisualPalette(source);
+  const lighting = pickVariant(seed, "visual-lighting", [
+    "low ritual glow from below",
+    "cold side light with a warm symbolic core",
+    "backlit silhouette against a luminous field",
+    "soft cyan radiance with amber edge light",
+  ]);
+  const atmosphere = pickVariant(seed, "visual-atmosphere", [
+    "quiet, charged, and watchful",
+    "ancient digital, restrained, and tense",
+    "liminal, weathered, and symbolically dense",
+    "calm on the surface with visible pressure underneath",
+  ]);
+  const environment = pickVariant(seed, "visual-environment", [
+    "a dark ritual chamber made of glass, water, and signal noise",
+    "a suspended symbolic landscape with distant threshold architecture",
+    "a black-blue codex space where light behaves like weather",
+    "a surreal field of glyphs, roots, and measured shadow",
+  ]);
+  const composition = pickVariant(seed, "visual-composition", [
+    "portrait tarot composition, one central figure, clear silhouette",
+    "central subject framed by orbiting motifs and a deep background field",
+    "single symbolic anchor in the foreground, atmosphere expanding behind it",
+    "vertical icon composition with readable negative space",
+  ]);
+
+  return {
+    subject,
+    archetypeFigure,
+    environment,
+    primaryMotif,
+    secondaryMotifs,
+    paletteHint,
+    lighting,
+    atmosphere,
+    composition,
+    symbolicProps: [
+      primaryMotif,
+      ...secondaryMotifs,
+      coreTension?.key ? `${coreTension.key} pressure marker` : "daily pressure marker",
+    ],
+    imagePrompt: cleanText(
+      [
+        subject,
+        `archetype figure: ${archetypeFigure}`,
+        `environment: ${environment}`,
+        `primary motif: ${primaryMotif}`,
+        `secondary motifs: ${secondaryMotifs.join(", ")}`,
+        `palette: ${paletteHint}`,
+        `lighting: ${lighting}`,
+        `atmosphere: ${atmosphere}`,
+        composition,
+      ].join("; ")
+    ),
+  };
+}
+
 function buildOpening(cardName = "The Witness Under Pressure") {
   return `You have drawn the “${cardName}” card`;
 }
@@ -947,16 +1091,31 @@ function buildCastSections({
     coreTension,
   });
 
+  const coreCardLore = buildCoreCardLore({
+    cardName,
+    description: coreCardDescription,
+    imagePrompt,
+    echo,
+    question,
+    coreTension,
+  });
+
   const coreCard = {
     name: cardName,
     description: coreCardDescription,
     imagePrompt,
-    lore: buildCoreCardLore({
+    lore: coreCardLore,
+    visual: buildCoreCardVisual({
       cardName,
       description: coreCardDescription,
       imagePrompt,
-      echo,
+      lore: coreCardLore,
       question,
+      signal,
+      tension,
+      pattern,
+      insight,
+      echo,
       coreTension,
     }),
   };
@@ -1068,6 +1227,14 @@ function getModelCoreCard(parsed = {}) {
       : coreCard.meaning && typeof coreCard.meaning === "object"
       ? coreCard.meaning
       : {};
+  const visualSource =
+    coreCard.visual && typeof coreCard.visual === "object"
+      ? coreCard.visual
+      : coreCard.visualIdentity && typeof coreCard.visualIdentity === "object"
+      ? coreCard.visualIdentity
+      : coreCard.visual_identity && typeof coreCard.visual_identity === "object"
+      ? coreCard.visual_identity
+      : {};
 
   return {
     name: cleanText(
@@ -1134,6 +1301,35 @@ function getModelCoreCard(parsed = {}) {
           ""
       ),
     },
+    visual: {
+      subject: cleanText(visualSource.subject || ""),
+      archetypeFigure: cleanText(
+        visualSource.archetypeFigure || visualSource.archetype_figure || ""
+      ),
+      environment: cleanText(visualSource.environment || ""),
+      primaryMotif: cleanText(
+        visualSource.primaryMotif || visualSource.primary_motif || ""
+      ),
+      secondaryMotifs: Array.isArray(visualSource.secondaryMotifs)
+        ? visualSource.secondaryMotifs.map(cleanText).filter(Boolean)
+        : Array.isArray(visualSource.secondary_motifs)
+        ? visualSource.secondary_motifs.map(cleanText).filter(Boolean)
+        : [],
+      paletteHint: cleanText(
+        visualSource.paletteHint || visualSource.palette_hint || ""
+      ),
+      lighting: cleanText(visualSource.lighting || ""),
+      atmosphere: cleanText(visualSource.atmosphere || ""),
+      composition: cleanText(visualSource.composition || ""),
+      symbolicProps: Array.isArray(visualSource.symbolicProps)
+        ? visualSource.symbolicProps.map(cleanText).filter(Boolean)
+        : Array.isArray(visualSource.symbolic_props)
+        ? visualSource.symbolic_props.map(cleanText).filter(Boolean)
+        : [],
+      imagePrompt: cleanText(
+        visualSource.imagePrompt || visualSource.image_prompt || ""
+      ),
+    },
   };
 }
 
@@ -1164,6 +1360,11 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
   const modelLore = Object.fromEntries(
     Object.entries(modelCoreCard.lore || {}).filter(([, value]) => value)
   );
+  const modelVisual = Object.fromEntries(
+    Object.entries(modelCoreCard.visual || {}).filter(([, value]) =>
+      Array.isArray(value) ? value.length > 0 : Boolean(value)
+    )
+  );
   const coreCardLore = {
     ...locked.coreCard.lore,
     ...buildCoreCardLore({
@@ -1176,6 +1377,23 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
     }),
     ...modelLore,
   };
+  const coreCardVisual = {
+    ...locked.coreCard.visual,
+    ...buildCoreCardVisual({
+      cardName: locked.coreCard.name,
+      description: mergedCoreCardDescription,
+      imagePrompt: mergedImagePrompt,
+      lore: coreCardLore,
+      question,
+      signal: getSectionContent(locked.sections, "signal"),
+      tension: getSectionContent(locked.sections, "tension"),
+      pattern: getSectionContent(locked.sections, "pattern"),
+      insight: getSectionContent(locked.sections, "insight"),
+      echo: modelEcho || locked.echo,
+      coreTension,
+    }),
+    ...modelVisual,
+  };
   const usedModelSectionTypes = priorSections.map((section) => section.type);
   const fallbackSectionTypes = locked.sections
     .map((section) => section.type)
@@ -1185,6 +1403,7 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
     modelCoreCard.description ? "coreCard.description" : "",
     modelCoreCard.imagePrompt ? "coreCard.imagePrompt" : "",
     Object.keys(modelLore).length > 0 ? "coreCard.lore" : "",
+    Object.keys(modelVisual).length > 0 ? "coreCard.visual" : "",
     modelEcho ? "echo" : "",
   ].filter(Boolean);
 
@@ -1198,6 +1417,7 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
       description: mergedCoreCardDescription,
       imagePrompt: mergedImagePrompt,
       lore: coreCardLore,
+      visual: coreCardVisual,
     },
     echo: modelEcho || locked.echo,
     metadata: {

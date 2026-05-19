@@ -21,9 +21,15 @@ function getCoreCard(cast) {
   if (!cast || typeof cast !== "object") return null;
   if (!cast.coreCard || typeof cast.coreCard !== "object") return null;
 
-  const title = normalizeText(cast.coreCard.title);
+  const visual =
+    cast.coreCard.visual && typeof cast.coreCard.visual === "object"
+      ? cast.coreCard.visual
+      : {};
+  const title = normalizeText(cast.coreCard.title || cast.coreCard.name);
   const subtitle = normalizeText(cast.coreCard.subtitle);
-  const hook = normalizeText(cast.coreCard.hook);
+  const hook = normalizeText(
+    cast.coreCard.hook || visual.subject || visual.atmosphere
+  );
   const imageUrl = normalizeText(cast.coreCard.imageUrl);
   if (!title && !subtitle && !hook && !imageUrl) return null;
 
@@ -32,6 +38,7 @@ function getCoreCard(cast) {
     subtitle,
     hook,
     imageUrl,
+    visual,
   };
 }
 
@@ -119,7 +126,7 @@ export default function CoreCard({ cast, className = "" }) {
             {/* FOOT */}
             <div className="mt-auto pt-6">
               <div className="rounded-xl bg-black/40 px-4 py-3 text-xs uppercase tracking-[0.2em] text-white/50">
-                Remember This
+                {core.visual?.primaryMotif || "Remember This"}
               </div>
             </div>
 

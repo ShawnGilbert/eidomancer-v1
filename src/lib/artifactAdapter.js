@@ -34,6 +34,8 @@ function escapeXml(value = "") {
 
 function buildVisualPrompt(cast) {
   const title = cleanText(cast?.coreCard?.name || cast?.cardName || cast?.title);
+  const visual = cast?.coreCard?.visual || {};
+  const visualImagePrompt = cleanText(visual?.imagePrompt);
   const imagePrompt = cleanText(cast?.coreCard?.imagePrompt);
   const description = cleanText(cast?.coreCard?.description);
   const signal = getSection(cast, "signal");
@@ -46,11 +48,35 @@ function buildVisualPrompt(cast) {
     cleanText(cast?.metadata?.dailyFocus) ||
     cleanText(cast?.input);
 
+  if (visualImagePrompt) return visualImagePrompt;
   if (imagePrompt) return imagePrompt;
   if (description) return description;
 
   return [
     title,
+    cleanText(visual?.subject) ? `subject: ${cleanText(visual.subject)}` : "",
+    cleanText(visual?.archetypeFigure)
+      ? `archetype figure: ${cleanText(visual.archetypeFigure)}`
+      : "",
+    cleanText(visual?.environment)
+      ? `environment: ${cleanText(visual.environment)}`
+      : "",
+    cleanText(visual?.primaryMotif)
+      ? `primary motif: ${cleanText(visual.primaryMotif)}`
+      : "",
+    Array.isArray(visual?.secondaryMotifs) && visual.secondaryMotifs.length
+      ? `secondary motifs: ${visual.secondaryMotifs.map(cleanText).filter(Boolean).join(", ")}`
+      : "",
+    cleanText(visual?.paletteHint)
+      ? `palette: ${cleanText(visual.paletteHint)}`
+      : "",
+    cleanText(visual?.lighting) ? `lighting: ${cleanText(visual.lighting)}` : "",
+    cleanText(visual?.atmosphere)
+      ? `atmosphere: ${cleanText(visual.atmosphere)}`
+      : "",
+    cleanText(visual?.composition)
+      ? `composition: ${cleanText(visual.composition)}`
+      : "",
     focus ? `focus: ${focus}` : "",
     signal ? `signal: ${signal}` : "",
     tension ? `tension: ${tension}` : "",
