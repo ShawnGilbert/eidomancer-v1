@@ -146,13 +146,30 @@ function PayloadField({ label, children, scroll = false }) {
 
 function ImageGenerationPayloadPanel({ cast }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [copyStatus, setCopyStatus] = useState("");
   const payload = getImageGenerationPayload(cast);
   const hasPayload = Object.values(payload).some((value) =>
     Array.isArray(value) ? value.length > 0 : Boolean(String(value || "").trim())
   );
+  const promptReady = Boolean(String(payload.prompt || "").trim());
+
+  async function handleCopyPrompt() {
+    if (!promptReady) {
+      setCopyStatus("No prompt encoded.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(payload.prompt);
+      setCopyStatus("Prompt copied.");
+    } catch (error) {
+      console.warn("Unable to copy image prompt", error);
+      setCopyStatus("Copy failed.");
+    }
+  }
 
   return (
-    <section className="border-t border-cyan-300/20 pt-4">
+    <section className="rounded-2xl border border-cyan-300/20 bg-cyan-400/[0.045] p-4 shadow-inner shadow-cyan-950/20">
       <button
         type="button"
         onClick={() => setIsOpen((value) => !value)}
@@ -167,8 +184,15 @@ function ImageGenerationPayloadPanel({ cast }) {
             hidden machinery beneath the symbolism
           </div>
         </div>
-        <div className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-cyan-100/75">
-          {isOpen ? "collapse" : "inspect"}
+        <div className="flex flex-wrap justify-end gap-2">
+          {promptReady ? (
+            <div className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-emerald-100/75">
+              Image prompt ready
+            </div>
+          ) : null}
+          <div className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-cyan-100/75">
+            {isOpen ? "collapse" : "inspect"}
+          </div>
         </div>
       </button>
 
@@ -176,6 +200,29 @@ function ImageGenerationPayloadPanel({ cast }) {
         <div className="mt-4 rounded-2xl border border-cyan-300/15 bg-slate-950/65 p-4 shadow-inner shadow-cyan-950/30">
           {hasPayload ? (
             <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-300/10 bg-black/20 p-3">
+                <div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-100/65">
+                    Core-card prompt channel
+                  </div>
+                  <div className="mt-1 text-xs leading-5 text-white/45">
+                    Prepared for a future image generator; no image API is called here.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyPrompt}
+                  disabled={!promptReady}
+                  className="rounded-full border border-cyan-300/25 bg-cyan-400/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-cyan-50/80 transition hover:bg-cyan-400/18 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-white/35"
+                >
+                  Copy Image Prompt
+                </button>
+                {copyStatus ? (
+                  <div className="w-full font-mono text-[10px] uppercase tracking-[0.16em] text-cyan-100/55">
+                    {copyStatus}
+                  </div>
+                ) : null}
+              </div>
               <PayloadField label="Prompt" scroll>
                 {payload.prompt}
               </PayloadField>
@@ -220,6 +267,9 @@ function CoreCardBack({ cast, details }) {
   const hasMeaning = hasLore || Object.values(dossier).some((value) =>
     String(value || "").trim()
   );
+  const imagePromptReady = Boolean(
+    String(cast?.coreCard?.imageGeneration?.prompt || "").trim()
+  );
   const archetype = details.subtitle || details.hook || dossier.archetypeMeaning;
   const alignment = dossier.uprightMeaning ? "Upright / Shadow" : "Interpretive";
   const momentum = dossier.casterInvitation ? "Invitational" : "Revealing";
@@ -245,6 +295,12 @@ function CoreCardBack({ cast, details }) {
                 <CoreCard cast={cast} />
               </div>
             </div>
+
+            {imagePromptReady ? (
+              <div className="mx-auto mt-3 w-fit rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-emerald-100/75 lg:mx-0">
+                Image prompt ready
+              </div>
+            ) : null}
 
             <div className="mt-5 grid grid-cols-2 gap-y-3 text-left lg:grid-cols-1">
               <DossierStat label="Archetype" value={trimLine(archetype)} />
