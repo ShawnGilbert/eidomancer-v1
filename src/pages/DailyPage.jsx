@@ -53,6 +53,26 @@ export default function DailyPage() {
     }
   }, [selectedArtifact, selectedCast]);
 
+  useEffect(() => {
+    if (!selectedCast || !import.meta.env.DEV) return;
+
+    const metadata = selectedCast.metadata || {};
+
+    console.info("[Eidomancer] Daily cast AI debug", {
+      castId: selectedCast.id || null,
+      dateKey: selectedCast.dateKey || metadata.dateKey || null,
+      mode: selectedCast.mode || "ai",
+      aiRequestSucceeded: Boolean(metadata.aiRequestSucceeded),
+      aiResponseReceived: Boolean(metadata.aiResponseReceived),
+      aiResponseLength: metadata.aiResponseLength || 0,
+      aiResponseUsed: Boolean(metadata.aiResponseUsed),
+      usedFallback: Boolean(
+        selectedCast.mode === "no-ai" || metadata.usedFallback
+      ),
+      fallbackReason: metadata.fallbackReason || "",
+    });
+  }, [selectedCast]);
+
   const activeArtifact = manualArtifact || selectedArtifact;
   const isViewingSaved = !!manualArtifact;
 
@@ -61,12 +81,17 @@ export default function DailyPage() {
   const appliedFocus =
     selectedCast?.metadata?.dailyFocus || selectedCast?.question || "";
 
+  const usedFallback =
+    selectedCast?.mode === "no-ai" ||
+    selectedCast?.metadata?.usedFallback ||
+    selectedCast?.metadata?.aiSource === "deterministic-fallback";
+
   let aiStatus = "connected";
 
   if (isLoading) {
     aiStatus = "connecting";
-  } else if (selectedCast?.mode === "no-ai") {
-    aiStatus = "offline";
+  } else if (usedFallback) {
+    aiStatus = "fallback";
   }
 
   return (
@@ -90,7 +115,7 @@ export default function DailyPage() {
             >
               {aiStatus === "connected" && "AI Connected"}
               {aiStatus === "connecting" && "Connecting..."}
-              {aiStatus === "offline" && "AI Offline"}
+              {aiStatus === "fallback" && "Local Fallback"}
             </div>
           </div>
 

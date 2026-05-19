@@ -56,8 +56,27 @@ function pickShortLines(text = "", maxLines = 4) {
   return sentenceChunks(text).slice(0, maxLines);
 }
 
+const SECTION_ALIASES = {
+  signal: "signal",
+  tension: "tension",
+  pattern: "pattern",
+  insight: "insight",
+  echo: "echo",
+  recommendation: "recommendation",
+  action: "recommendation",
+  guidance: "recommendation",
+  next_move: "recommendation",
+  nextmove: "recommendation",
+};
+
 function normalizeSectionName(value = "") {
-  return String(value || "").trim().toLowerCase();
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  return SECTION_ALIASES[normalized] || normalized;
 }
 
 function getSectionContent(sections = [], type = "") {
@@ -919,18 +938,48 @@ function extractJsonObject(raw = "") {
 }
 
 function normalizeModelSections(parsed) {
-  const inputSections = Array.isArray(parsed?.sections) ? parsed.sections : [];
   const sectionMap = new Map();
+  const allowedTypes = new Set([
+    "signal",
+    "tension",
+    "pattern",
+    "insight",
+    "recommendation",
+    "echo",
+  ]);
 
-  for (const section of inputSections) {
-    const key = normalizeSectionName(section?.type || section?.title || "");
-    if (!key) continue;
+  function readSectionContent(value) {
+    if (typeof value === "string") return cleanText(value);
+    if (!value || typeof value !== "object") return "";
+
+    return cleanText(
+      value.content || value.body || value.text || value.value || ""
+    );
+  }
+
+  function addSection(type, value) {
+    const key = normalizeSectionName(type);
+    const content = readSectionContent(value);
+
+    if (!allowedTypes.has(key) || !content) return;
 
     sectionMap.set(key, {
       type: key,
       title: titleCase(key),
-      content: cleanText(section?.content || ""),
+      content,
     });
+  }
+
+  const inputSections = Array.isArray(parsed?.sections) ? parsed.sections : [];
+
+  for (const section of inputSections) {
+    addSection(section?.type || section?.title || "", section);
+  }
+
+  if (parsed && typeof parsed === "object") {
+    for (const [key, value] of Object.entries(parsed)) {
+      addSection(key, value);
+    }
   }
 
   return Array.from(sectionMap.values());
@@ -953,9 +1002,15 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
     coreTension,
   });
 
-  const modelEcho = cleanText(parsed?.echo || parsed?.echoText || "");
+  const modelEcho = cleanText(
+    parsed?.echo || parsed?.echoText || getSectionContent(priorSections, "echo")
+  );
   const modelImagePrompt = cleanText(parsed?.coreCard?.imagePrompt || "");
   const modelDescription = cleanText(parsed?.coreCard?.description || "");
+  const usedModelSectionTypes = priorSections.map((section) => section.type);
+  const fallbackSectionTypes = locked.sections
+    .map((section) => section.type)
+    .filter((type) => !usedModelSectionTypes.includes(type));
 
   return {
     cardName: locked.coreCard.name,
@@ -972,6 +1027,9 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
       lockedFlow: true,
       flowVersion: "eidomancer-v1-tension-extraction",
       coreTensionKey: coreTension?.key || "default-pressure",
+      usedModelSections: usedModelSectionTypes,
+      fallbackSections: fallbackSectionTypes,
+      usedFallback: usedModelSectionTypes.length === 0 && !modelEcho,
     },
   };
 }
