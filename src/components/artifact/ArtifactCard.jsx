@@ -2,10 +2,7 @@
 
 import { useRef, useState } from "react";
 import { toPng } from "html-to-image";
-import {
-  getArtifactInput,
-  saveArtifact as saveStoredArtifact,
-} from "../../lib/artifactStorage";
+import { getArtifactInput } from "../../lib/artifactStorage";
 
 const sectionPositions = {
   leftTop: "left-[4%] top-[26%]",
@@ -78,22 +75,6 @@ export default function ArtifactCard({ artifact }) {
     } catch (error) {
       console.error(error);
       setStatus("Image download failed.");
-    }
-  }
-
-  function saveArtifact() {
-    try {
-      const { saved, reason } = saveStoredArtifact(artifact);
-
-      if (!saved && reason === "duplicate") {
-        setStatus("Already saved.");
-        return;
-      }
-
-      setStatus("Artifact saved.");
-    } catch (error) {
-      console.error(error);
-      setStatus("Save failed.");
     }
   }
 
@@ -257,14 +238,6 @@ export default function ArtifactCard({ artifact }) {
             Download Image
           </button>
 
-          <button
-            type="button"
-            onClick={saveArtifact}
-            className="rounded-xl bg-emerald-400/20 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-400/30"
-          >
-            Save Artifact
-          </button>
-
           {artifact.input && (
             <button
               type="button"
@@ -274,6 +247,10 @@ export default function ArtifactCard({ artifact }) {
               {showInput ? "Hide Input" : "View Input"}
             </button>
           )}
+
+          <span className="rounded-xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-2 text-sm font-semibold text-emerald-100/80">
+            Auto-saved
+          </span>
 
           {status && <span className="text-sm text-slate-400">{status}</span>}
         </div>
