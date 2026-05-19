@@ -129,6 +129,43 @@ export default function DailyPage() {
           </p>
         </div>
 
+        {/* Generate Daily Cast */}
+        <div className="mb-8">
+          <DailyFocusInput
+            initialValue={focusValue}
+            resetKey={inputResetKey}
+            appliedFocus={appliedFocus}
+            onSubmit={submitFocus}
+            onClear={clearFocus}
+            isLoading={isLoading}
+          />
+        </div>
+
+        {/* Loading */}
+        {status === "loading" && !selectedCast && (
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center text-white/75">
+            Generating today’s cast…
+          </div>
+        )}
+
+        {/* Error */}
+        {status === "error" && (
+          <div className="rounded-3xl border border-red-400/20 bg-red-500/10 p-8 text-center text-red-100">
+            {error || "Something went wrong."}
+          </div>
+        )}
+
+        {/* Daily Cast */}
+        {(status === "ready" || selectedCast) && selectedCast && (
+          <div className="mb-8">
+            <DailyCastCard
+              cast={selectedCast}
+              onShare={handleShare}
+              shareMessage={shareMessage}
+            />
+          </div>
+        )}
+
         {/* Artifact + Saved */}
         {activeArtifact && (
           <div className="mb-8 space-y-4">
@@ -151,57 +188,25 @@ export default function DailyPage() {
               <ArtifactViewer artifact={activeArtifact} />
 
               <SavedArtifactsPanel
-  key={savedRefreshKey}
-  activeArtifact={activeArtifact}
-  onSelectArtifact={(artifact) => {
-    setManualArtifact(artifact);
-  }}
-/>
+                key={savedRefreshKey}
+                activeArtifact={activeArtifact}
+                onSelectArtifact={(artifact) => {
+                  setManualArtifact(artifact);
+                }}
+              />
             </div>
           </div>
         )}
 
-        {/* Loading */}
-        {status === "loading" && !selectedCast && (
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center text-white/75">
-            Generating today’s cast…
-          </div>
-        )}
-
-        {/* Error */}
-        {status === "error" && (
-          <div className="rounded-3xl border border-red-400/20 bg-red-500/10 p-8 text-center text-red-100">
-            {error || "Something went wrong."}
-          </div>
-        )}
-
-        {/* Daily Cast */}
+        {/* History + Supporting Panels */}
         {(status === "ready" || selectedCast) && selectedCast && (
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
-            <DailyCastCard
-              cast={selectedCast}
-              onShare={handleShare}
-              shareMessage={shareMessage}
-            />
-
-            <div className="space-y-6">
-              <DailyFocusInput
-                initialValue={focusValue}
-                resetKey={inputResetKey}
-                appliedFocus={appliedFocus}
-                onSubmit={submitFocus}
-                onClear={clearFocus}
-                isLoading={isLoading}
-              />
-
-              <DailySidebar
-                capabilities={capabilities}
-                recentCasts={recentCasts}
-                selectedCast={selectedCast}
-                onSelectCast={handleSelectRecentCast}
-              />
-            </div>
-          </div>
+          <DailySidebar
+            capabilities={capabilities}
+            recentCasts={recentCasts}
+            selectedCast={selectedCast}
+            onSelectCast={handleSelectRecentCast}
+            showLens={false}
+          />
         )}
       </div>
     </div>
