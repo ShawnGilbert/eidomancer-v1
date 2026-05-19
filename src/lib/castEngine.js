@@ -985,6 +985,87 @@ function buildCoreCardVisual({
   };
 }
 
+function buildCoreCardImageGeneration({
+  cardName,
+  visual = {},
+  lore = {},
+  question = "",
+  themeId = "emergent",
+}) {
+  const palette =
+    cleanText(visual.paletteHint) ||
+    pickVisualPalette(
+      [
+        cardName,
+        question,
+        lore.archetypeMeaning,
+        lore.shadowMeaning,
+        visual.atmosphere,
+        visual.primaryMotif,
+      ]
+        .filter(Boolean)
+        .join(" ")
+    );
+  const symbolicMotifs = [
+    visual.primaryMotif,
+    ...(Array.isArray(visual.secondaryMotifs) ? visual.secondaryMotifs : []),
+    ...(Array.isArray(visual.symbolicProps) ? visual.symbolicProps.slice(0, 2) : []),
+  ]
+    .map(cleanText)
+    .filter(Boolean);
+  const subject =
+    cleanText(visual.subject) ||
+    cleanText(lore.archetypeMeaning) ||
+    `${cardName} as a symbolic archetype figure`;
+  const setting =
+    cleanText(visual.environment) ||
+    cleanText(lore.symbolicRole) ||
+    "an ancient digital ritual field";
+  const mood =
+    cleanText(visual.atmosphere) ||
+    cleanText(lore.shadowMeaning) ||
+    "quiet, charged, and symbolically dense";
+  const lighting = cleanText(visual.lighting) || "luminous cyan and amber ritual light";
+  const composition =
+    cleanText(visual.composition) ||
+    "portrait tarot card composition, one central figure, readable silhouette";
+
+  return {
+    prompt: cleanText(
+      [
+        `Create a tarot-style Core Card image for "${cardName}".`,
+        `Subject: ${subject}.`,
+        `Setting: ${setting}.`,
+        symbolicMotifs.length
+          ? `Symbolic motifs: ${symbolicMotifs.join(", ")}.`
+          : "",
+        `Palette: ${palette}.`,
+        `Lighting: ${lighting}.`,
+        `Mood: ${mood}.`,
+        `Composition: ${composition}.`,
+        "The image should feel like a single symbolic card illustration, not a full environmental artifact scene.",
+      ]
+        .filter(Boolean)
+        .join(" ")
+    ),
+    negativePrompt:
+      "no readable text, no UI, no dashboard panels, no logo, no watermark, no photorealistic celebrity, no cluttered collage, no full artifact/world scene",
+    aspectRatio: "2:3",
+    styleFamily: "tarot-core-card",
+    themeId,
+    palette,
+    subject,
+    setting,
+    symbolicMotifs,
+    composition,
+    mood,
+    lighting,
+    textPolicy: "Do not render readable text inside the image; the app overlays titles separately.",
+    safetyNotes:
+      "Symbolic, non-literal archetypal imagery only; avoid depicting real private people or graphic harm.",
+  };
+}
+
 function buildOpening(cardName = "The Witness Under Pressure") {
   return `You have drawn the “${cardName}” card`;
 }
@@ -1099,24 +1180,31 @@ function buildCastSections({
     question,
     coreTension,
   });
+  const coreCardVisual = buildCoreCardVisual({
+    cardName,
+    description: coreCardDescription,
+    imagePrompt,
+    lore: coreCardLore,
+    question,
+    signal,
+    tension,
+    pattern,
+    insight,
+    echo,
+    coreTension,
+  });
 
   const coreCard = {
     name: cardName,
     description: coreCardDescription,
     imagePrompt,
     lore: coreCardLore,
-    visual: buildCoreCardVisual({
+    visual: coreCardVisual,
+    imageGeneration: buildCoreCardImageGeneration({
       cardName,
-      description: coreCardDescription,
-      imagePrompt,
+      visual: coreCardVisual,
       lore: coreCardLore,
       question,
-      signal,
-      tension,
-      pattern,
-      insight,
-      echo,
-      coreTension,
     }),
   };
 
@@ -1235,6 +1323,12 @@ function getModelCoreCard(parsed = {}) {
       : coreCard.visual_identity && typeof coreCard.visual_identity === "object"
       ? coreCard.visual_identity
       : {};
+  const imageGenerationSource =
+    coreCard.imageGeneration && typeof coreCard.imageGeneration === "object"
+      ? coreCard.imageGeneration
+      : coreCard.image_generation && typeof coreCard.image_generation === "object"
+      ? coreCard.image_generation
+      : {};
 
   return {
     name: cleanText(
@@ -1330,6 +1424,48 @@ function getModelCoreCard(parsed = {}) {
         visualSource.imagePrompt || visualSource.image_prompt || ""
       ),
     },
+    imageGeneration: {
+      prompt: cleanText(imageGenerationSource.prompt || ""),
+      negativePrompt: cleanText(
+        imageGenerationSource.negativePrompt ||
+          imageGenerationSource.negative_prompt ||
+          ""
+      ),
+      aspectRatio: cleanText(
+        imageGenerationSource.aspectRatio ||
+          imageGenerationSource.aspect_ratio ||
+          ""
+      ),
+      styleFamily: cleanText(
+        imageGenerationSource.styleFamily ||
+          imageGenerationSource.style_family ||
+          ""
+      ),
+      themeId: cleanText(
+        imageGenerationSource.themeId || imageGenerationSource.theme_id || ""
+      ),
+      palette: cleanText(imageGenerationSource.palette || ""),
+      subject: cleanText(imageGenerationSource.subject || ""),
+      setting: cleanText(imageGenerationSource.setting || ""),
+      symbolicMotifs: Array.isArray(imageGenerationSource.symbolicMotifs)
+        ? imageGenerationSource.symbolicMotifs.map(cleanText).filter(Boolean)
+        : Array.isArray(imageGenerationSource.symbolic_motifs)
+        ? imageGenerationSource.symbolic_motifs.map(cleanText).filter(Boolean)
+        : [],
+      composition: cleanText(imageGenerationSource.composition || ""),
+      mood: cleanText(imageGenerationSource.mood || ""),
+      lighting: cleanText(imageGenerationSource.lighting || ""),
+      textPolicy: cleanText(
+        imageGenerationSource.textPolicy ||
+          imageGenerationSource.text_policy ||
+          ""
+      ),
+      safetyNotes: cleanText(
+        imageGenerationSource.safetyNotes ||
+          imageGenerationSource.safety_notes ||
+          ""
+      ),
+    },
   };
 }
 
@@ -1365,6 +1501,11 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
       Array.isArray(value) ? value.length > 0 : Boolean(value)
     )
   );
+  const modelImageGeneration = Object.fromEntries(
+    Object.entries(modelCoreCard.imageGeneration || {}).filter(([, value]) =>
+      Array.isArray(value) ? value.length > 0 : Boolean(value)
+    )
+  );
   const coreCardLore = {
     ...locked.coreCard.lore,
     ...buildCoreCardLore({
@@ -1394,6 +1535,15 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
     }),
     ...modelVisual,
   };
+  const coreCardImageGeneration = {
+    ...buildCoreCardImageGeneration({
+      cardName: locked.coreCard.name,
+      visual: coreCardVisual,
+      lore: coreCardLore,
+      question,
+    }),
+    ...modelImageGeneration,
+  };
   const usedModelSectionTypes = priorSections.map((section) => section.type);
   const fallbackSectionTypes = locked.sections
     .map((section) => section.type)
@@ -1404,6 +1554,9 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
     modelCoreCard.imagePrompt ? "coreCard.imagePrompt" : "",
     Object.keys(modelLore).length > 0 ? "coreCard.lore" : "",
     Object.keys(modelVisual).length > 0 ? "coreCard.visual" : "",
+    Object.keys(modelImageGeneration).length > 0
+      ? "coreCard.imageGeneration"
+      : "",
     modelEcho ? "echo" : "",
   ].filter(Boolean);
 
@@ -1418,6 +1571,7 @@ function normalizeCastResponse(parsed = {}, sourceText = "", question = "") {
       imagePrompt: mergedImagePrompt,
       lore: coreCardLore,
       visual: coreCardVisual,
+      imageGeneration: coreCardImageGeneration,
     },
     echo: modelEcho || locked.echo,
     metadata: {
