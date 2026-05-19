@@ -104,6 +104,109 @@ function DossierEntry({ label, children, accent = "cyan" }) {
   );
 }
 
+function getImageGenerationPayload(cast) {
+  const payload =
+    cast?.coreCard?.imageGeneration && typeof cast.coreCard.imageGeneration === "object"
+      ? cast.coreCard.imageGeneration
+      : {};
+
+  return {
+    prompt: payload.prompt || "",
+    negativePrompt: payload.negativePrompt || payload.negative_prompt || "",
+    styleFamily: payload.styleFamily || payload.style_family || "",
+    palette: payload.palette || "",
+    mood: payload.mood || "",
+    symbolicMotifs: Array.isArray(payload.symbolicMotifs)
+      ? payload.symbolicMotifs
+      : Array.isArray(payload.symbolic_motifs)
+      ? payload.symbolic_motifs
+      : [],
+    composition: payload.composition || "",
+    lighting: payload.lighting || "",
+    aspectRatio: payload.aspectRatio || payload.aspect_ratio || "",
+  };
+}
+
+function PayloadField({ label, children, scroll = false }) {
+  return (
+    <div className="border-t border-cyan-300/10 pt-3">
+      <div className="text-[9px] uppercase tracking-[0.18em] text-cyan-200/45">
+        {label}
+      </div>
+      <div
+        className={`mt-2 whitespace-pre-wrap break-words font-mono text-[11px] leading-5 text-cyan-50/78 ${
+          scroll ? "max-h-36 overflow-y-auto pr-2" : ""
+        }`}
+      >
+        {children || "Not encoded"}
+      </div>
+    </div>
+  );
+}
+
+function ImageGenerationPayloadPanel({ cast }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const payload = getImageGenerationPayload(cast);
+  const hasPayload = Object.values(payload).some((value) =>
+    Array.isArray(value) ? value.length > 0 : Boolean(String(value || "").trim())
+  );
+
+  return (
+    <section className="border-t border-cyan-300/20 pt-4">
+      <button
+        type="button"
+        onClick={() => setIsOpen((value) => !value)}
+        className="flex w-full items-center justify-between gap-4 text-left"
+        aria-expanded={isOpen}
+      >
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.26em] text-cyan-200/60">
+            Image Generation Payload
+          </div>
+          <div className="mt-1 font-mono text-[11px] leading-5 text-white/42">
+            hidden machinery beneath the symbolism
+          </div>
+        </div>
+        <div className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-cyan-100/75">
+          {isOpen ? "collapse" : "inspect"}
+        </div>
+      </button>
+
+      {isOpen ? (
+        <div className="mt-4 rounded-2xl border border-cyan-300/15 bg-slate-950/65 p-4 shadow-inner shadow-cyan-950/30">
+          {hasPayload ? (
+            <div className="space-y-3">
+              <PayloadField label="Prompt" scroll>
+                {payload.prompt}
+              </PayloadField>
+              <PayloadField label="Negative Prompt" scroll>
+                {payload.negativePrompt}
+              </PayloadField>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <PayloadField label="Style Family">{payload.styleFamily}</PayloadField>
+                <PayloadField label="Aspect Ratio">{payload.aspectRatio}</PayloadField>
+                <PayloadField label="Palette">{payload.palette}</PayloadField>
+                <PayloadField label="Mood">{payload.mood}</PayloadField>
+                <PayloadField label="Composition">{payload.composition}</PayloadField>
+                <PayloadField label="Lighting">{payload.lighting}</PayloadField>
+              </div>
+              <PayloadField label="Symbolic Motifs">
+                {payload.symbolicMotifs.length > 0
+                  ? payload.symbolicMotifs.join(" | ")
+                  : ""}
+              </PayloadField>
+            </div>
+          ) : (
+            <div className="font-mono text-[11px] leading-5 text-white/50">
+              No image-generation payload is encoded on this historical cast.
+            </div>
+          )}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 function CoreCardBack({ cast, details }) {
   const dossier = getBackContent(cast, details);
   const hasLore = [
@@ -209,6 +312,8 @@ function CoreCardBack({ cast, details }) {
                       dossier.focus ||
                       "No additional cast context is needed for this card."}
                   </DossierEntry>
+
+                  <ImageGenerationPayloadPanel cast={cast} />
                 </>
               ) : (
                 <div className="border-y border-white/10 py-4 text-sm leading-6 text-white/70">
