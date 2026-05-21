@@ -12,6 +12,21 @@ import {
 
 const MAX_SAVED_ARTIFACTS_DISPLAY = 5;
 
+function formatSavedTimestamp(savedAt) {
+  if (!savedAt) return "";
+
+  const savedDate = new Date(savedAt);
+
+  if (Number.isNaN(savedDate.getTime())) return "";
+
+  return savedDate.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 export default function SavedArtifactsPanel({
   activeArtifact,
   onSelectArtifact,
@@ -54,12 +69,16 @@ export default function SavedArtifactsPanel({
             return (
               <div
                 key={`${artifact.title}-${artifact.savedAt}-${index}`}
-                className={`group relative rounded-xl border p-3 text-left transition ${
+                className={`group relative rounded-xl border p-3 text-left transition-all duration-200 ease-out ${
                   isActive
-                    ? "border-cyan-300/70 bg-cyan-400/15 shadow-lg shadow-cyan-950/40"
+                    ? "border-cyan-200/90 bg-cyan-400/20 shadow-xl shadow-cyan-950/50 ring-1 ring-cyan-200/35"
                     : "border-white/10 bg-black/30 hover:border-cyan-300/40 hover:bg-cyan-950/30"
                 }`}
               >
+                {isActive && (
+                  <div className="pointer-events-none absolute inset-y-3 left-0 w-1 rounded-r-full bg-cyan-200/80 shadow-[0_0_18px_rgba(103,232,249,0.55)]" />
+                )}
+
                 <button
                   type="button"
                   onClick={() => deleteArtifact(index)}
@@ -71,16 +90,31 @@ export default function SavedArtifactsPanel({
                 <button
                   type="button"
                   onClick={() => onSelectArtifact(artifact)}
+                  aria-current={isActive ? "true" : undefined}
                   className="w-full text-left"
                 >
-                  {isActive && (
-                    <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-200">
-                      Active
-                    </div>
-                  )}
+                  <div className="flex items-start justify-between gap-3 pr-5">
+                    <div className="min-w-0">
+                      {isActive && (
+                        <div className="mb-2 inline-flex rounded-full border border-cyan-200/35 bg-cyan-300/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-50 shadow-[0_0_12px_rgba(103,232,249,0.16)]">
+                          Active
+                        </div>
+                      )}
 
-                  <div className="text-sm font-semibold text-white">
-                    {artifact.title || "Untitled Artifact"}
+                      <div
+                        className={`truncate text-sm font-semibold leading-5 ${
+                          isActive ? "text-cyan-50" : "text-white"
+                        }`}
+                      >
+                        {artifact.title || "Untitled Artifact"}
+                      </div>
+                    </div>
+
+                    {artifact.savedAt && (
+                      <div className="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-300/80">
+                        {formatSavedTimestamp(artifact.savedAt)}
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-2 flex flex-wrap gap-1.5">
@@ -95,30 +129,34 @@ export default function SavedArtifactsPanel({
                     </span>
 
                     {outputLabels.map((label) => (
-                        <span
-                          key={label}
-                          className="rounded-full border border-purple-300/25 bg-purple-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-purple-100/80"
-                        >
-                          {label}
-                        </span>
+                      <span
+                        key={label}
+                        className="rounded-full border border-purple-300/25 bg-purple-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-purple-100/80"
+                      >
+                        {label}
+                      </span>
                     ))}
                   </div>
 
                   {artifact.subtitle && (
-                    <div className="mt-1 line-clamp-2 text-xs text-slate-400">
-                      {artifact.subtitle}
+                    <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                        Essence
+                      </div>
+                      <div className="mt-1 line-clamp-2 text-xs leading-5 text-slate-200/80">
+                        {artifact.subtitle}
+                      </div>
                     </div>
                   )}
 
                   {inputPreview && (
-                    <div className="mt-2 line-clamp-3 rounded-lg border border-cyan-300/10 bg-cyan-400/10 p-2 text-xs text-cyan-100">
-                      Focus: {inputPreview}
-                    </div>
-                  )}
-
-                  {artifact.savedAt && (
-                    <div className="mt-2 text-[10px] uppercase tracking-[0.18em] text-slate-500">
-                      Saved {new Date(artifact.savedAt).toLocaleString()}
+                    <div className="mt-2 rounded-lg border border-cyan-300/10 bg-cyan-400/10 px-2.5 py-2">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-200/70">
+                        Focus
+                      </div>
+                      <div className="mt-1 line-clamp-2 text-xs leading-5 text-cyan-50/85">
+                        {inputPreview}
+                      </div>
                     </div>
                   )}
                 </button>
