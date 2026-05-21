@@ -80,7 +80,9 @@ export default function DailyFocusInput({
             type="submit"
             disabled={isLoading || !hasTypedFocus}
             className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${
-              isLoading || !hasTypedFocus
+              isLoading
+                ? "cursor-wait border border-cyan-300/30 bg-cyan-500/15 text-cyan-100 shadow-[0_0_20px_rgba(34,211,238,0.12)] animate-pulse"
+                : !hasTypedFocus
                 ? "cursor-not-allowed border border-white/10 bg-white/5 text-white/35"
                 : "border border-cyan-400/30 bg-cyan-500/15 text-cyan-100 hover:bg-cyan-500/25"
             }`}
@@ -101,6 +103,13 @@ export default function DailyFocusInput({
             Clear Focus
           </button>
         </div>
+
+        {isLoading ? (
+          <div className="rounded-2xl border border-cyan-300/15 bg-cyan-400/10 px-4 py-3 text-sm leading-6 text-cyan-50/80">
+            <span className="font-medium text-cyan-100">Reading the signal...</span>{" "}
+            Drawing the card and shaping the daily cast.
+          </div>
+        ) : null}
       </form>
 
       <div className="mt-3 rounded-2xl border border-cyan-400/15 bg-cyan-500/10 px-4 py-3">

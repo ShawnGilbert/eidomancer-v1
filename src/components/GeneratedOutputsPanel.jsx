@@ -66,6 +66,55 @@ function getAssetBadges(data) {
   return [];
 }
 
+const outputPresentation = {
+  echo: {
+    typeLabel: "Echo Artifact",
+    accent: "border-l-cyan-300/55",
+    badge: "border-cyan-300/20 bg-cyan-400/10 text-cyan-100/75",
+  },
+  song: {
+    typeLabel: "Song Artifact",
+    accent: "border-l-fuchsia-300/45",
+    badge: "border-fuchsia-300/20 bg-fuchsia-400/10 text-fuchsia-100/75",
+  },
+  youtube: {
+    typeLabel: "Video Artifact",
+    accent: "border-l-amber-300/45",
+    badge: "border-amber-300/20 bg-amber-400/10 text-amber-100/75",
+  },
+  default: {
+    typeLabel: "Package Artifact",
+    accent: "border-l-cyan-300/35",
+    badge: "border-cyan-300/20 bg-cyan-400/10 text-cyan-100/75",
+  },
+};
+
+function buildCardPreview(data, fullText, artifactType) {
+  if (artifactType === "echo" && data?.prompt) {
+    return previewText(data.prompt, 150);
+  }
+
+  if (artifactType === "song" && data) {
+    return [
+      data.songTitle ? `Title: ${data.songTitle}` : "",
+      data.sunoStylePrompt ? `Style: ${previewText(data.sunoStylePrompt, 120)}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  if (artifactType === "youtube" && data) {
+    return [
+      data.videoTitle ? `Title: ${data.videoTitle}` : "",
+      data.description ? previewText(data.description, 135) : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  return previewText(fullText, 140);
+}
+
 function buildFullPackageText(assets = {}) {
   const sections = [];
 
@@ -172,23 +221,41 @@ function buildDerivedAssets(activeCast, generatedOnly = false) {
   };
 }
 
-function AssetCard({ title, data, isOpen, onToggle, onCopy, copied }) {
+function AssetCard({
+  title,
+  data,
+  isOpen,
+  onToggle,
+  onCopy,
+  copied,
+  artifactType = "default",
+}) {
   const fullText = useMemo(() => stringifyAsset(data), [data]);
-  const shortText = useMemo(() => previewText(fullText, 140), [fullText]);
+  const presentation =
+    outputPresentation[artifactType] || outputPresentation.default;
+  const shortText = useMemo(
+    () => buildCardPreview(data, fullText, artifactType),
+    [data, fullText, artifactType]
+  );
   const badges = useMemo(() => getAssetBadges(data), [data]);
   const hasContent = !!data;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#07143a] shadow-lg shadow-black/10">
+    <div
+      className={`rounded-2xl border border-l-2 border-white/10 bg-[#07143a] shadow-lg shadow-black/10 ${presentation.accent}`}
+    >
       <div className="p-3 sm:p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
+            <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-200/55">
+              {presentation.typeLabel}
+            </div>
             <div className="flex flex-wrap items-center gap-2">
               <div className="text-sm font-semibold text-white">{title}</div>
               {badges.map((badge) => (
                 <span
                   key={badge}
-                  className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-100/75"
+                  className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] ${presentation.badge}`}
                 >
                   {badge}
                 </span>
@@ -344,6 +411,7 @@ export function GeneratedOutputsPanel({
         {assets.echo ? (
           <AssetCard
             title="Echo Prompt"
+            artifactType="echo"
             data={assets.echo}
             isOpen={openSections.echo}
             onToggle={() => toggleSection("echo")}
@@ -355,6 +423,7 @@ export function GeneratedOutputsPanel({
         {assets.song ? (
           <AssetCard
             title="Song Package"
+            artifactType="song"
             data={assets.song}
             isOpen={openSections.song}
             onToggle={() => toggleSection("song")}
@@ -399,6 +468,7 @@ export function GeneratedOutputsPanel({
         {assets.youtube ? (
           <AssetCard
             title="YouTube Package"
+            artifactType="youtube"
             data={assets.youtube}
             isOpen={openSections.youtube}
             onToggle={() => toggleSection("youtube")}
