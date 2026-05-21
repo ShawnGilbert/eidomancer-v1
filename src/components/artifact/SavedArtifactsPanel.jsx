@@ -83,28 +83,26 @@ export default function SavedArtifactsPanel({
                     {artifact.title || "Untitled Artifact"}
                   </div>
 
-                  <div
-                    className={`mt-2 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] ${
-                      isFullyReloadable
-                        ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100/80"
-                        : "border-amber-300/25 bg-amber-400/10 text-amber-100/75"
-                    }`}
-                  >
-                    {isFullyReloadable ? "Full cast" : "Artifact only"}
-                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] ${
+                        isFullyReloadable
+                          ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100/80"
+                          : "border-amber-300/25 bg-amber-400/10 text-amber-100/75"
+                      }`}
+                    >
+                      {isFullyReloadable ? "Full cast" : "Artifact only"}
+                    </span>
 
-                  {outputLabels.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {outputLabels.map((label) => (
+                    {outputLabels.map((label) => (
                         <span
                           key={label}
                           className="rounded-full border border-purple-300/25 bg-purple-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-purple-100/80"
                         >
                           {label}
                         </span>
-                      ))}
-                    </div>
-                  )}
+                    ))}
+                  </div>
 
                   {artifact.subtitle && (
                     <div className="mt-1 line-clamp-2 text-xs text-slate-400">

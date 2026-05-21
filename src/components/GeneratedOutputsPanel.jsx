@@ -298,13 +298,13 @@ export function GeneratedOutputsPanel({
 
   return (
     <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="text-2xl font-semibold text-white">
           Generated Outputs
         </h3>
 
         {hasGeneratedOutput ? (
-          <div className="flex flex-wrap justify-end gap-2">
+          <div className="flex flex-wrap gap-2 sm:justify-end">
             <button
               type="button"
               onClick={handleCopyFullPackage}
@@ -337,7 +337,7 @@ export function GeneratedOutputsPanel({
       <div className="mt-5 space-y-4">
         {hasGeneratedOutput ? null : (
           <div className="rounded-2xl border border-white/10 bg-[#07143a] p-4 text-sm leading-6 text-blue-100/70">
-            Create an Echo, Song, YouTube package, or Full Package to expand this cast.
+            Create an Echo Prompt, Song Package, YouTube Package, or Full Package to expand this cast.
           </div>
         )}
 
