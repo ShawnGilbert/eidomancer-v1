@@ -178,6 +178,12 @@ export default function DailyPage() {
   }
 
   function handleClearGeneratedOutputs() {
+    const confirmed = window.confirm(
+      "Clear all generated package outputs for this cast?"
+    );
+
+    if (!confirmed) return;
+
     setGeneratedOutputs({});
     setPackageStatusMessage("Generated outputs cleared");
 
