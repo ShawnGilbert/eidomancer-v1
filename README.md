@@ -6,6 +6,14 @@ V1 should use familiar, proven interaction patterns from tarot apps, journaling 
 
 Innovation should focus on the meaning layer: symbolic compression, Castfiles, theme translation, and generated package outputs. The interface should feel familiar enough to understand quickly, but distinctive enough to feel like Eidomancer.
 
+## Development Session Checklist
+
+- Start the frontend and backend before testing app behavior.
+- Make one small change at a time.
+- Run `npm run build` after each stabilization pass.
+- Commit stable checkpoints.
+- Avoid reinventing basic UX patterns for V1.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
