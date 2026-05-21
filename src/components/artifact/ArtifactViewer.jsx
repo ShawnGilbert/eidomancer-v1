@@ -217,7 +217,7 @@ function DepthLayers({ artifact, sourceRecord }) {
                   <button
                     type="button"
                     onClick={() => copyLayer(layer.type, layer.text)}
-                    className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-100/80 transition hover:bg-cyan-400/18"
+                    className="rounded-xl border border-cyan-300/20 bg-cyan-400/10 px-3.5 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-100/80 transition hover:bg-cyan-400/18"
                   >
                     {copiedLayer === layer.type ? "Copied" : "Copy Layer"}
                   </button>

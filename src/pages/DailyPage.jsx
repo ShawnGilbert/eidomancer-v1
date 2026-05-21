@@ -10,6 +10,8 @@ import DailyCoreCardPreview from "../components/daily/DailyCoreCardPreview";
 import DailyFocusInput from "../components/daily/DailyFocusInput";
 import DailySidebar from "../components/daily/DailySidebar";
 import { castToArtifact } from "../lib/artifactAdapter";
+import { getDateKey } from "../lib/dailyCast";
+import { getTodayDailyCast } from "../lib/dailyCastStorage";
 import {
   clearSavedArtifactPackageOutputs,
   getArtifactPackageOutputs,
@@ -88,6 +90,16 @@ export default function DailyPage() {
   function handleSelectSidebarCast(cast) {
     setManualArtifact(null);
     handleSelectRecentCast(cast);
+  }
+
+  function handleReturnToCurrentCast() {
+    const currentCast = getTodayDailyCast(getDateKey());
+
+    setManualArtifact(null);
+
+    if (currentCast && currentCast?.id !== selectedCast?.id) {
+      handleSelectRecentCast(currentCast);
+    }
   }
 
   function handleGenerateOutput(type) {
@@ -336,10 +348,10 @@ export default function DailyPage() {
                 </div>
 
                 <button
-                  onClick={() => setManualArtifact(null)}
+                  onClick={handleReturnToCurrentCast}
                   className={palette.savedBannerButton}
                 >
-                  Back to Today
+                  Return to Current Cast
                 </button>
               </div>
             )}

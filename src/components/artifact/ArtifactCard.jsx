@@ -225,7 +225,7 @@ export default function ArtifactCard({ artifact }) {
           <button
             type="button"
             onClick={copyCast}
-            className="rounded-xl bg-cyan-400/20 px-4 py-2 text-sm font-semibold text-cyan-100 hover:bg-cyan-400/30"
+            className="rounded-xl border border-cyan-300/20 bg-cyan-400/20 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/30"
           >
             Copy Cast
           </button>
@@ -233,7 +233,7 @@ export default function ArtifactCard({ artifact }) {
           <button
             type="button"
             onClick={downloadImage}
-            className="rounded-xl bg-purple-400/20 px-4 py-2 text-sm font-semibold text-purple-100 hover:bg-purple-400/30"
+            className="rounded-xl border border-purple-300/20 bg-purple-400/20 px-4 py-2 text-sm font-semibold text-purple-100 transition hover:bg-purple-400/30"
           >
             Download Image
           </button>
@@ -242,7 +242,7 @@ export default function ArtifactCard({ artifact }) {
             <button
               type="button"
               onClick={() => setShowInput(!showInput)}
-              className="rounded-xl bg-amber-400/20 px-4 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-400/30"
+              className="rounded-xl border border-amber-300/20 bg-amber-400/20 px-4 py-2 text-sm font-semibold text-amber-100 transition hover:bg-amber-400/30"
             >
               {showInput ? "Hide Input" : "View Input"}
             </button>

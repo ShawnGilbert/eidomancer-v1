@@ -45,7 +45,7 @@ export default function SavedArtifactsPanel({
     : "";
 
   return (
-    <aside className="min-w-0 rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-4">
+    <aside className="min-w-0 rounded-3xl border border-white/10 bg-white/5 p-3 sm:p-4">
       <h2 className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-300">
         Saved Artifacts
       </h2>
@@ -69,7 +69,7 @@ export default function SavedArtifactsPanel({
             return (
               <div
                 key={`${artifact.title}-${artifact.savedAt}-${index}`}
-                className={`group relative rounded-xl border p-3 text-left transition-all duration-200 ease-out ${
+                className={`group relative rounded-2xl border p-3 text-left transition-all duration-200 ease-out ${
                   isActive
                     ? "border-cyan-200/90 bg-cyan-400/20 shadow-xl shadow-cyan-950/50 ring-1 ring-cyan-200/35"
                     : "border-white/10 bg-black/30 hover:border-cyan-300/40 hover:bg-cyan-950/30"
@@ -139,7 +139,7 @@ export default function SavedArtifactsPanel({
                   </div>
 
                   {artifact.subtitle && (
-                    <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2">
+                    <div className="mt-2 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-2">
                       <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
                         Essence
                       </div>
@@ -150,7 +150,7 @@ export default function SavedArtifactsPanel({
                   )}
 
                   {inputPreview && (
-                    <div className="mt-2 rounded-lg border border-cyan-300/10 bg-cyan-400/10 px-2.5 py-2">
+                    <div className="mt-2 rounded-xl border border-cyan-300/10 bg-cyan-400/10 px-2.5 py-2">
                       <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-200/70">
                         Focus
                       </div>
