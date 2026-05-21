@@ -11,6 +11,7 @@ import DailyFocusInput from "../components/daily/DailyFocusInput";
 import DailySidebar from "../components/daily/DailySidebar";
 import { castToArtifact } from "../lib/artifactAdapter";
 import {
+  clearSavedArtifactPackageOutputs,
   getArtifactPackageOutputs,
   getArtifactSourceCast,
   saveArtifact,
@@ -174,6 +175,21 @@ export default function DailyPage() {
 
     setPackageStatusMessage(successMessages[type] || "Package output created");
     setIsGeneratingOutput(false);
+  }
+
+  function handleClearGeneratedOutputs() {
+    setGeneratedOutputs({});
+    setPackageStatusMessage("Generated outputs cleared");
+
+    const { artifact } = clearSavedArtifactPackageOutputs(activeArtifact);
+
+    if (artifact) {
+      if (isViewingSaved) {
+        setManualArtifact(artifact);
+      }
+
+      setSavedRefreshKey((value) => value + 1);
+    }
   }
 
   useEffect(() => {
@@ -343,7 +359,11 @@ export default function DailyPage() {
               statusMessage={packageStatusMessage}
             />
 
-            <GeneratedOutputsPanel activeCast={activeOutputCast} generatedOnly />
+            <GeneratedOutputsPanel
+              activeCast={activeOutputCast}
+              generatedOnly
+              onClearOutputs={handleClearGeneratedOutputs}
+            />
           </div>
         )}
 

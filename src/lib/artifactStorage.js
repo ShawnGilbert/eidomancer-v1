@@ -131,6 +131,32 @@ export function updateSavedArtifact(artifact, updates = {}) {
   return { updated: true, artifact: updatedArtifact };
 }
 
+export function clearSavedArtifactPackageOutputs(artifact) {
+  if (!artifact) return { updated: false, reason: "missing" };
+
+  const artifacts = loadSavedArtifacts();
+  const targetFingerprint = getArtifactFingerprint(artifact);
+  const targetIndex = artifacts.findIndex(
+    (item) => getArtifactFingerprint(item) === targetFingerprint
+  );
+
+  if (targetIndex === -1) {
+    return { updated: false, reason: "not_found" };
+  }
+
+  const { packageOutputs, generatedOutputs, outputs, echoPrompt, ...rest } =
+    artifacts[targetIndex];
+  const updatedArtifact = {
+    ...rest,
+    updatedAt: new Date().toISOString(),
+  };
+
+  artifacts[targetIndex] = updatedArtifact;
+  localStorage.setItem(ARTIFACT_HISTORY_KEY, JSON.stringify(artifacts));
+
+  return { updated: true, artifact: updatedArtifact };
+}
+
 export function deleteSavedArtifact(index) {
   const artifacts = loadSavedArtifacts();
   artifacts.splice(index, 1);
