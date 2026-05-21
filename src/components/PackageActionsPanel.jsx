@@ -12,6 +12,7 @@ export function PackageActionsPanel({
   onGenerateAll,
   isGeneratingAsset,
   availableActions = actions,
+  statusMessage = "",
 }) {
   return (
     <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
@@ -46,6 +47,12 @@ export function PackageActionsPanel({
           </button>
         ))}
       </div>
+
+      {statusMessage ? (
+        <div className="mt-4 rounded-xl border border-emerald-300/20 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-100/80">
+          {statusMessage}
+        </div>
+      ) : null}
     </section>
   );
 }

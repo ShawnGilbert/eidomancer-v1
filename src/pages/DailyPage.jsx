@@ -47,6 +47,7 @@ export default function DailyPage() {
   const [savedRefreshKey, setSavedRefreshKey] = useState(0);
   const [generatedOutputs, setGeneratedOutputs] = useState({});
   const [isGeneratingOutput, setIsGeneratingOutput] = useState(false);
+  const [packageStatusMessage, setPackageStatusMessage] = useState("");
 
   const accessTier = useMemo(() => getAccessTier(null), []);
   const capabilities = useMemo(
@@ -135,6 +136,12 @@ export default function DailyPage() {
       setIsGeneratingOutput(false);
       return;
     }
+    const successMessages = {
+      echo: "Echo Prompt created",
+      song: "Song Package created",
+      youtube: "YouTube Package created",
+      fullPackage: "Full Package created",
+    };
 
     const packageOutputs = {
       ...existingOutputs,
@@ -165,6 +172,7 @@ export default function DailyPage() {
       setManualArtifact(updatedArtifact);
     }
 
+    setPackageStatusMessage(successMessages[type] || "Package output created");
     setIsGeneratingOutput(false);
   }
 
@@ -332,6 +340,7 @@ export default function DailyPage() {
               ]}
               onGenerate={handleGenerateOutput}
               isGeneratingAsset={isGeneratingOutput}
+              statusMessage={packageStatusMessage}
             />
 
             <GeneratedOutputsPanel activeCast={activeOutputCast} generatedOnly />

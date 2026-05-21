@@ -323,7 +323,7 @@ export function GeneratedOutputsPanel({ activeCast, generatedOnly = false }) {
       <div className="mt-5 space-y-4">
         {hasGeneratedOutput ? null : (
           <div className="rounded-2xl border border-white/10 bg-[#07143a] p-4 text-sm leading-6 text-blue-100/70">
-            Generated prompts will appear here.
+            Create an Echo, Song, YouTube package, or Full Package to expand this cast.
           </div>
         )}
 
