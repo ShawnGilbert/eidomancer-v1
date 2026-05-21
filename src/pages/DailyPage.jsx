@@ -325,10 +325,10 @@ export default function DailyPage() {
 
             <PackageActionsPanel
               availableActions={[
-                ["echo", "Generate Echo"],
-                ["song", "Generate Song Package"],
-                ["youtube", "Generate YouTube Package"],
-                ["fullPackage", "Generate Full Package"],
+                ["echo", "Create Echo Prompt"],
+                ["song", "Create Song Package"],
+                ["youtube", "Create YouTube Package"],
+                ["fullPackage", "Create Full Package"],
               ]}
               onGenerate={handleGenerateOutput}
               isGeneratingAsset={isGeneratingOutput}
