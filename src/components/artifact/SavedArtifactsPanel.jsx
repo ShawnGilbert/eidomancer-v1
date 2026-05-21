@@ -105,6 +105,14 @@ export default function SavedArtifactsPanel({
 
   const savedArtifacts = loadSavedArtifacts();
   const visibleArtifacts = savedArtifacts.slice(0, MAX_SAVED_ARTIFACTS_DISPLAY);
+  const fullCastCount = savedArtifacts.filter((artifact) =>
+    Boolean(getArtifactSourceCast(artifact))
+  ).length;
+  const packageOutputCount = savedArtifacts.filter((artifact) => {
+    const outputs = getArtifactPackageOutputs(artifact);
+
+    return Boolean(outputs.echo || outputs.song || outputs.youtube);
+  }).length;
   const activeFingerprint = activeArtifact
     ? getArtifactFingerprint(activeArtifact)
     : "";
@@ -114,6 +122,18 @@ export default function SavedArtifactsPanel({
       <h2 className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-300">
         Saved Artifacts
       </h2>
+
+      <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em]">
+        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-slate-300/75">
+          {savedArtifacts.length} saved
+        </span>
+        <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-2 py-0.5 text-emerald-100/70">
+          {fullCastCount} full cast
+        </span>
+        <span className="rounded-full border border-purple-300/20 bg-purple-400/10 px-2 py-0.5 text-purple-100/70">
+          {packageOutputCount} outputs
+        </span>
+      </div>
 
       {visibleArtifacts.length === 0 ? (
         <p className="mt-3 text-sm text-slate-400">No saved artifacts yet.</p>
