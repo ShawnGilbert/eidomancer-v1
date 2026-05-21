@@ -9,6 +9,34 @@ const depthLayerTypes = [
   ["guidance", "Guidance"],
 ];
 
+const depthLayerStyles = {
+  signal: {
+    marker: "bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.45)]",
+    edge: "border-l-cyan-300/55",
+    label: "text-cyan-200",
+  },
+  tension: {
+    marker: "bg-amber-300 shadow-[0_0_10px_rgba(252,211,77,0.35)]",
+    edge: "border-l-amber-300/45",
+    label: "text-amber-200",
+  },
+  pattern: {
+    marker: "bg-violet-300 shadow-[0_0_10px_rgba(196,181,253,0.35)]",
+    edge: "border-l-violet-300/45",
+    label: "text-violet-200",
+  },
+  echo: {
+    marker: "bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.35)]",
+    edge: "border-l-emerald-300/45",
+    label: "text-emerald-200",
+  },
+  guidance: {
+    marker: "bg-fuchsia-300 shadow-[0_0_10px_rgba(240,171,252,0.35)]",
+    edge: "border-l-fuchsia-300/45",
+    label: "text-fuchsia-200",
+  },
+};
+
 function getArtifactTransitionKey(artifact) {
   return [
     artifact?.id,
@@ -84,6 +112,7 @@ function previewText(value, maxLength = 120) {
 
 function DepthLayers({ artifact, sourceRecord }) {
   const [openLayers, setOpenLayers] = useState({});
+  const [copiedLayer, setCopiedLayer] = useState("");
 
   const layers = useMemo(
     () =>
@@ -99,6 +128,7 @@ function DepthLayers({ artifact, sourceRecord }) {
 
   useEffect(() => {
     setOpenLayers({});
+    setCopiedLayer("");
   }, [artifact?.id, artifact?.savedAt, sourceRecord?.id]);
 
   if (layers.length === 0) return null;
@@ -108,6 +138,14 @@ function DepthLayers({ artifact, sourceRecord }) {
       ...current,
       [type]: !current[type],
     }));
+  }
+
+  async function copyLayer(type, text) {
+    if (!text) return;
+
+    await navigator.clipboard.writeText(text);
+    setCopiedLayer(type);
+    window.setTimeout(() => setCopiedLayer(""), 1500);
   }
 
   return (
@@ -133,27 +171,36 @@ function DepthLayers({ artifact, sourceRecord }) {
       <div className="mt-4 grid gap-2">
         {layers.map((layer) => {
           const isOpen = Boolean(openLayers[layer.type]);
+          const layerStyle = depthLayerStyles[layer.type] || depthLayerStyles.signal;
 
           return (
-            <button
+            <div
               key={layer.type}
-              type="button"
-              onClick={() => toggleLayer(layer.type)}
-              aria-expanded={isOpen}
-              className={`rounded-2xl border text-left transition-all duration-200 ease-out ${
+              className={`rounded-2xl border border-l-2 text-left transition-all duration-200 ease-out ${layerStyle.edge} ${
                 isOpen
                   ? "border-cyan-300/45 bg-cyan-400/12 p-4 shadow-[0_0_24px_rgba(34,211,238,0.08)]"
                   : "border-white/10 bg-white/[0.04] p-3 hover:border-cyan-300/25 hover:bg-white/[0.07]"
               }`}
             >
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-200">
-                  {layer.label}
+              <button
+                type="button"
+                onClick={() => toggleLayer(layer.type)}
+                aria-expanded={isOpen}
+                className="flex w-full items-center justify-between gap-3 text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`h-2 w-2 rounded-full ${layerStyle.marker}`}
+                    aria-hidden="true"
+                  />
+                  <div className={`text-xs font-bold uppercase tracking-[0.24em] ${layerStyle.label}`}>
+                    {layer.label}
+                  </div>
                 </div>
                 <div className="text-[10px] uppercase tracking-[0.18em] text-slate-400">
                   {isOpen ? "Collapse" : "Expand"}
                 </div>
-              </div>
+              </button>
 
               <div
                 className={`mt-2 whitespace-pre-wrap text-sm ${
@@ -164,7 +211,19 @@ function DepthLayers({ artifact, sourceRecord }) {
               >
                 {isOpen ? layer.text : previewText(layer.text)}
               </div>
-            </button>
+
+              {isOpen ? (
+                <div className="mt-3 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => copyLayer(layer.type, layer.text)}
+                    className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-100/80 transition hover:bg-cyan-400/18"
+                  >
+                    {copiedLayer === layer.type ? "Copied" : "Copy Layer"}
+                  </button>
+                </div>
+              ) : null}
+            </div>
           );
         })}
       </div>
@@ -203,7 +262,13 @@ export default function ArtifactViewer({ artifact, sourceRecord }) {
           : "translate-y-2 scale-[0.99] opacity-0"
       }`}
     >
-      <ArtifactCard artifact={artifact} />
+      <div className="relative rounded-[2rem] border border-cyan-300/15 bg-gradient-to-b from-cyan-300/10 via-slate-950/80 to-slate-950/95 p-2 shadow-[0_24px_80px_rgba(8,47,73,0.32)] sm:p-3">
+        <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" />
+        <div className="pointer-events-none absolute inset-x-4 top-4 h-px bg-gradient-to-r from-transparent via-cyan-200/30 to-transparent" />
+        <div className="relative">
+          <ArtifactCard artifact={artifact} />
+        </div>
+      </div>
       <DepthLayers artifact={artifact} sourceRecord={sourceRecord} />
     </div>
   );
