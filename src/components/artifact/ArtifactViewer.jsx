@@ -37,6 +37,34 @@ const depthLayerStyles = {
   },
 };
 
+const artifactMoodStyles = {
+  calm: {
+    stage:
+      "border-cyan-300/15 bg-gradient-to-b from-cyan-300/10 via-slate-950/80 to-slate-950/95 shadow-[0_24px_80px_rgba(8,47,73,0.32)]",
+    rule: "via-cyan-200/30",
+  },
+  tense: {
+    stage:
+      "border-amber-300/18 bg-gradient-to-b from-amber-300/10 via-slate-950/84 to-slate-950/95 shadow-[0_24px_80px_rgba(120,53,15,0.24)]",
+    rule: "via-amber-200/30",
+  },
+  hopeful: {
+    stage:
+      "border-emerald-300/18 bg-gradient-to-b from-emerald-300/10 via-slate-950/82 to-slate-950/95 shadow-[0_24px_80px_rgba(6,78,59,0.26)]",
+    rule: "via-emerald-200/30",
+  },
+  ominous: {
+    stage:
+      "border-fuchsia-300/16 bg-gradient-to-b from-fuchsia-300/10 via-slate-950/88 to-slate-950/95 shadow-[0_24px_80px_rgba(88,28,135,0.28)]",
+    rule: "via-fuchsia-200/28",
+  },
+  reflective: {
+    stage:
+      "border-violet-300/16 bg-gradient-to-b from-violet-300/10 via-slate-950/84 to-slate-950/95 shadow-[0_24px_80px_rgba(49,46,129,0.26)]",
+    rule: "via-violet-200/30",
+  },
+};
+
 function getArtifactTransitionKey(artifact) {
   return [
     artifact?.id,
@@ -46,6 +74,57 @@ function getArtifactTransitionKey(artifact) {
   ]
     .filter(Boolean)
     .join("::");
+}
+
+function collectMoodText(artifact, sourceRecord) {
+  const sourceSections = Array.isArray(sourceRecord?.sections)
+    ? sourceRecord.sections
+    : [];
+  const artifactSections = Array.isArray(artifact?.sections)
+    ? artifact.sections
+    : [];
+
+  return [
+    artifact?.title,
+    artifact?.subtitle,
+    artifact?.coreObject,
+    sourceRecord?.title,
+    sourceRecord?.subtitle,
+    sourceRecord?.tone,
+    sourceRecord?.mood,
+    sourceRecord?.echo,
+    sourceRecord?.coreCard?.title,
+    sourceRecord?.coreCard?.description,
+    sourceRecord?.coreCard?.imageGeneration?.mood,
+    sourceRecord?.coreCard?.visual?.atmosphere,
+    ...sourceSections.map((section) =>
+      [section?.title, section?.content, section?.full, section?.short].join(" ")
+    ),
+    ...artifactSections.map((section) =>
+      [section?.title, section?.full, section?.short, section?.action].join(" ")
+    ),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function inferArtifactMood(artifact, sourceRecord) {
+  const text = collectMoodText(artifact, sourceRecord);
+
+  const moodSignals = [
+    ["ominous", ["shadow", "omen", "haunt", "threat", "void", "dark", "danger"]],
+    ["tense", ["tension", "friction", "pressure", "crack", "urgent", "conflict"]],
+    ["hopeful", ["hope", "open", "bloom", "renew", "bright", "possibility"]],
+    ["reflective", ["reflect", "memory", "mirror", "listen", "observe", "still"]],
+    ["calm", ["calm", "steady", "ground", "quiet", "soft", "balance"]],
+  ];
+
+  const matched = moodSignals.find(([, words]) =>
+    words.some((word) => text.includes(word))
+  );
+
+  return matched?.[0] || "calm";
 }
 
 function getSectionByType(record, type) {
@@ -237,6 +316,11 @@ export default function ArtifactViewer({ artifact, sourceRecord }) {
     () => getArtifactTransitionKey(artifact),
     [artifact]
   );
+  const artifactMood = useMemo(
+    () => inferArtifactMood(artifact, sourceRecord),
+    [artifact, sourceRecord]
+  );
+  const moodStyle = artifactMoodStyles[artifactMood] || artifactMoodStyles.calm;
 
   useEffect(() => {
     if (!artifact) return undefined;
@@ -262,9 +346,9 @@ export default function ArtifactViewer({ artifact, sourceRecord }) {
           : "translate-y-2 scale-[0.99] opacity-0"
       }`}
     >
-      <div className="relative rounded-[2rem] border border-cyan-300/15 bg-gradient-to-b from-cyan-300/10 via-slate-950/80 to-slate-950/95 p-2 shadow-[0_24px_80px_rgba(8,47,73,0.32)] sm:p-3">
+      <div className={`relative rounded-[2rem] border p-2 sm:p-3 ${moodStyle.stage}`}>
         <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" />
-        <div className="pointer-events-none absolute inset-x-4 top-4 h-px bg-gradient-to-r from-transparent via-cyan-200/30 to-transparent" />
+        <div className={`pointer-events-none absolute inset-x-4 top-4 h-px bg-gradient-to-r from-transparent ${moodStyle.rule} to-transparent`} />
         <div className="relative">
           <ArtifactCard artifact={artifact} />
         </div>
