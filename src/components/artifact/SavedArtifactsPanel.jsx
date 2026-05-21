@@ -27,6 +27,61 @@ function formatSavedTimestamp(savedAt) {
   });
 }
 
+function collectMoodText(artifact, sourceRecord) {
+  const sourceSections = Array.isArray(sourceRecord?.sections)
+    ? sourceRecord.sections
+    : [];
+  const artifactSections = Array.isArray(artifact?.sections)
+    ? artifact.sections
+    : [];
+
+  return [
+    artifact?.title,
+    artifact?.subtitle,
+    artifact?.coreObject,
+    sourceRecord?.title,
+    sourceRecord?.subtitle,
+    sourceRecord?.tone,
+    sourceRecord?.mood,
+    sourceRecord?.echo,
+    sourceRecord?.coreCard?.title,
+    sourceRecord?.coreCard?.description,
+    sourceRecord?.coreCard?.imageGeneration?.mood,
+    sourceRecord?.coreCard?.visual?.atmosphere,
+    ...sourceSections.map((section) =>
+      [section?.title, section?.content, section?.full, section?.short].join(" ")
+    ),
+    ...artifactSections.map((section) =>
+      [section?.title, section?.full, section?.short, section?.action].join(" ")
+    ),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function inferArtifactMood(artifact, sourceRecord) {
+  const text = collectMoodText(artifact, sourceRecord);
+  const moodSignals = [
+    ["ominous", ["shadow", "omen", "haunt", "threat", "void", "dark", "danger"]],
+    ["tense", ["tension", "friction", "pressure", "crack", "urgent", "conflict"]],
+    ["hopeful", ["hope", "open", "bloom", "renew", "bright", "possibility"]],
+    ["reflective", ["reflect", "memory", "mirror", "listen", "observe", "still"]],
+    ["calm", ["calm", "steady", "ground", "quiet", "soft", "balance"]],
+  ];
+  const matched = moodSignals.find(([, words]) =>
+    words.some((word) => text.includes(word))
+  );
+
+  return matched?.[0] || "calm";
+}
+
+function formatMoodLabel(mood) {
+  if (!mood) return "Calm";
+
+  return `${mood.charAt(0).toUpperCase()}${mood.slice(1)}`;
+}
+
 export default function SavedArtifactsPanel({
   activeArtifact,
   onSelectArtifact,
@@ -56,7 +111,9 @@ export default function SavedArtifactsPanel({
         <div className="mt-4 space-y-3">
           {visibleArtifacts.map((artifact, index) => {
             const inputPreview = getArtifactInput(artifact);
-            const isFullyReloadable = Boolean(getArtifactSourceCast(artifact));
+            const sourceCast = getArtifactSourceCast(artifact);
+            const isFullyReloadable = Boolean(sourceCast);
+            const artifactMood = inferArtifactMood(artifact, sourceCast);
             const packageOutputs = getArtifactPackageOutputs(artifact);
             const outputLabels = [
               packageOutputs.echo ? "Echo" : "",
@@ -126,6 +183,10 @@ export default function SavedArtifactsPanel({
                       }`}
                     >
                       {isFullyReloadable ? "Full cast" : "Artifact only"}
+                    </span>
+
+                    <span className="rounded-full border border-cyan-300/15 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-100/65">
+                      Mood: {formatMoodLabel(artifactMood)}
                     </span>
 
                     {outputLabels.map((label) => (
