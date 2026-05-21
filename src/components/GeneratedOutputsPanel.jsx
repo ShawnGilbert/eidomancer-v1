@@ -66,6 +66,61 @@ function getAssetBadges(data) {
   return [];
 }
 
+function buildFullPackageText(assets = {}) {
+  const sections = [];
+
+  if (assets.echo?.prompt) {
+    sections.push(["ECHO PROMPT", assets.echo.prompt]);
+  }
+
+  if (assets.song?.songTitle) {
+    sections.push(["SONG TITLE", assets.song.songTitle]);
+  }
+
+  if (assets.song?.sunoStylePrompt) {
+    sections.push(["SUNO STYLE PROMPT", assets.song.sunoStylePrompt]);
+  }
+
+  if (assets.song?.lyrics) {
+    sections.push(["LYRICS", assets.song.lyrics]);
+  }
+
+  if (assets.youtube?.videoTitle) {
+    sections.push(["YOUTUBE TITLE", assets.youtube.videoTitle]);
+  }
+
+  if (assets.youtube?.description) {
+    sections.push(["YOUTUBE DESCRIPTION", assets.youtube.description]);
+  }
+
+  if (assets.youtube?.tags) {
+    sections.push(["YOUTUBE TAGS", assets.youtube.tags]);
+  }
+
+  return sections
+    .map(([label, body]) => `=== ${label} ===\n${body}`)
+    .join("\n\n");
+}
+
+function slugifyFilename(value = "") {
+  const slug = String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+  return slug || "package";
+}
+
+function getPackageFilename(assets = {}) {
+  const title =
+    assets.song?.songTitle ||
+    assets.youtube?.videoTitle ||
+    assets.echo?.title ||
+    assets.coreCard?.title;
+
+  return `eidomancer-${slugifyFilename(title)}-package.txt`;
+}
+
 function buildDerivedAssets(activeCast, generatedOnly = false) {
   const explicitAssets =
     activeCast && typeof activeCast.assets === "object" ? activeCast.assets : {};
@@ -209,8 +264,25 @@ export function GeneratedOutputsPanel({ activeCast, generatedOnly = false }) {
   }
 
   function handleCopyFullPackage() {
-    if (!assets.fullPackage) return;
-    handleCopy("fullPackageTop", assets.fullPackage);
+    const text = buildFullPackageText(assets);
+    if (!text) return;
+
+    navigator.clipboard.writeText(text);
+    markCopied("fullPackageTop");
+  }
+
+  function handleExportFullPackage() {
+    const text = buildFullPackageText(assets);
+    if (!text) return;
+
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = getPackageFilename(assets);
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   function toggleSection(key) {
@@ -227,13 +299,24 @@ export function GeneratedOutputsPanel({ activeCast, generatedOnly = false }) {
           Generated Outputs
         </h3>
 
-        {assets.fullPackage ? (
-          <button
-            onClick={handleCopyFullPackage}
-            className="text-sm text-blue-200"
-          >
-            Copy Full Package
-          </button>
+        {hasGeneratedOutput ? (
+          <div className="flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              onClick={handleCopyFullPackage}
+              className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-blue-50 transition hover:bg-white/10"
+            >
+              {copied === "fullPackageTop" ? "Copied" : "Copy Full Package"}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExportFullPackage}
+              className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-blue-50 transition hover:bg-white/10"
+            >
+              Export Full Package
+            </button>
+          </div>
         ) : null}
       </div>
 
