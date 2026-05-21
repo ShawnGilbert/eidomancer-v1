@@ -10,6 +10,10 @@ Innovation should focus on the meaning layer: symbolic compression, Castfiles, t
 
 Artifact mood is currently lightweight and heuristic-based. It uses existing cast and artifact text to tint subtle UI presentation such as glow, gradient, and small mood badges. It is not yet a deep psychological model.
 
+## Theme Framework Note
+
+V1 currently defaults to the Emergent/Eidomancer visual language. Theme switching is not implemented yet, but visual tokens are beginning to move into `src/lib/themePalettes.js`. Future themes should reuse proven UX patterns while changing symbolic language, tone, palette, and imagery.
+
 ## Development Session Checklist
 
 - Start the frontend and backend before testing app behavior.
