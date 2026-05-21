@@ -2,14 +2,26 @@
 
 import { useEffect, useMemo, useState } from "react";
 import ArtifactViewer from "../components/artifact/ArtifactViewer";
+import { GeneratedOutputsPanel } from "../components/GeneratedOutputsPanel";
+import { PackageActionsPanel } from "../components/PackageActionsPanel";
 import SavedArtifactsPanel from "../components/artifact/SavedArtifactsPanel";
 import DailyCastCard from "../components/daily/DailyCastCard";
 import DailyCoreCardPreview from "../components/daily/DailyCoreCardPreview";
 import DailyFocusInput from "../components/daily/DailyFocusInput";
 import DailySidebar from "../components/daily/DailySidebar";
 import { castToArtifact } from "../lib/artifactAdapter";
-import { saveArtifact } from "../lib/artifactStorage";
+import {
+  getArtifactPackageOutputs,
+  getArtifactSourceCast,
+  saveArtifact,
+  updateSavedArtifact,
+} from "../lib/artifactStorage";
 import { getAccessTier, getFreemiumCapabilities } from "../lib/freemiumGate";
+import {
+  generateEcho,
+  generateSongPackage,
+  generateYouTubePackage,
+} from "../lib/packageGenerators";
 import { getThemePalette } from "../lib/themePalettes";
 import useDailyCast from "../hooks/useDailyCast";
 
@@ -33,6 +45,8 @@ export default function DailyPage() {
 
   const [manualArtifact, setManualArtifact] = useState(null);
   const [savedRefreshKey, setSavedRefreshKey] = useState(0);
+  const [generatedOutputs, setGeneratedOutputs] = useState({});
+  const [isGeneratingOutput, setIsGeneratingOutput] = useState(false);
 
   const accessTier = useMemo(() => getAccessTier(null), []);
   const capabilities = useMemo(
@@ -46,10 +60,121 @@ export default function DailyPage() {
     [selectedCast]
   );
 
+  function handleSelectSavedArtifact(artifact) {
+    if (!artifact) return;
+
+    setManualArtifact(artifact);
+    setGeneratedOutputs(getArtifactPackageOutputs(artifact));
+
+    const sourceCast = getArtifactSourceCast(artifact);
+
+    if (sourceCast) {
+      handleSelectRecentCast(sourceCast);
+    }
+  }
+
+  async function handleSubmitFocus(nextFocus) {
+    setManualArtifact(null);
+    await submitFocus(nextFocus);
+  }
+
+  async function handleClearFocus() {
+    setManualArtifact(null);
+    await clearFocus();
+  }
+
+  function handleSelectSidebarCast(cast) {
+    setManualArtifact(null);
+    handleSelectRecentCast(cast);
+  }
+
+  function handleGenerateOutput(type) {
+    const activeRecord = getArtifactSourceCast(activeArtifact) || selectedCast || activeArtifact;
+
+    if (!activeRecord) return;
+
+    setIsGeneratingOutput(true);
+    const existingOutputs = {
+      ...getArtifactPackageOutputs(activeArtifact),
+      ...generatedOutputs,
+    };
+    const fullPackageOutputs =
+      type === "fullPackage"
+        ? (() => {
+            const echo = generateEcho(activeRecord);
+            const song = generateSongPackage(activeRecord);
+            const youtube = generateYouTubePackage({
+              ...activeRecord,
+              packageOutputs: {
+                ...existingOutputs,
+                echo,
+                song,
+              },
+            });
+
+            return { echo, song, youtube };
+          })()
+        : null;
+    const nextOutput =
+      fullPackageOutputs
+        ? fullPackageOutputs
+        : type === "youtube"
+        ? generateYouTubePackage({
+            ...activeRecord,
+            packageOutputs: {
+              ...existingOutputs,
+            },
+          })
+        : type === "song"
+        ? generateSongPackage(activeRecord)
+        : type === "echo"
+        ? generateEcho(activeRecord)
+        : null;
+
+    if (!nextOutput) {
+      setIsGeneratingOutput(false);
+      return;
+    }
+
+    const packageOutputs = {
+      ...existingOutputs,
+      ...(fullPackageOutputs || { [type]: nextOutput }),
+    };
+    const updatedArtifact = {
+      ...activeArtifact,
+      packageOutputs,
+      ...(packageOutputs.echo ? { echoPrompt: packageOutputs.echo.prompt } : {}),
+    };
+
+    setGeneratedOutputs((outputs) => ({
+      ...outputs,
+      ...(fullPackageOutputs || { [type]: nextOutput }),
+    }));
+
+    const { artifact } = updateSavedArtifact(activeArtifact, {
+      packageOutputs,
+      ...(packageOutputs.echo ? { echoPrompt: packageOutputs.echo.prompt } : {}),
+    });
+
+    if (artifact) {
+      if (isViewingSaved) {
+        setManualArtifact(artifact);
+      }
+      setSavedRefreshKey((value) => value + 1);
+    } else if (isViewingSaved) {
+      setManualArtifact(updatedArtifact);
+    }
+
+    setIsGeneratingOutput(false);
+  }
+
   useEffect(() => {
     if (!selectedArtifact || !selectedCast) return;
 
-    const { saved } = saveArtifact(selectedArtifact, { source: "daily" });
+    const { saved } = saveArtifact(selectedArtifact, {
+      source: "daily",
+      sourceCast: selectedCast,
+    });
 
     if (saved) {
       setSavedRefreshKey((value) => value + 1);
@@ -78,6 +203,16 @@ export default function DailyPage() {
 
   const activeArtifact = manualArtifact || selectedArtifact;
   const isViewingSaved = !!manualArtifact;
+  const activeOutputRecord = getArtifactSourceCast(activeArtifact) || selectedCast || activeArtifact;
+  const activeOutputCast = activeOutputRecord
+    ? {
+        ...activeOutputRecord,
+        assets: {
+          ...((activeOutputRecord && activeOutputRecord.assets) || {}),
+          ...generatedOutputs,
+        },
+      }
+    : null;
 
   const isLoading = status === "loading";
 
@@ -96,6 +231,10 @@ export default function DailyPage() {
   } else if (usedFallback) {
     aiStatus = "fallback";
   }
+
+  useEffect(() => {
+    setGeneratedOutputs(getArtifactPackageOutputs(activeArtifact));
+  }, [activeArtifact?.id, activeArtifact?.savedAt]);
 
   return (
     <div className={palette.shell}>
@@ -134,8 +273,8 @@ export default function DailyPage() {
             initialValue={focusValue}
             resetKey={inputResetKey}
             appliedFocus={appliedFocus}
-            onSubmit={submitFocus}
-            onClear={clearFocus}
+            onSubmit={handleSubmitFocus}
+            onClear={handleClearFocus}
             isLoading={isLoading}
           />
 
@@ -180,11 +319,22 @@ export default function DailyPage() {
               <SavedArtifactsPanel
                 key={savedRefreshKey}
                 activeArtifact={activeArtifact}
-                onSelectArtifact={(artifact) => {
-                  setManualArtifact(artifact);
-                }}
+                onSelectArtifact={handleSelectSavedArtifact}
               />
             </div>
+
+            <PackageActionsPanel
+              availableActions={[
+                ["echo", "Generate Echo"],
+                ["song", "Generate Song Package"],
+                ["youtube", "Generate YouTube Package"],
+                ["fullPackage", "Generate Full Package"],
+              ]}
+              onGenerate={handleGenerateOutput}
+              isGeneratingAsset={isGeneratingOutput}
+            />
+
+            <GeneratedOutputsPanel activeCast={activeOutputCast} generatedOnly />
           </div>
         )}
 
@@ -205,7 +355,7 @@ export default function DailyPage() {
             capabilities={capabilities}
             recentCasts={recentCasts}
             selectedCast={selectedCast}
-            onSelectCast={handleSelectRecentCast}
+            onSelectCast={handleSelectSidebarCast}
             showLens={false}
           />
         )}

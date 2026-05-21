@@ -12,12 +12,16 @@ function normalizeText(value, fallback = "Not generated yet.") {
 function getSectionContent(record, type, fallback = "Not generated yet.") {
   if (!record || !Array.isArray(record.sections)) return fallback;
 
-  const match = record.sections.find((section) => section?.type === type);
-  if (!match || typeof match.content !== "string" || !match.content.trim()) {
+  const match = record.sections.find(
+    (section) => section?.type === type || section?.id === type
+  );
+  const content = match?.content || match?.full || match?.short;
+
+  if (!match || typeof content !== "string" || !content.trim()) {
     return fallback;
   }
 
-  return match.content.trim();
+  return content.trim();
 }
 
 function getQuestion(record) {
@@ -29,7 +33,10 @@ function getTheme(record) {
 }
 
 function getTitle(record) {
-  return normalizeText(record?.coreCard?.title || record?.title, "Untitled Cast");
+  return normalizeText(
+    record?.coreCard?.title || record?.coreCard?.name || record?.cardName || record?.title,
+    "Untitled Cast"
+  );
 }
 
 function getSubtitle(record) {
@@ -41,7 +48,10 @@ function getSubtitle(record) {
 
 function getHook(record) {
   return normalizeText(
-    record?.coreCard?.hook || getSectionContent(record, "echo", ""),
+    record?.coreCard?.hook ||
+      record?.coreCard?.description ||
+      record?.subtitle ||
+      getSectionContent(record, "echo", ""),
     "The signal is still forming."
   );
 }
@@ -59,6 +69,31 @@ function flattenRecord(record) {
     poem: getSectionContent(record, "poem"),
     echo: getSectionContent(record, "echo"),
   };
+}
+
+function limitText(value = "", maxLength = 1000) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength - 1).trim();
+}
+
+function getPackageOutput(record, key) {
+  return record?.packageOutputs?.[key] || record?.assets?.[key] || null;
+}
+
+function limitCommaTags(tags = [], maxLength = 500) {
+  const uniqueTags = Array.from(
+    new Set(tags.map((tag) => String(tag || "").trim()).filter(Boolean))
+  );
+  const selected = [];
+
+  for (const tag of uniqueTags) {
+    const next = [...selected, tag].join(", ");
+    if (next.length > maxLength) break;
+    selected.push(tag);
+  }
+
+  return selected.join(", ");
 }
 
 export const IMAGE_FORMATS = {
@@ -284,6 +319,31 @@ export function generateSuno(record) {
   };
 }
 
+export function generateSongPackage(record) {
+  const cast = flattenRecord(record);
+  const songTitle = cast.title;
+  const sunoStylePrompt = limitText(
+    [
+      "Cinematic symbolic art-pop with electronic texture, organic percussion, and a memorable melodic chorus.",
+      "Mood: reflective, vivid, future-mystic, emotionally grounded, quietly intense.",
+      `Theme: ${cast.theme}.`,
+      `Emotional basis: ${cast.signal}.`,
+      `Core tension: ${cast.tension}.`,
+      `Pattern movement: ${cast.pattern}.`,
+      `Hook: ${cast.hook}.`,
+      "No specific artist or band reference; original style only.",
+    ].join(" "),
+    1000
+  );
+  const lyrics = generateLyrics(record).lyrics;
+
+  return {
+    songTitle,
+    sunoStylePrompt,
+    lyrics,
+  };
+}
+
 export function generateSpecterr(record) {
   const cast = flattenRecord(record);
 
@@ -298,45 +358,63 @@ export function generateSpecterr(record) {
 
 export function generateYouTubePackage(record) {
   const cast = flattenRecord(record);
+  const song = getPackageOutput(record, "song");
+  const videoTitle = song?.songTitle
+    ? `${song.songTitle} | Eidomancer Song`
+    : `${cast.title} | Eidomancer Cast`;
 
   const tags = [
     "Eidomancer",
     cast.theme,
-    "AI music",
+    song ? "symbolic music" : "symbolic video",
     "symbolic cast",
     "meaning compression",
     "philosophy",
     cast.title,
+    song?.songTitle || "",
   ];
-
-  return {
-    titleOptions: [
-      `${cast.title} | Eidomancer Cast`,
-      `${cast.hook} | Eidomancer`,
-      `${cast.title} - Signal from ${cast.theme}`,
-    ],
-    description: `${cast.title}
+  const tagString = limitCommaTags(tags, 500);
+  const description = `${videoTitle}
 
 ${cast.subtitle}
 
-Question: ${cast.question}
+Question:
+${cast.question}
 
-Signal
+Signal:
 ${cast.signal}
 
-Tension
+Tension:
 ${cast.tension}
 
-Pattern
+Pattern:
 ${cast.pattern}
 
-Poem
-${cast.poem}
+Echo:
+${cast.echo}${
+    song
+      ? `
 
-Echo
-${cast.echo}`,
-    tags,
-    tagString: joinTags(tags),
+Song Package:
+${song.songTitle || cast.title}
+
+${song.sunoStylePrompt || ""}`
+      : ""
+  }
+
+Generated with Eidomancer.`;
+
+  return {
+    videoTitle,
+    description,
+    tags: tagString,
+    titleOptions: [
+      videoTitle,
+      `${cast.hook} | Eidomancer`,
+      `${cast.title} - Signal from ${cast.theme}`,
+    ],
+    tagList: tags.filter(Boolean),
+    tagString,
   };
 }
 

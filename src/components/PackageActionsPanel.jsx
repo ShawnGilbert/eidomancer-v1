@@ -11,6 +11,7 @@ export function PackageActionsPanel({
   onGenerate,
   onGenerateAll,
   isGeneratingAsset,
+  availableActions = actions,
 }) {
   return (
     <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
@@ -22,16 +23,18 @@ export function PackageActionsPanel({
       </h3>
 
       <div className="mt-5 flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={onGenerateAll}
-          disabled={isGeneratingAsset}
-          className="rounded-xl bg-blue-500/80 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isGeneratingAsset ? "Generating..." : "Generate All"}
-        </button>
+        {onGenerateAll && (
+          <button
+            type="button"
+            onClick={onGenerateAll}
+            disabled={isGeneratingAsset}
+            className="rounded-xl bg-blue-500/80 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isGeneratingAsset ? "Generating..." : "Generate All"}
+          </button>
+        )}
 
-        {actions.map(([value, label]) => (
+        {availableActions.map(([value, label]) => (
           <button
             key={value}
             type="button"
