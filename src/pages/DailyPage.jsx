@@ -16,6 +16,7 @@ import {
   clearSavedArtifactPackageOutputs,
   getArtifactPackageOutputs,
   getArtifactSourceCast,
+  markArtifactViewed,
   saveArtifact,
   updateSavedArtifact,
 } from "../lib/artifactStorage";
@@ -67,14 +68,19 @@ export default function DailyPage() {
   function handleSelectSavedArtifact(artifact) {
     if (!artifact) return;
 
-    setManualArtifact(artifact);
-    setGeneratedOutputs(getArtifactPackageOutputs(artifact));
+    const { artifact: viewedArtifact } = markArtifactViewed(artifact);
+    const activeSavedArtifact = viewedArtifact || artifact;
 
-    const sourceCast = getArtifactSourceCast(artifact);
+    setManualArtifact(activeSavedArtifact);
+    setGeneratedOutputs(getArtifactPackageOutputs(activeSavedArtifact));
+
+    const sourceCast = getArtifactSourceCast(activeSavedArtifact);
 
     if (sourceCast) {
       handleSelectRecentCast(sourceCast);
     }
+
+    setSavedRefreshKey((value) => value + 1);
   }
 
   async function handleSubmitFocus(nextFocus) {

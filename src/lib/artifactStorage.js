@@ -1,6 +1,25 @@
 const ARTIFACT_HISTORY_KEY = "eidomancer_artifact_history_v1";
 const ARTIFACT_HISTORY_LIMIT = 30;
 
+function getArtifactActivityTime(artifact) {
+  const value = artifact?.viewedAt || artifact?.updatedAt || artifact?.savedAt || "";
+  const time = value ? new Date(value).getTime() : 0;
+
+  return Number.isNaN(time) ? 0 : time;
+}
+
+function sortSavedArtifacts(artifacts = []) {
+  return artifacts
+    .map((artifact, index) => ({ artifact, index }))
+    .sort((a, b) => {
+      const activityDelta =
+        getArtifactActivityTime(b.artifact) - getArtifactActivityTime(a.artifact);
+
+      return activityDelta || a.index - b.index;
+    })
+    .map(({ artifact }) => artifact);
+}
+
 export function getArtifactInput(artifact) {
   if (typeof artifact?.input === "string") return artifact.input;
   return artifact?.input?.text || artifact?.focus || "";
@@ -60,7 +79,9 @@ export function getArtifactPackageOutputs(artifact) {
 
 export function loadSavedArtifacts() {
   try {
-    return JSON.parse(localStorage.getItem(ARTIFACT_HISTORY_KEY) || "[]");
+    return sortSavedArtifacts(
+      JSON.parse(localStorage.getItem(ARTIFACT_HISTORY_KEY) || "[]")
+    );
   } catch {
     return [];
   }
@@ -129,6 +150,31 @@ export function updateSavedArtifact(artifact, updates = {}) {
   localStorage.setItem(ARTIFACT_HISTORY_KEY, JSON.stringify(artifacts));
 
   return { updated: true, artifact: updatedArtifact };
+}
+
+export function markArtifactViewed(artifact) {
+  if (!artifact) return { updated: false, reason: "missing" };
+
+  const artifacts = loadSavedArtifacts();
+  const targetFingerprint = getArtifactFingerprint(artifact);
+  const targetIndex = artifacts.findIndex(
+    (item) => getArtifactFingerprint(item) === targetFingerprint
+  );
+
+  if (targetIndex === -1) {
+    return { updated: false, reason: "not_found" };
+  }
+
+  const viewedArtifact = {
+    ...artifacts[targetIndex],
+    viewedAt: new Date().toISOString(),
+  };
+
+  artifacts[targetIndex] = viewedArtifact;
+  const sortedArtifacts = sortSavedArtifacts(artifacts);
+  localStorage.setItem(ARTIFACT_HISTORY_KEY, JSON.stringify(sortedArtifacts));
+
+  return { updated: true, artifact: viewedArtifact };
 }
 
 export function clearSavedArtifactPackageOutputs(artifact) {

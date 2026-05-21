@@ -27,6 +27,16 @@ function formatSavedTimestamp(savedAt) {
   });
 }
 
+function isRecentlyViewed(viewedAt) {
+  if (!viewedAt) return false;
+
+  const viewedTime = new Date(viewedAt).getTime();
+
+  if (Number.isNaN(viewedTime)) return false;
+
+  return Date.now() - viewedTime < 5 * 60 * 1000;
+}
+
 function collectMoodText(artifact, sourceRecord) {
   const sourceSections = Array.isArray(sourceRecord?.sections)
     ? sourceRecord.sections
@@ -120,6 +130,7 @@ export default function SavedArtifactsPanel({
               packageOutputs.suno || packageOutputs.song ? "Song" : "",
               packageOutputs.youtube ? "YouTube" : "",
             ].filter(Boolean);
+            const recentlyViewed = isRecentlyViewed(artifact.viewedAt);
             const isActive =
               getArtifactFingerprint(artifact) === activeFingerprint;
 
@@ -189,6 +200,12 @@ export default function SavedArtifactsPanel({
                       Mood: {formatMoodLabel(artifactMood)}
                     </span>
 
+                    {recentlyViewed && (
+                      <span className="rounded-full border border-cyan-200/25 bg-cyan-300/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-50/75">
+                        Recently Viewed
+                      </span>
+                    )}
+
                     {outputLabels.map((label) => (
                       <span
                         key={label}
@@ -198,6 +215,12 @@ export default function SavedArtifactsPanel({
                       </span>
                     ))}
                   </div>
+
+                  {artifact.viewedAt && (
+                    <div className="mt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      Last viewed {formatSavedTimestamp(artifact.viewedAt)}
+                    </div>
+                  )}
 
                   {artifact.subtitle && (
                     <div className="mt-2 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-2">
