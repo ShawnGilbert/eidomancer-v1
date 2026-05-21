@@ -127,6 +127,12 @@ function inferArtifactMood(artifact, sourceRecord) {
   return matched?.[0] || "calm";
 }
 
+function formatMoodLabel(mood) {
+  if (!mood) return "Calm";
+
+  return `${mood.charAt(0).toUpperCase()}${mood.slice(1)}`;
+}
+
 function getSectionByType(record, type) {
   if (!Array.isArray(record?.sections)) return null;
 
@@ -349,6 +355,9 @@ export default function ArtifactViewer({ artifact, sourceRecord }) {
       <div className={`relative rounded-[2rem] border p-2 sm:p-3 ${moodStyle.stage}`}>
         <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" />
         <div className={`pointer-events-none absolute inset-x-4 top-4 h-px bg-gradient-to-r from-transparent ${moodStyle.rule} to-transparent`} />
+        <div className="absolute right-4 top-4 z-10 rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/60 backdrop-blur-md">
+          Mood: {formatMoodLabel(artifactMood)}
+        </div>
         <div className="relative">
           <ArtifactCard artifact={artifact} />
         </div>
