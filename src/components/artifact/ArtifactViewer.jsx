@@ -37,7 +37,7 @@ export default function ArtifactViewer({ artifact }) {
 
   return (
     <div
-      className={`transform transition-all duration-300 ease-out ${
+      className={`min-w-0 transform transition-all duration-300 ease-out ${
         visible
           ? "translate-y-0 scale-100 opacity-100"
           : "translate-y-2 scale-[0.99] opacity-0"

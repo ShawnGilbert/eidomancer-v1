@@ -79,7 +79,7 @@ export default function ArtifactCard({ artifact }) {
   }
 
   return (
-    <section className="mx-auto w-full max-w-5xl rounded-3xl border border-cyan-300/10 bg-slate-950 p-4 shadow-2xl shadow-cyan-950/30">
+    <section className="mx-auto w-full max-w-5xl rounded-3xl border border-cyan-300/10 bg-slate-950 p-3 shadow-2xl shadow-cyan-950/30 sm:p-4">
       <div
         ref={artifactRef}
         className="relative overflow-hidden rounded-2xl border border-amber-300/20 bg-black"
@@ -90,17 +90,17 @@ export default function ArtifactCard({ artifact }) {
           className="block w-full"
         />
 
-        <div className="absolute left-0 right-0 top-0 bg-gradient-to-b from-black/85 via-black/45 to-transparent px-6 py-5 text-center">
-          <p className="text-[10px] uppercase tracking-[0.45em] text-amber-300/70">
+        <div className="absolute left-0 right-0 top-0 bg-gradient-to-b from-black/85 via-black/45 to-transparent px-3 py-4 text-center sm:px-6 sm:py-5">
+          <p className="text-[9px] uppercase tracking-[0.32em] text-amber-300/70 sm:text-[10px] sm:tracking-[0.45em]">
             Eidomancer Artifact
           </p>
 
-          <h2 className="mt-2 text-3xl font-bold text-white drop-shadow">
+          <h2 className="mt-2 text-xl font-bold leading-tight text-white drop-shadow sm:text-3xl">
             {artifact.title}
           </h2>
 
           {artifact.subtitle && (
-            <p className="mt-1 text-sm text-slate-200">{artifact.subtitle}</p>
+            <p className="mt-1 line-clamp-2 text-xs text-slate-200 sm:text-sm">{artifact.subtitle}</p>
           )}
         </div>
 
@@ -221,7 +221,7 @@ export default function ArtifactCard({ artifact }) {
   </div>
 )}
       <div className="mt-5 space-y-3">
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
           <button
             type="button"
             onClick={copyCast}
@@ -248,7 +248,7 @@ export default function ArtifactCard({ artifact }) {
             </button>
           )}
 
-          <span className="rounded-xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-2 text-sm font-semibold text-emerald-100/80">
+          <span className="rounded-xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-2 text-center text-sm font-semibold text-emerald-100/80">
             Auto-saved
           </span>
 

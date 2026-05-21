@@ -180,7 +180,7 @@ function AssetCard({ title, data, isOpen, onToggle, onCopy, copied }) {
 
   return (
     <div className="rounded-2xl border border-white/10 bg-[#07143a] shadow-lg shadow-black/10">
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
@@ -202,7 +202,7 @@ function AssetCard({ title, data, isOpen, onToggle, onCopy, copied }) {
             ) : null}
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0 sm:items-center">
             <button
               type="button"
               onClick={onCopy}
@@ -224,7 +224,7 @@ function AssetCard({ title, data, isOpen, onToggle, onCopy, copied }) {
         </div>
 
         {isOpen ? (
-          <pre className="mt-4 max-h-[34rem] overflow-auto whitespace-pre-wrap break-words rounded-xl border border-white/10 bg-black/25 p-4 text-sm leading-6 text-blue-100/85">
+          <pre className="mt-4 max-h-[28rem] overflow-auto whitespace-pre-wrap break-words rounded-xl border border-white/10 bg-black/25 p-3 text-xs leading-6 text-blue-100/85 sm:max-h-[34rem] sm:p-4 sm:text-sm">
             {fullText}
           </pre>
         ) : null}
@@ -297,14 +297,14 @@ export function GeneratedOutputsPanel({
   }
 
   return (
-    <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
+    <section className="rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h3 className="text-2xl font-semibold text-white">
+        <h3 className="text-xl font-semibold text-white sm:text-2xl">
           Generated Outputs
         </h3>
 
         {hasGeneratedOutput ? (
-          <div className="flex flex-wrap gap-2 sm:justify-end">
+          <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
             <button
               type="button"
               onClick={handleCopyFullPackage}
@@ -336,7 +336,7 @@ export function GeneratedOutputsPanel({
 
       <div className="mt-5 space-y-4">
         {hasGeneratedOutput ? null : (
-          <div className="rounded-2xl border border-white/10 bg-[#07143a] p-4 text-sm leading-6 text-blue-100/70">
+          <div className="rounded-2xl border border-white/10 bg-[#07143a] p-3 text-sm leading-6 text-blue-100/70 sm:p-4">
             Create an Echo Prompt, Song Package, YouTube Package, or Full Package to expand this cast.
           </div>
         )}

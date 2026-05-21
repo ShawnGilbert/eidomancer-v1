@@ -45,7 +45,7 @@ export default function SavedArtifactsPanel({
     : "";
 
   return (
-    <aside className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <aside className="min-w-0 rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-4">
       <h2 className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-300">
         Saved Artifacts
       </h2>
@@ -93,7 +93,7 @@ export default function SavedArtifactsPanel({
                   aria-current={isActive ? "true" : undefined}
                   className="w-full text-left"
                 >
-                  <div className="flex items-start justify-between gap-3 pr-5">
+                  <div className="flex flex-col gap-2 pr-5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                     <div className="min-w-0">
                       {isActive && (
                         <div className="mb-2 inline-flex rounded-full border border-cyan-200/35 bg-cyan-300/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-50 shadow-[0_0_12px_rgba(103,232,249,0.16)]">
@@ -111,7 +111,7 @@ export default function SavedArtifactsPanel({
                     </div>
 
                     {artifact.savedAt && (
-                      <div className="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-300/80">
+                      <div className="w-fit shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-300/80">
                         {formatSavedTimestamp(artifact.savedAt)}
                       </div>
                     )}
