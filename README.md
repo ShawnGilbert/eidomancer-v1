@@ -6,6 +6,10 @@ V1 should use familiar, proven interaction patterns from tarot apps, journaling 
 
 Innovation should focus on the meaning layer: symbolic compression, Castfiles, theme translation, and generated package outputs. The interface should feel familiar enough to understand quickly, but distinctive enough to feel like Eidomancer.
 
+## Artifact Mood Note
+
+Artifact mood is currently lightweight and heuristic-based. It uses existing cast and artifact text to tint subtle UI presentation such as glow, gradient, and small mood badges. It is not yet a deep psychological model.
+
 ## Development Session Checklist
 
 - Start the frontend and backend before testing app behavior.
