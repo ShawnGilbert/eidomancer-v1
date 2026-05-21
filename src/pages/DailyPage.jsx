@@ -233,6 +233,7 @@ export default function DailyPage() {
 
   const activeArtifact = manualArtifact || selectedArtifact;
   const isViewingSaved = !!manualArtifact;
+  const activeDepthRecord = getArtifactSourceCast(activeArtifact) || activeArtifact;
   const activeOutputRecord = getArtifactSourceCast(activeArtifact) || selectedCast || activeArtifact;
   const activeOutputCast = activeOutputRecord
     ? {
@@ -344,7 +345,10 @@ export default function DailyPage() {
             )}
 
             <div className={palette.artifactGrid}>
-              <ArtifactViewer artifact={activeArtifact} />
+              <ArtifactViewer
+                artifact={activeArtifact}
+                sourceRecord={activeDepthRecord}
+              />
 
               <SavedArtifactsPanel
                 key={savedRefreshKey}
