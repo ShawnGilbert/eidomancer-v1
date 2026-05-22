@@ -95,12 +95,12 @@ export default function ArtifactCard({ artifact }) {
             Eidomancer Artifact
           </p>
 
-          <h2 className="mx-auto mt-2 max-w-3xl text-xl font-bold leading-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] sm:text-3xl">
+          <h2 className="mx-auto mt-2 line-clamp-2 max-w-3xl break-words text-xl font-bold leading-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] sm:text-3xl">
             {artifact.title}
           </h2>
 
           {artifact.subtitle && (
-            <p className="mx-auto mt-1 max-w-2xl line-clamp-2 text-xs leading-5 text-slate-200/90 sm:text-sm">{artifact.subtitle}</p>
+            <p className="mx-auto mt-1 max-w-2xl line-clamp-2 break-words text-xs leading-5 text-slate-200/90 sm:text-sm">{artifact.subtitle}</p>
           )}
         </div>
 
@@ -131,19 +131,19 @@ export default function ArtifactCard({ artifact }) {
                   </span>
                 </div>
 
-                <div className="mt-2 space-y-2">
-  <p className="text-xs leading-relaxed text-slate-100">
+                <div className="mt-2 space-y-2 overflow-hidden">
+  <p className={`${isOpen ? "" : "line-clamp-3"} break-words text-xs leading-relaxed text-slate-100`}>
     {section.short}
   </p>
 
   {isOpen && (
   <div className="space-y-2 border-t border-white/10 pt-2">
-    <div className="text-[11px] leading-relaxed text-slate-300">
+    <div className="max-h-28 overflow-auto break-words text-[11px] leading-relaxed text-slate-300">
       {section.full || "No deeper interpretation yet."}
     </div>
 
     {section.action && (
-      <div className="rounded-lg border border-emerald-300/20 bg-emerald-400/10 p-2 text-[11px] leading-relaxed text-emerald-100">
+      <div className="max-h-24 overflow-auto rounded-lg border border-emerald-300/20 bg-emerald-400/10 p-2 text-[11px] leading-relaxed text-emerald-100">
         <span className="font-bold uppercase tracking-[0.18em]">
           Next Move:
         </span>{" "}
@@ -164,7 +164,7 @@ export default function ArtifactCard({ artifact }) {
               Core Object
             </h3>
 
-            <p className="mt-1 text-xs leading-relaxed text-slate-200">
+            <p className="mt-1 line-clamp-3 break-words text-xs leading-relaxed text-slate-200">
               {artifact.coreObject}
             </p>
           </div>
@@ -187,16 +187,16 @@ export default function ArtifactCard({ artifact }) {
               </h3>
 
               <div className="mt-2 space-y-2">
-  <p className="text-sm text-slate-200">{section.short}</p>
+  <p className="line-clamp-3 break-words text-sm text-slate-200">{section.short}</p>
 
   {isOpen && (
   <div className="space-y-2 border-t border-white/10 pt-2">
-    <div className="text-[11px] leading-relaxed text-slate-300">
+    <div className="max-h-40 overflow-auto break-words text-[11px] leading-relaxed text-slate-300">
       {section.full || "No deeper interpretation yet."}
     </div>
 
     {section.action && (
-      <div className="rounded-lg border border-emerald-300/20 bg-emerald-400/10 p-2 text-[11px] leading-relaxed text-emerald-100">
+      <div className="max-h-32 overflow-auto rounded-lg border border-emerald-300/20 bg-emerald-400/10 p-2 text-[11px] leading-relaxed text-emerald-100">
         <span className="font-bold uppercase tracking-[0.18em]">
           Next Move:
         </span>{" "}
@@ -215,7 +215,7 @@ export default function ArtifactCard({ artifact }) {
     <h3 className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-300">
       Guidance
     </h3>
-    <p className="mt-2 text-sm leading-relaxed text-emerald-100">
+    <p className="mt-2 line-clamp-4 break-words text-sm leading-relaxed text-emerald-100">
       {sections.find((section) => section.action)?.action}
     </p>
   </div>
