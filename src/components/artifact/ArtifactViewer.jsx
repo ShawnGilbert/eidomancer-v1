@@ -227,7 +227,7 @@ function DepthLayers({ artifact, sourceRecord }) {
         </div>
       </div>
 
-      <div className="mt-4 grid gap-2">
+      <div className="mt-4 grid gap-2.5">
         {!hasLayers ? (
           <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-200/65">
@@ -249,7 +249,7 @@ function DepthLayers({ artifact, sourceRecord }) {
               className={`rounded-2xl border border-l-2 text-left transition-all duration-200 ease-out ${layerStyle.edge} ${
                 isOpen
                   ? "border-cyan-300/45 bg-cyan-400/12 p-4 shadow-[0_0_24px_rgba(34,211,238,0.08)]"
-                  : "border-white/10 bg-white/[0.04] p-3 hover:border-cyan-300/25 hover:bg-white/[0.07]"
+                  : "border-white/10 bg-white/[0.04] p-3 shadow-sm shadow-black/10 hover:border-cyan-300/25 hover:bg-white/[0.07]"
               }`}
             >
               <button
@@ -267,15 +267,16 @@ function DepthLayers({ artifact, sourceRecord }) {
                     {layer.label}
                   </div>
                 </div>
-                <div className="text-[10px] uppercase tracking-[0.18em] text-slate-400">
-                  {isOpen ? "Collapse" : "Expand"}
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-slate-400">
+                  <span aria-hidden="true">{isOpen ? "-" : "+"}</span>
+                  <span>{isOpen ? "Collapse" : "Expand"}</span>
                 </div>
               </button>
 
               <div
                 className={`mt-2 whitespace-pre-wrap text-sm ${
                   isOpen
-                    ? "rounded-xl border border-white/10 bg-black/20 p-3 leading-7 text-slate-100"
+                    ? "rounded-xl border border-white/10 bg-black/20 p-3.5 leading-7 text-slate-100"
                     : "line-clamp-2 leading-6 text-slate-300/70"
                 }`}
               >
