@@ -136,7 +136,14 @@ export default function SavedArtifactsPanel({
       </div>
 
       {visibleArtifacts.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-400">No saved artifacts yet.</p>
+        <div className="mt-4 rounded-2xl border border-cyan-300/10 bg-cyan-400/10 p-4">
+          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-200/70">
+            Archive Empty
+          </div>
+          <p className="mt-2 text-sm leading-6 text-slate-300/85">
+            Saved artifacts will appear here after you generate a cast. They preserve the card, cast context, and any package outputs you create.
+          </p>
+        </div>
       ) : (
         <div className="mt-4 space-y-3">
           {visibleArtifacts.map((artifact, index) => {
