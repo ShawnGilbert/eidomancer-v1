@@ -56,6 +56,7 @@ function previewText(text, maxLength = 180) {
 function getAssetBadges(data) {
   if (!data || typeof data !== "object") return [];
 
+  if (data.cardTitle && data.coreObject) return ["Core Card", "Image Prompt"];
   if (data.videoTitle) return ["Video", "Description", "Tags"];
   if (data.songTitle || data.sunoStylePrompt) return ["Song", "Style", "Lyrics"];
   if (data.prompt) return ["Prompt"];
@@ -71,6 +72,11 @@ const outputPresentation = {
     typeLabel: "Echo Artifact",
     accent: "border-l-cyan-300/55",
     badge: "border-cyan-300/20 bg-cyan-400/10 text-cyan-100/75",
+  },
+  coreImagePrompt: {
+    typeLabel: "Core Card Image Prompt",
+    accent: "border-l-emerald-300/45",
+    badge: "border-emerald-300/20 bg-emerald-400/10 text-emerald-100/75",
   },
   song: {
     typeLabel: "Song Artifact",
@@ -92,6 +98,16 @@ const outputPresentation = {
 function buildCardPreview(data, fullText, artifactType) {
   if (artifactType === "echo" && data?.prompt) {
     return previewText(data.prompt, 150);
+  }
+
+  if (artifactType === "coreImagePrompt" && data?.prompt) {
+    return [
+      data.cardTitle ? `Card: ${data.cardTitle}` : "",
+      data.coreObject ? `Object: ${previewText(data.coreObject, 90)}` : "",
+      previewText(data.prompt, 140),
+    ]
+      .filter(Boolean)
+      .join("\n");
   }
 
   if (artifactType === "song" && data) {
@@ -120,6 +136,10 @@ function buildFullPackageText(assets = {}) {
 
   if (assets.echo?.prompt) {
     sections.push(["ECHO PROMPT", assets.echo.prompt]);
+  }
+
+  if (assets.coreImagePrompt?.prompt) {
+    sections.push(["CORE CARD IMAGE PROMPT", assets.coreImagePrompt.prompt]);
   }
 
   if (assets.song?.songTitle) {
@@ -165,6 +185,7 @@ function getPackageFilename(assets = {}) {
     assets.song?.songTitle ||
     assets.youtube?.videoTitle ||
     assets.echo?.title ||
+    assets.coreImagePrompt?.cardTitle ||
     assets.coreCard?.title;
 
   return `eidomancer-${slugifyFilename(title)}-package.txt`;
@@ -204,6 +225,7 @@ function buildDerivedAssets(activeCast, generatedOnly = false) {
     ...explicitAssets,
     coreCard,
     echo,
+    coreImagePrompt: explicitAssets.coreImagePrompt || null,
     lyrics: explicitAssets.lyrics || null,
     suno: explicitAssets.suno || null,
     youtube: explicitAssets.youtube || null,
@@ -321,6 +343,7 @@ export function GeneratedOutputsPanel({
   const [openSections, setOpenSections] = useState({
     coreCard: false,
     echo: false,
+    coreImagePrompt: false,
     song: false,
     lyrics: false,
     suno: false,
@@ -444,6 +467,18 @@ export function GeneratedOutputsPanel({
             onToggle={() => toggleSection("echo")}
             onCopy={() => handleCopy("echo", assets.echo)}
             copied={copied === "echo"}
+          />
+        ) : null}
+
+        {assets.coreImagePrompt ? (
+          <AssetCard
+            title="Core Card Image Prompt"
+            artifactType="coreImagePrompt"
+            data={assets.coreImagePrompt}
+            isOpen={openSections.coreImagePrompt}
+            onToggle={() => toggleSection("coreImagePrompt")}
+            onCopy={() => handleCopy("coreImagePrompt", assets.coreImagePrompt)}
+            copied={copied === "coreImagePrompt"}
           />
         ) : null}
 

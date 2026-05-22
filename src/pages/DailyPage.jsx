@@ -22,6 +22,7 @@ import {
 } from "../lib/artifactStorage";
 import { getAccessTier, getFreemiumCapabilities } from "../lib/freemiumGate";
 import {
+  generateCoreCardImagePrompt,
   generateEcho,
   generateSongPackage,
   generateYouTubePackage,
@@ -124,6 +125,11 @@ export default function DailyPage() {
     if (!activeRecord) return;
 
     setIsGeneratingOutput(true);
+    const imagePromptRecord = {
+      ...activeRecord,
+      artifact: activeArtifact,
+      coreObject: activeArtifact?.coreObject || activeRecord?.coreObject,
+    };
     const existingOutputs = {
       ...getArtifactPackageOutputs(activeArtifact),
       ...generatedOutputs,
@@ -159,6 +165,8 @@ export default function DailyPage() {
         ? generateSongPackage(activeRecord)
         : type === "echo"
         ? generateEcho(activeRecord)
+        : type === "coreImagePrompt"
+        ? generateCoreCardImagePrompt(imagePromptRecord)
         : null;
 
     if (!nextOutput) {
@@ -169,6 +177,7 @@ export default function DailyPage() {
       echo: "Echo Prompt created",
       song: "Song Package created",
       youtube: "YouTube Package created",
+      coreImagePrompt: "Core Card Image Prompt created",
       fullPackage: "Full Package created",
     };
 
@@ -397,6 +406,7 @@ export default function DailyPage() {
               <PackageActionsPanel
                 availableActions={[
                   ["echo", "Create Echo Prompt"],
+                  ["coreImagePrompt", "Create Core Image Prompt"],
                   ["song", "Create Song Package"],
                   ["youtube", "Create YouTube Package"],
                   ["fullPackage", "Create Full Package"],

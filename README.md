@@ -22,6 +22,8 @@ Generated artifact text can vary in length. V1 uses clamps, wrapping, and overfl
 
 Package outputs are reusable materials derived from a cast: Echo Prompt, Song Package, YouTube Package, and Full Package. They can be copied or exported, and generated outputs can be saved with artifacts when available.
 
+Core Card Image Prompt is a text-only image-generation readiness output. It prepares a tarot-style Core Card prompt from the cast and artifact context, but V1 does not call an image API yet.
+
 ## Artifact Mood Note
 
 Artifact mood is currently lightweight and heuristic-based. It uses existing cast and artifact text to tint subtle UI presentation such as glow, gradient, and small mood badges. It is not yet a deep psychological model.

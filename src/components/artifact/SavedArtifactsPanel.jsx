@@ -111,7 +111,12 @@ export default function SavedArtifactsPanel({
   const packageOutputCount = savedArtifacts.filter((artifact) => {
     const outputs = getArtifactPackageOutputs(artifact);
 
-    return Boolean(outputs.echo || outputs.song || outputs.youtube);
+    return Boolean(
+      outputs.echo ||
+        outputs.coreImagePrompt ||
+        outputs.song ||
+        outputs.youtube
+    );
   }).length;
   const activeFingerprint = activeArtifact
     ? getArtifactFingerprint(activeArtifact)
@@ -158,6 +163,7 @@ export default function SavedArtifactsPanel({
             const packageOutputs = getArtifactPackageOutputs(artifact);
             const outputLabels = [
               packageOutputs.echo ? "Echo" : "",
+              packageOutputs.coreImagePrompt ? "Image" : "",
               packageOutputs.suno || packageOutputs.song ? "Song" : "",
               packageOutputs.youtube ? "YouTube" : "",
             ].filter(Boolean);

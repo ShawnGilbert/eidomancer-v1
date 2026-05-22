@@ -56,6 +56,46 @@ function getHook(record) {
   );
 }
 
+function getCoreObject(record) {
+  return normalizeText(
+    record?.coreObject ||
+      record?.artifact?.coreObject ||
+      record?.coreCard?.visual?.subject ||
+      record?.coreCard?.visual?.archetypeFigure ||
+      record?.coreCard?.visual?.primaryMotif ||
+      record?.coreCard?.description,
+    "A symbolic core object emerging from the cast."
+  );
+}
+
+function getMoodTone(record) {
+  return normalizeText(
+    record?.mood ||
+      record?.tone ||
+      record?.coreCard?.imageGeneration?.mood ||
+      record?.coreCard?.visual?.atmosphere,
+    "Reflective, luminous, and quietly intense."
+  );
+}
+
+function getVisualAtmosphere(record) {
+  const visual = record?.coreCard?.visual || {};
+
+  return normalizeText(
+    [
+      visual.environment,
+      visual.lighting,
+      visual.atmosphere,
+      visual.paletteHint,
+      record?.coreCard?.imageGeneration?.lighting,
+      record?.coreCard?.imageGeneration?.palette,
+    ]
+      .filter(Boolean)
+      .join(", "),
+    "Ancient-digital atmosphere, restrained cyber-mystic palette, symbolic light."
+  );
+}
+
 function flattenRecord(record) {
   return {
     title: getTitle(record),
@@ -68,6 +108,12 @@ function flattenRecord(record) {
     pattern: getSectionContent(record, "pattern"),
     poem: getSectionContent(record, "poem"),
     echo: getSectionContent(record, "echo"),
+    guidance:
+      getSectionContent(record, "guidance", "") ||
+      normalizeText(record?.guidance || record?.recommendation, ""),
+    coreObject: getCoreObject(record),
+    moodTone: getMoodTone(record),
+    visualAtmosphere: getVisualAtmosphere(record),
   };
 }
 
@@ -265,6 +311,43 @@ export function generateCoreCard(record) {
     footer: `Theme: ${cast.theme}`,
     imageFormat: IMAGE_FORMATS.CORE,
     imagePrompt: buildImagePrompt({ cast, type: "CORE" }),
+  };
+}
+
+export function generateCoreCardImagePrompt(record) {
+  const cast = flattenRecord(record);
+  const prompt = [
+    `Create a vertical tarot-style Eidomancer Core Card image for "${cast.title}".`,
+    `Core symbolic object: ${cast.coreObject}`,
+    `Mood/tone: ${cast.moodTone}`,
+    `Visual atmosphere: ${cast.visualAtmosphere}`,
+    `Signal: ${cast.signal}`,
+    `Tension: ${cast.tension}`,
+    `Pattern: ${cast.pattern}`,
+    `Echo: ${cast.echo}`,
+    cast.guidance ? `Guidance: ${cast.guidance}` : "",
+    "Use a 2:3 portrait composition with an ornate tarot-style frame.",
+    "Keep important symbols inside safe margins and avoid crowding text zones.",
+    "The image should feel like the symbolic seed of the cast, not a full environmental artifact scene.",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    title: `${cast.title} Core Card Image Prompt`,
+    prompt,
+    imageFormat: IMAGE_FORMATS.CORE,
+    cardTitle: cast.title,
+    coreObject: cast.coreObject,
+    moodTone: cast.moodTone,
+    visualAtmosphere: cast.visualAtmosphere,
+    symbolicElements: {
+      signal: cast.signal,
+      tension: cast.tension,
+      pattern: cast.pattern,
+      echo: cast.echo,
+      guidance: cast.guidance,
+    },
   };
 }
 
