@@ -242,16 +242,18 @@ function AssetCard({
 
   return (
     <div
-      className={`rounded-2xl border border-l-2 border-white/10 bg-[#07143a] shadow-lg shadow-black/10 ${presentation.accent}`}
+      className={`rounded-2xl border border-l-2 border-white/10 bg-[#07143a]/95 shadow-lg shadow-black/10 ${presentation.accent}`}
     >
       <div className="p-3 sm:p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-200/55">
               {presentation.typeLabel}
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <div className="text-sm font-semibold text-white">{title}</div>
+              <div className="text-base font-semibold leading-6 text-white">
+                {title}
+              </div>
               {badges.map((badge) => (
                 <span
                   key={badge}
@@ -263,7 +265,7 @@ function AssetCard({
             </div>
 
             {!isOpen ? (
-              <div className="mt-2 line-clamp-2 whitespace-pre-wrap text-sm leading-6 text-blue-100/70">
+              <div className="mt-2 line-clamp-2 whitespace-pre-wrap text-xs leading-5 text-blue-100/62 sm:text-sm sm:leading-6">
                 {shortText}
               </div>
             ) : null}
@@ -366,9 +368,14 @@ export function GeneratedOutputsPanel({
   return (
     <section className="rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h3 className="text-xl font-semibold text-white sm:text-2xl">
-          Generated Outputs
-        </h3>
+        <div>
+          <h3 className="text-xl font-semibold text-white sm:text-2xl">
+            Generated Outputs
+          </h3>
+          <p className="mt-1 text-sm leading-6 text-blue-100/55">
+            Review, copy, or export outputs from this cast.
+          </p>
+        </div>
 
         {hasGeneratedOutput ? (
           <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
@@ -405,7 +412,7 @@ export function GeneratedOutputsPanel({
         {hasGeneratedOutput ? null : (
           <div className="rounded-2xl border border-cyan-300/10 bg-[#07143a] p-3 sm:p-4">
             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-200/55">
-              Package Outputs Empty
+              No Outputs Yet
             </div>
             <p className="mt-2 text-sm leading-6 text-blue-100/70">
               Create Echo, Song, YouTube, or Full Package outputs from this cast.
