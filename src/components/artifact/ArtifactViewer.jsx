@@ -147,6 +147,7 @@ function previewText(value, maxLength = 120) {
 function DepthLayers({ artifact, sourceRecord }) {
   const [openLayers, setOpenLayers] = useState({});
   const [copiedLayer, setCopiedLayer] = useState("");
+  const [copiedAllLayers, setCopiedAllLayers] = useState(false);
 
   const layers = useMemo(
     () =>
@@ -163,6 +164,7 @@ function DepthLayers({ artifact, sourceRecord }) {
   useEffect(() => {
     setOpenLayers({});
     setCopiedLayer("");
+    setCopiedAllLayers(false);
   }, [artifact?.id, artifact?.savedAt, sourceRecord?.id]);
 
   if (layers.length === 0) return null;
@@ -182,6 +184,18 @@ function DepthLayers({ artifact, sourceRecord }) {
     window.setTimeout(() => setCopiedLayer(""), 1500);
   }
 
+  async function copyAllLayers() {
+    const text = layers
+      .map((layer) => `${layer.label.toUpperCase()}\n${layer.text}`)
+      .join("\n\n");
+
+    if (!text) return;
+
+    await navigator.clipboard.writeText(text);
+    setCopiedAllLayers(true);
+    window.setTimeout(() => setCopiedAllLayers(false), 1500);
+  }
+
   return (
     <section className="mt-4 rounded-3xl border border-cyan-300/10 bg-slate-950/90 p-3 shadow-xl shadow-cyan-950/20 sm:p-4">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
@@ -197,8 +211,17 @@ function DepthLayers({ artifact, sourceRecord }) {
           </p>
         </div>
 
-        <div className="text-xs text-slate-400">
-          {layers.length} available
+        <div className="flex items-center gap-2">
+          <div className="text-xs text-slate-400">
+            {layers.length} available
+          </div>
+          <button
+            type="button"
+            onClick={copyAllLayers}
+            className="rounded-xl border border-cyan-300/20 bg-cyan-400/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-100/75 transition hover:bg-cyan-400/18"
+          >
+            {copiedAllLayers ? "Copied" : "Copy All Layers"}
+          </button>
         </div>
       </div>
 
