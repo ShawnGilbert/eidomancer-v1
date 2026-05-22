@@ -27,6 +27,7 @@ import {
   generateSongPackage,
   generateYouTubePackage,
 } from "../lib/packageGenerators";
+import { getOutputActions, getOutputSuccessMessage } from "../lib/outputRegistry";
 import { getThemePalette } from "../lib/themePalettes";
 import useDailyCast from "../hooks/useDailyCast";
 
@@ -173,14 +174,6 @@ export default function DailyPage() {
       setIsGeneratingOutput(false);
       return;
     }
-    const successMessages = {
-      echo: "Echo Prompt created",
-      song: "Song Package created",
-      youtube: "YouTube Package created",
-      coreImagePrompt: "Core Card Image Prompt created",
-      fullPackage: "Full Package created",
-    };
-
     const packageOutputs = {
       ...existingOutputs,
       ...(fullPackageOutputs || { [type]: nextOutput }),
@@ -210,7 +203,7 @@ export default function DailyPage() {
       setManualArtifact(updatedArtifact);
     }
 
-    setPackageStatusMessage(successMessages[type] || "Package output created");
+    setPackageStatusMessage(getOutputSuccessMessage(type));
     setIsGeneratingOutput(false);
   }
 
@@ -404,13 +397,7 @@ export default function DailyPage() {
               </div>
 
               <PackageActionsPanel
-                availableActions={[
-                  ["echo", "Create Echo Prompt"],
-                  ["coreImagePrompt", "Create Core Image Prompt"],
-                  ["song", "Create Song Package"],
-                  ["youtube", "Create YouTube Package"],
-                  ["fullPackage", "Create Full Package"],
-                ]}
+                availableActions={getOutputActions()}
                 onGenerate={handleGenerateOutput}
                 isGeneratingAsset={isGeneratingOutput}
                 statusMessage={packageStatusMessage}

@@ -28,6 +28,10 @@ Package outputs are reusable materials derived from a cast: Echo Prompt, Song Pa
 
 Core Card Image Prompt is a text-only image-generation readiness output. It prepares a tarot-style Core Card prompt from the cast and artifact context, with lightweight metadata such as orientation, intended use, aspect ratio, and rendering style. V1 does not call an image API yet.
 
+## Output Routing
+
+Generated outputs are beginning to use `src/lib/outputRegistry.js` as a lightweight routing registry. The registry keeps output keys, labels, descriptions, and intended uses together so future image, audio, and export actions can attach cleanly without changing the cast or artifact model.
+
 ## Artifact Mood Note
 
 Artifact mood is currently lightweight and heuristic-based. It uses existing cast and artifact text to tint subtle UI presentation such as glow, gradient, and small mood badges. It is not yet a deep psychological model.

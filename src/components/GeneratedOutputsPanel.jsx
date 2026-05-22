@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { normalizePackageOutputs } from "../lib/normalizeArtifact";
+import { OUTPUT_KEYS, getOutputLabel } from "../lib/outputRegistry";
 
 function stringifyAsset(data) {
   if (!data) return "Not generated yet.";
@@ -484,7 +485,12 @@ export function GeneratedOutputsPanel({
               Create Echo, Song, YouTube, or Full Package outputs from this cast.
             </p>
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {["Echo Prompt", "Song Package", "YouTube Package", "Full Package"].map((label) => (
+              {[
+                getOutputLabel(OUTPUT_KEYS.ECHO),
+                getOutputLabel(OUTPUT_KEYS.SONG),
+                getOutputLabel(OUTPUT_KEYS.YOUTUBE),
+                getOutputLabel(OUTPUT_KEYS.FULL_PACKAGE),
+              ].map((label) => (
                 <span
                   key={label}
                   className="rounded-full border border-cyan-300/15 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-100/65"
@@ -498,7 +504,7 @@ export function GeneratedOutputsPanel({
 
         {assets.echo ? (
           <AssetCard
-            title="Echo Prompt"
+            title={getOutputLabel(OUTPUT_KEYS.ECHO)}
             artifactType="echo"
             data={assets.echo}
             isOpen={openSections.echo}
@@ -510,7 +516,7 @@ export function GeneratedOutputsPanel({
 
         {assets.coreImagePrompt ? (
           <AssetCard
-            title="Core Card Image Prompt"
+            title={getOutputLabel(OUTPUT_KEYS.CORE_IMAGE_PROMPT)}
             artifactType="coreImagePrompt"
             data={assets.coreImagePrompt}
             isOpen={openSections.coreImagePrompt}
@@ -522,7 +528,7 @@ export function GeneratedOutputsPanel({
 
         {assets.song ? (
           <AssetCard
-            title="Song Package"
+            title={getOutputLabel(OUTPUT_KEYS.SONG)}
             artifactType="song"
             data={assets.song}
             isOpen={openSections.song}
@@ -567,7 +573,7 @@ export function GeneratedOutputsPanel({
 
         {assets.youtube ? (
           <AssetCard
-            title="YouTube Package"
+            title={getOutputLabel(OUTPUT_KEYS.YOUTUBE)}
             artifactType="youtube"
             data={assets.youtube}
             isOpen={openSections.youtube}
