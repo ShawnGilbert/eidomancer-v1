@@ -221,6 +221,13 @@ export default function ArtifactCard({ artifact }) {
   </div>
 )}
       <div className="mt-5 space-y-3">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] leading-5 text-slate-400">
+          <span className="font-bold uppercase tracking-[0.16em] text-cyan-200/55">
+            Artifact Actions
+          </span>{" "}
+          Copy the cast, download the image, or view the input.
+        </div>
+
         <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
           <button
             type="button"
