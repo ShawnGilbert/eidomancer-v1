@@ -197,8 +197,13 @@ export default function SavedArtifactsPanel({
                   <div className="flex flex-col gap-2 pr-5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                     <div className="min-w-0">
                       {isActive && (
-                        <div className="mb-2 inline-flex rounded-full border border-cyan-200/35 bg-cyan-300/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-50 shadow-[0_0_12px_rgba(103,232,249,0.16)]">
-                          Active
+                        <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                          <span className="inline-flex rounded-full border border-cyan-200/35 bg-cyan-300/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-50 shadow-[0_0_12px_rgba(103,232,249,0.16)]">
+                            Active
+                          </span>
+                          <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100/55">
+                            Currently shown
+                          </span>
                         </div>
                       )}
 
