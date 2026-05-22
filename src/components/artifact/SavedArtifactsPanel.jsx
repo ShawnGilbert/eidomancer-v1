@@ -123,6 +123,10 @@ export default function SavedArtifactsPanel({
         Saved Artifacts
       </h2>
 
+      <p className="mt-2 text-xs leading-5 text-slate-400">
+        Select an artifact to restore its card, context, and saved outputs when available.
+      </p>
+
       <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em]">
         <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-slate-300/75">
           {savedArtifacts.length} saved
