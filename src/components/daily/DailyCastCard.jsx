@@ -35,7 +35,7 @@ function SectionBlock({ title, content, tone = "default" }) {
   if (!content) return null;
 
   const toneClasses = {
-    default: "border-white/10 bg-white/5 text-white/85",
+    default: "border-white/10 bg-slate-950/45 text-white/85",
     cyan: "border-cyan-400/20 bg-cyan-500/10 text-cyan-50/90",
     violet: "border-violet-400/20 bg-violet-500/10 text-violet-50/90",
     orange: "border-orange-400/20 bg-orange-500/10 text-orange-50/90",
@@ -52,7 +52,7 @@ function SectionBlock({ title, content, tone = "default" }) {
 
   return (
     <div
-      className={`rounded-2xl border border-l-2 p-3.5 shadow-lg sm:p-4 ${toneClasses[tone] || toneClasses.default}`}
+      className={`rounded-2xl border border-l-2 p-3.5 shadow-md shadow-black/10 sm:p-4 ${toneClasses[tone] || toneClasses.default}`}
     >
       <div
         className={`text-[10px] font-bold uppercase tracking-[0.22em] ${labelToneClasses[tone] || labelToneClasses.default}`}
