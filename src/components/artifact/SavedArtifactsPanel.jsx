@@ -164,6 +164,8 @@ export default function SavedArtifactsPanel({
             const recentlyViewed = isRecentlyViewed(artifact.viewedAt);
             const isActive =
               getArtifactFingerprint(artifact) === activeFingerprint;
+            const savedTimeLabel = formatSavedTimestamp(artifact.savedAt);
+            const viewedTimeLabel = formatSavedTimestamp(artifact.viewedAt);
 
             return (
               <div
@@ -209,9 +211,10 @@ export default function SavedArtifactsPanel({
                       </div>
                     </div>
 
-                    {artifact.savedAt && (
+                    {savedTimeLabel && (
                       <div className="w-fit shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-300/80">
-                        {formatSavedTimestamp(artifact.savedAt)}
+                        <span className="text-slate-500">Saved</span>{" "}
+                        {savedTimeLabel}
                       </div>
                     )}
                   </div>
@@ -247,9 +250,10 @@ export default function SavedArtifactsPanel({
                     ))}
                   </div>
 
-                  {artifact.viewedAt && (
-                    <div className="mt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      Last viewed {formatSavedTimestamp(artifact.viewedAt)}
+                  {viewedTimeLabel && (
+                    <div className="mt-2 border-t border-white/10 pt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      <span className="text-slate-400/80">Last viewed</span>{" "}
+                      {viewedTimeLabel}
                     </div>
                   )}
 
