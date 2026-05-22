@@ -167,7 +167,7 @@ function DepthLayers({ artifact, sourceRecord }) {
     setCopiedAllLayers(false);
   }, [artifact?.id, artifact?.savedAt, sourceRecord?.id]);
 
-  if (layers.length === 0) return null;
+  const hasLayers = layers.length > 0;
 
   function toggleLayer(type) {
     setOpenLayers((current) => ({
@@ -215,17 +215,30 @@ function DepthLayers({ artifact, sourceRecord }) {
           <div className="text-xs text-slate-400">
             {layers.length} available
           </div>
-          <button
-            type="button"
-            onClick={copyAllLayers}
-            className="rounded-xl border border-cyan-300/20 bg-cyan-400/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-100/75 transition hover:bg-cyan-400/18"
-          >
-            {copiedAllLayers ? "Copied" : "Copy All Layers"}
-          </button>
+          {hasLayers ? (
+            <button
+              type="button"
+              onClick={copyAllLayers}
+              className="rounded-xl border border-cyan-300/20 bg-cyan-400/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-100/75 transition hover:bg-cyan-400/18"
+            >
+              {copiedAllLayers ? "Copied" : "Copy All Layers"}
+            </button>
+          ) : null}
         </div>
       </div>
 
       <div className="mt-4 grid gap-2">
+        {!hasLayers ? (
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-200/65">
+              Cast Context Needed
+            </div>
+            <p className="mt-2 text-sm leading-6 text-slate-300/80">
+              Depth layers appear when this artifact includes cast context.
+            </p>
+          </div>
+        ) : null}
+
         {layers.map((layer) => {
           const isOpen = Boolean(openLayers[layer.type]);
           const layerStyle = depthLayerStyles[layer.type] || depthLayerStyles.signal;
