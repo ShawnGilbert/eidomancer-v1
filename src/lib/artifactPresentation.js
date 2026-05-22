@@ -20,6 +20,66 @@ export const ARTIFACT_SECTION_POSITIONS = {
   bottomCenter: "left-1/2 bottom-[8%] -translate-x-1/2",
 };
 
+// Presentation-only accents keep section identity out of artifact meaning data.
+export const ARTIFACT_SECTION_ACCENTS = {
+  cyan: {
+    label: "text-cyan-300",
+    mutedLabel: "text-cyan-200/70",
+    closedPanel: "border-cyan-300/20 hover:border-cyan-300/60",
+    openPanel:
+      "border-cyan-300/75 shadow-[0_0_20px_rgba(34,211,238,0.22)]",
+    mobilePanel: "border-cyan-300/20 border-l-cyan-300/55 bg-cyan-400/[0.05]",
+    actionPanel: "border-cyan-300/20 bg-cyan-400/10 text-cyan-100",
+  },
+  amber: {
+    label: "text-amber-300",
+    mutedLabel: "text-amber-200/70",
+    closedPanel: "border-amber-300/20 hover:border-amber-300/55",
+    openPanel:
+      "border-amber-300/70 shadow-[0_0_20px_rgba(251,191,36,0.18)]",
+    mobilePanel: "border-amber-300/20 border-l-amber-300/50 bg-amber-400/[0.05]",
+    actionPanel: "border-amber-300/20 bg-amber-400/10 text-amber-100",
+  },
+  violet: {
+    label: "text-violet-300",
+    mutedLabel: "text-violet-200/70",
+    closedPanel: "border-violet-300/20 hover:border-violet-300/55",
+    openPanel:
+      "border-violet-300/70 shadow-[0_0_20px_rgba(167,139,250,0.18)]",
+    mobilePanel: "border-violet-300/20 border-l-violet-300/50 bg-violet-400/[0.05]",
+    actionPanel: "border-violet-300/20 bg-violet-400/10 text-violet-100",
+  },
+  blue: {
+    label: "text-blue-300",
+    mutedLabel: "text-blue-200/70",
+    closedPanel: "border-blue-300/20 hover:border-blue-300/55",
+    openPanel:
+      "border-blue-300/70 shadow-[0_0_20px_rgba(96,165,250,0.18)]",
+    mobilePanel: "border-blue-300/20 border-l-blue-300/50 bg-blue-400/[0.05]",
+    actionPanel: "border-blue-300/20 bg-blue-400/10 text-blue-100",
+  },
+  emerald: {
+    label: "text-emerald-300",
+    mutedLabel: "text-emerald-200/70",
+    closedPanel: "border-emerald-300/20 hover:border-emerald-300/55",
+    openPanel:
+      "border-emerald-300/70 shadow-[0_0_20px_rgba(52,211,153,0.18)]",
+    mobilePanel:
+      "border-emerald-300/20 border-l-emerald-300/50 bg-emerald-400/[0.05]",
+    actionPanel: "border-emerald-300/20 bg-emerald-400/10 text-emerald-100",
+  },
+  fuchsia: {
+    label: "text-fuchsia-300",
+    mutedLabel: "text-fuchsia-200/70",
+    closedPanel: "border-fuchsia-300/20 hover:border-fuchsia-300/55",
+    openPanel:
+      "border-fuchsia-300/70 shadow-[0_0_20px_rgba(232,121,249,0.18)]",
+    mobilePanel:
+      "border-fuchsia-300/20 border-l-fuchsia-300/50 bg-fuchsia-400/[0.05]",
+    actionPanel: "border-fuchsia-300/20 bg-fuchsia-400/10 text-fuchsia-100",
+  },
+};
+
 export const ARTIFACT_SECTION_PRESENTATION = {
   signal: {
     label: "Signal",
@@ -86,6 +146,13 @@ export function getSectionPresentation(type) {
       symbolicTone: "section",
     }
   );
+}
+
+export function getSectionAccentStyles(typeOrAccent) {
+  const sectionAccent =
+    ARTIFACT_SECTION_PRESENTATION[typeOrAccent]?.sectionAccent || typeOrAccent;
+
+  return ARTIFACT_SECTION_ACCENTS[sectionAccent] || ARTIFACT_SECTION_ACCENTS.cyan;
 }
 
 export function getDepthLayerTypes() {

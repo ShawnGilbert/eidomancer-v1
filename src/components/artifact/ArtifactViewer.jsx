@@ -225,8 +225,8 @@ function DepthLayers({ artifact, sourceRecord }) {
               key={layer.type}
               className={`rounded-2xl border border-l-2 text-left transition-all duration-200 ease-out ${layerStyle.edge} ${
                 isOpen
-                  ? "border-cyan-300/45 bg-cyan-400/12 p-4 shadow-[0_0_24px_rgba(34,211,238,0.08)]"
-                  : "border-white/10 bg-white/[0.04] p-3 shadow-sm shadow-black/10 hover:border-cyan-300/25 hover:bg-white/[0.07]"
+                  ? `${layerStyle.open || "border-cyan-300/45 bg-cyan-400/12"} p-4 shadow-[0_0_24px_rgba(34,211,238,0.08)]`
+                  : `border-white/10 bg-white/[0.04] p-3 shadow-sm shadow-black/10 ${layerStyle.hover || "hover:border-cyan-300/25"} hover:bg-white/[0.07]`
               }`}
             >
               <button

@@ -5,6 +5,7 @@ import { toPng } from "html-to-image";
 import { getArtifactInput } from "../../lib/artifactStorage";
 import {
   ARTIFACT_SECTION_POSITIONS,
+  getSectionAccentStyles,
   getSectionPresentation,
 } from "../../lib/artifactPresentation";
 import { normalizeArtifact } from "../../lib/normalizeArtifact";
@@ -20,6 +21,7 @@ export default function ArtifactCard({ artifact }) {
   // Normalize at the render edge so legacy archive records cannot crash the card UI.
   const normalizedArtifact = normalizeArtifact(artifact);
   const sections = normalizedArtifact.sections;
+  const guidanceAccent = getSectionAccentStyles("guidance");
 
   function buildShareText() {
     return [
@@ -107,6 +109,7 @@ export default function ArtifactCard({ artifact }) {
           {sections.map((section) => {
             const isOpen = openSection === section.id;
             const sectionPresentation = getSectionPresentation(section.type);
+            const sectionAccent = getSectionAccentStyles(section.type);
             const positionClass =
               ARTIFACT_SECTION_POSITIONS[section.position] ||
               ARTIFACT_SECTION_POSITIONS[sectionPresentation.position] ||
@@ -118,13 +121,13 @@ export default function ArtifactCard({ artifact }) {
                 type="button"
                 onClick={() => setOpenSection(isOpen ? null : section.id)}
                 className={`absolute ${positionClass} ${
-  isOpen
-  ? "z-30 scale-[1.03] border-cyan-300/80 bg-slate-950/95 shadow-[0_0_20px_rgba(34,211,238,0.25)]"
-  : "z-10 scale-100 border-amber-300/20 bg-black/50 opacity-70 hover:scale-[1.01] hover:opacity-100"
-} w-[25%] rounded-xl border p-3 text-left shadow-xl backdrop-blur-md transition-all duration-200 ease-out hover:border-cyan-300/70 hover:bg-slate-950/85`}
+                  isOpen
+                    ? `z-30 scale-[1.03] bg-slate-950/95 ${sectionAccent.openPanel}`
+                    : `z-10 scale-100 bg-black/50 opacity-70 hover:scale-[1.01] hover:opacity-100 ${sectionAccent.closedPanel}`
+                } w-[25%] rounded-xl border p-3 text-left shadow-xl backdrop-blur-md transition-all duration-200 ease-out hover:bg-slate-950/85`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-[10px] font-bold uppercase tracking-[0.28em] text-amber-300">
+                  <h3 className={`text-[10px] font-bold uppercase tracking-[0.28em] ${sectionAccent.label}`}>
                     {section.title || sectionPresentation.label}
                   </h3>
 
@@ -177,15 +180,16 @@ export default function ArtifactCard({ artifact }) {
         {sections.map((section) => {
           const isOpen = openSection === section.id;
           const sectionPresentation = getSectionPresentation(section.type);
+          const sectionAccent = getSectionAccentStyles(section.type);
 
           return (
             <button
               key={section.id}
               type="button"
               onClick={() => setOpenSection(isOpen ? null : section.id)}
-              className="rounded-xl border border-white/10 bg-white/5 p-4 text-left"
+              className={`rounded-xl border border-l-2 p-4 text-left transition hover:bg-white/[0.08] ${sectionAccent.mobilePanel}`}
             >
-              <h3 className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">
+              <h3 className={`text-xs font-bold uppercase tracking-[0.25em] ${sectionAccent.label}`}>
                 {section.title || sectionPresentation.label}
               </h3>
 
@@ -214,11 +218,11 @@ export default function ArtifactCard({ artifact }) {
         })}
       </div>
 {sections.some((section) => section.action) && (
-  <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 p-4">
-    <h3 className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-300">
+  <div className={`mt-4 rounded-2xl border p-4 ${guidanceAccent.actionPanel}`}>
+    <h3 className={`text-xs font-bold uppercase tracking-[0.25em] ${guidanceAccent.label}`}>
       Guidance
     </h3>
-    <p className="mt-2 line-clamp-4 break-words text-sm leading-relaxed text-emerald-100">
+    <p className="mt-2 line-clamp-4 break-words text-sm leading-relaxed">
       {sections.find((section) => section.action)?.action}
     </p>
   </div>
