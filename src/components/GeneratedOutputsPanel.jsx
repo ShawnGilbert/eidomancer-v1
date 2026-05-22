@@ -276,7 +276,7 @@ function AssetCard({
               type="button"
               onClick={onCopy}
               disabled={!hasContent}
-              className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs text-blue-50 transition hover:bg-white/10 disabled:opacity-50"
+              className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-medium text-blue-50 transition hover:bg-white/10 disabled:opacity-50"
             >
               {copied ? "Copied" : "Copy"}
             </button>
@@ -285,7 +285,7 @@ function AssetCard({
               type="button"
               onClick={onToggle}
               aria-expanded={isOpen}
-              className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs text-blue-50 transition hover:bg-white/10"
+              className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-medium text-blue-50 transition hover:bg-white/10"
             >
               {isOpen ? "Collapse" : "Expand"}
             </button>
@@ -382,7 +382,7 @@ export function GeneratedOutputsPanel({
             <button
               type="button"
               onClick={handleCopyFullPackage}
-              className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs text-blue-50 transition hover:bg-white/10"
+              className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-medium text-blue-50 transition hover:bg-white/10"
             >
               {copied === "fullPackageTop" ? "Copied" : "Copy Full Package"}
             </button>
@@ -390,7 +390,7 @@ export function GeneratedOutputsPanel({
             <button
               type="button"
               onClick={handleExportFullPackage}
-              className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs text-blue-50 transition hover:bg-white/10"
+              className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-medium text-blue-50 transition hover:bg-white/10"
             >
               Export Full Package
             </button>
@@ -399,7 +399,7 @@ export function GeneratedOutputsPanel({
               <button
                 type="button"
                 onClick={onClearOutputs}
-                className="rounded-xl border border-red-300/20 bg-red-400/10 px-3.5 py-2 text-xs text-red-100/80 transition hover:bg-red-400/15"
+                className="rounded-xl border border-red-300/20 bg-red-400/10 px-3.5 py-2 text-xs font-medium text-red-100/80 transition hover:bg-red-400/15"
               >
                 Clear Outputs
               </button>

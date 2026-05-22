@@ -86,7 +86,7 @@ export default function DailyFocusInput({
           <button
             type="submit"
             disabled={isLoading || !hasTypedFocus}
-            className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${
+            className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
               isLoading
                 ? "cursor-wait border border-cyan-300/30 bg-cyan-500/15 text-cyan-100 shadow-[0_0_20px_rgba(34,211,238,0.12)] animate-pulse"
                 : !hasTypedFocus
@@ -101,7 +101,7 @@ export default function DailyFocusInput({
             type="button"
             onClick={handleClear}
             disabled={isLoading || (!hasTypedFocus && !hasAppliedFocus)}
-            className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${
+            className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
               isLoading || (!hasTypedFocus && !hasAppliedFocus)
                 ? "cursor-not-allowed border border-white/10 bg-white/5 text-white/35"
                 : "border border-white/10 bg-white/5 text-white/75 hover:bg-white/10"

@@ -44,7 +44,7 @@ export function PackageActionsPanel({
             type="button"
             onClick={() => onGenerate(value)}
             disabled={isGeneratingAsset}
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-sm text-blue-50 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-sm font-medium text-blue-50 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
             {label}
           </button>
