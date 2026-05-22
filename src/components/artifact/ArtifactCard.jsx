@@ -225,7 +225,7 @@ export default function ArtifactCard({ artifact }) {
           <span className="font-bold uppercase tracking-[0.16em] text-cyan-200/55">
             Artifact Actions
           </span>{" "}
-          Copy the cast, download the image, or view the input.
+          Copy, download, or review the input. Artifacts preserve card state, cast context, and outputs when available.
         </div>
 
         <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
