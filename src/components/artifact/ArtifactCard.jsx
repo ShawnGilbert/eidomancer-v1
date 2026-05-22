@@ -82,7 +82,7 @@ export default function ArtifactCard({ artifact }) {
     <section className="mx-auto w-full max-w-5xl rounded-3xl border border-cyan-300/10 bg-slate-950 p-3 shadow-2xl shadow-cyan-950/30 sm:p-4">
       <div
         ref={artifactRef}
-        className="relative overflow-hidden rounded-2xl border border-amber-300/20 bg-black"
+        className="relative overflow-hidden rounded-2xl border border-amber-300/25 bg-black shadow-[0_0_32px_rgba(251,191,36,0.08)] ring-1 ring-cyan-200/5"
       >
         <img
           src={artifact.image}
@@ -90,17 +90,17 @@ export default function ArtifactCard({ artifact }) {
           className="block w-full"
         />
 
-        <div className="absolute left-0 right-0 top-0 bg-gradient-to-b from-black/85 via-black/45 to-transparent px-3 py-4 text-center sm:px-6 sm:py-5">
+        <div className="absolute left-0 right-0 top-0 bg-gradient-to-b from-black/90 via-black/50 to-transparent px-3 py-4 text-center sm:px-6 sm:py-5">
           <p className="text-[9px] uppercase tracking-[0.32em] text-amber-300/70 sm:text-[10px] sm:tracking-[0.45em]">
             Eidomancer Artifact
           </p>
 
-          <h2 className="mt-2 text-xl font-bold leading-tight text-white drop-shadow sm:text-3xl">
+          <h2 className="mx-auto mt-2 max-w-3xl text-xl font-bold leading-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] sm:text-3xl">
             {artifact.title}
           </h2>
 
           {artifact.subtitle && (
-            <p className="mt-1 line-clamp-2 text-xs text-slate-200 sm:text-sm">{artifact.subtitle}</p>
+            <p className="mx-auto mt-1 max-w-2xl line-clamp-2 text-xs leading-5 text-slate-200/90 sm:text-sm">{artifact.subtitle}</p>
           )}
         </div>
 
@@ -159,7 +159,7 @@ export default function ArtifactCard({ artifact }) {
         </div>
 
         {artifact.coreObject && (
-          <div className="absolute bottom-3 left-3 right-3 hidden rounded-xl border border-cyan-300/20 bg-black/75 p-3 backdrop-blur-md md:block">
+          <div className="absolute bottom-3 left-3 right-3 hidden rounded-xl border border-cyan-300/25 bg-black/80 p-3 shadow-[0_0_18px_rgba(34,211,238,0.12)] backdrop-blur-md md:block">
             <h3 className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-300">
               Core Object
             </h3>
@@ -221,7 +221,7 @@ export default function ArtifactCard({ artifact }) {
   </div>
 )}
       <div className="mt-5 space-y-3">
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] leading-5 text-slate-400">
+        <div className="rounded-xl border border-cyan-300/10 bg-cyan-400/[0.04] px-3 py-2 text-[11px] leading-5 text-slate-400">
           <span className="font-bold uppercase tracking-[0.16em] text-cyan-200/55">
             Artifact Actions
           </span>{" "}

@@ -242,7 +242,11 @@ function AssetCard({
 
   return (
     <div
-      className={`rounded-2xl border border-l-2 border-white/10 bg-[#07143a]/95 shadow-lg shadow-black/10 ${presentation.accent}`}
+      className={`rounded-2xl border border-l-2 bg-[#07143a]/95 transition-all duration-200 ${
+        isOpen
+          ? "border-blue-200/25 shadow-xl shadow-blue-950/20"
+          : "border-white/10 shadow-md shadow-black/10 hover:border-blue-200/20"
+      } ${presentation.accent}`}
     >
       <div className="p-3 sm:p-4">
         <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
@@ -287,13 +291,14 @@ function AssetCard({
               aria-expanded={isOpen}
               className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-medium text-blue-50 transition hover:bg-white/10"
             >
+              <span aria-hidden="true">{isOpen ? "- " : "+ "}</span>
               {isOpen ? "Collapse" : "Expand"}
             </button>
           </div>
         </div>
 
         {isOpen ? (
-          <pre className="mt-4 max-h-[28rem] overflow-auto whitespace-pre-wrap break-words rounded-xl border border-white/10 bg-black/25 p-3 text-xs leading-6 text-blue-100/85 sm:max-h-[34rem] sm:p-4 sm:text-sm">
+          <pre className="mt-4 max-h-[28rem] overflow-auto whitespace-pre-wrap break-words rounded-xl border border-blue-200/15 bg-black/25 p-3 text-xs leading-6 text-blue-100/85 sm:max-h-[34rem] sm:p-4 sm:text-sm">
             {fullText}
           </pre>
         ) : null}
