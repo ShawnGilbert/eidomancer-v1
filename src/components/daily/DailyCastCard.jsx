@@ -52,14 +52,14 @@ function SectionBlock({ title, content, tone = "default" }) {
 
   return (
     <div
-      className={`rounded-2xl border p-4 shadow-lg ${toneClasses[tone] || toneClasses.default}`}
+      className={`rounded-2xl border border-l-2 p-3.5 shadow-lg sm:p-4 ${toneClasses[tone] || toneClasses.default}`}
     >
       <div
-        className={`text-xs uppercase tracking-[0.2em] ${labelToneClasses[tone] || labelToneClasses.default}`}
+        className={`text-[10px] font-bold uppercase tracking-[0.22em] ${labelToneClasses[tone] || labelToneClasses.default}`}
       >
         {title}
       </div>
-      <div className="mt-2 whitespace-pre-wrap text-sm leading-6">
+      <div className="mt-2 whitespace-pre-wrap text-sm leading-6 text-current/90">
         {content}
       </div>
     </div>
@@ -148,7 +148,7 @@ export default function DailyCastCard({
       } ${className}`.trim()}
     >
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl">
-        <div className="border-b border-white/10 bg-gradient-to-r from-cyan-500/10 via-violet-500/10 to-fuchsia-500/10 px-6 py-4">
+        <div className="border-b border-white/10 bg-gradient-to-r from-cyan-500/10 via-violet-500/10 to-fuchsia-500/10 px-4 py-4 sm:px-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="text-xs uppercase tracking-[0.24em] text-cyan-200/75">
@@ -157,12 +157,12 @@ export default function DailyCastCard({
               <div className="mt-3 text-sm uppercase tracking-[0.2em] text-white/45">
                 Daily Cast
               </div>
-              <h2 className="mt-2 text-3xl font-semibold leading-tight text-white sm:text-4xl">
+              <h2 className="mt-2 text-2xl font-semibold leading-tight text-white sm:text-3xl">
                 You have drawn the{" "}
                 <span className="text-cyan-200">“{coreTitle}”</span> card.
               </h2>
               {coreSubtitle ? (
-                <div className="mt-3 max-w-2xl text-base leading-7 text-white/70">
+                <div className="mt-2 max-w-2xl text-sm leading-6 text-white/70 sm:text-base sm:leading-7">
                   {coreSubtitle}
                 </div>
               ) : null}
@@ -174,7 +174,7 @@ export default function DailyCastCard({
           </div>
         </div>
 
-        <div className="space-y-5 p-6">
+        <div className="space-y-4 p-4 sm:p-5">
           {dailyFocus ? (
             <SectionBlock title="Question / Focus" content={dailyFocus} tone="cyan" />
           ) : null}
@@ -194,8 +194,8 @@ export default function DailyCastCard({
           ) : null}
 
           {guidance ? (
-            <div className="rounded-3xl border border-cyan-400/20 bg-cyan-500/10 p-5">
-              <div className="text-xs uppercase tracking-[0.2em] text-cyan-200/75">
+            <div className="rounded-3xl border border-l-2 border-cyan-400/20 bg-cyan-500/10 p-4 sm:p-5">
+              <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-200/75">
                 Guidance
               </div>
               <div className="mt-2 text-sm leading-6 text-cyan-50/95">
