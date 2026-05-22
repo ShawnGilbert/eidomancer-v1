@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { getThemePalette } from "../../lib/themePalettes";
+import {
+  getArtifactSectionText,
+  getNormalizedArtifactSections,
+  normalizeArtifact,
+} from "../../lib/normalizeArtifact";
 import ArtifactCard from "./ArtifactCard";
 
 const depthLayerTypes = [
@@ -82,58 +87,34 @@ function formatMoodLabel(mood) {
   return `${mood.charAt(0).toUpperCase()}${mood.slice(1)}`;
 }
 
-function getSectionByType(record, type) {
-  if (!Array.isArray(record?.sections)) return null;
-
-  return record.sections.find((section) => {
-    const sectionType = String(section?.type || section?.id || "").toLowerCase();
-    const sectionTitle = String(section?.title || "").toLowerCase();
-
-    return sectionType === type || sectionTitle === type;
-  });
-}
-
-function getSectionText(section) {
-  if (!section) return "";
-
-  return (
-    section.content ||
-    section.full ||
-    section.body ||
-    section.short ||
-    section.description ||
-    ""
-  );
-}
-
 function getDepthLayerText(type, sourceRecord, artifact) {
   if (type === "echo") {
     return (
       sourceRecord?.echo ||
-      getSectionText(getSectionByType(sourceRecord, "echo")) ||
+      getArtifactSectionText(sourceRecord, "echo") ||
       artifact?.echo ||
-      getSectionText(getSectionByType(artifact, "echo"))
+      getArtifactSectionText(artifact, "echo")
     );
   }
 
   if (type === "guidance") {
-    const artifactGuidance = Array.isArray(artifact?.sections)
-      ? artifact.sections.find((section) => section?.action)?.action
-      : "";
+    const artifactGuidance =
+      getNormalizedArtifactSections(artifact).find((section) => section?.action)
+        ?.action || "";
 
     return (
       sourceRecord?.guidance ||
       sourceRecord?.recommendation ||
       sourceRecord?.coreCard?.guidance ||
-      getSectionText(getSectionByType(sourceRecord, "guidance")) ||
+      getArtifactSectionText(sourceRecord, "guidance") ||
       artifactGuidance ||
-      getSectionText(getSectionByType(artifact, "guidance"))
+      getArtifactSectionText(artifact, "guidance")
     );
   }
 
   return (
-    getSectionText(getSectionByType(sourceRecord, type)) ||
-    getSectionText(getSectionByType(artifact, type))
+    getArtifactSectionText(sourceRecord, type) ||
+    getArtifactSectionText(artifact, type)
   );
 }
 
@@ -308,13 +289,21 @@ export default function ArtifactViewer({
   contextLabel = "Current Daily Cast",
 }) {
   const [visible, setVisible] = useState(false);
-  const artifactKey = useMemo(
-    () => getArtifactTransitionKey(artifact),
+  const normalizedArtifact = useMemo(
+    () => (artifact ? normalizeArtifact(artifact) : null),
     [artifact]
   );
+  const normalizedSourceRecord = useMemo(
+    () => (sourceRecord ? normalizeArtifact(sourceRecord) : null),
+    [sourceRecord]
+  );
+  const artifactKey = useMemo(
+    () => getArtifactTransitionKey(normalizedArtifact),
+    [normalizedArtifact]
+  );
   const artifactMood = useMemo(
-    () => inferArtifactMood(artifact, sourceRecord),
-    [artifact, sourceRecord]
+    () => inferArtifactMood(normalizedArtifact, normalizedSourceRecord),
+    [normalizedArtifact, normalizedSourceRecord]
   );
   const moodStyle = artifactMoodStyles[artifactMood] || artifactMoodStyles.calm;
 
@@ -332,7 +321,7 @@ export default function ArtifactViewer({
     };
   }, [artifactKey, artifact]);
 
-  if (!artifact) return null;
+  if (!normalizedArtifact) return null;
 
   return (
     <div
@@ -355,10 +344,13 @@ export default function ArtifactViewer({
           Mood: {formatMoodLabel(artifactMood)}
         </div>
         <div className="relative">
-          <ArtifactCard artifact={artifact} />
+          <ArtifactCard artifact={normalizedArtifact} />
         </div>
       </div>
-      <DepthLayers artifact={artifact} sourceRecord={sourceRecord} />
+      <DepthLayers
+        artifact={normalizedArtifact}
+        sourceRecord={normalizedSourceRecord}
+      />
     </div>
   );
 }

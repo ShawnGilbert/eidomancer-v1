@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { normalizePackageOutputs } from "../lib/normalizeArtifact";
 
 function stringifyAsset(data) {
   if (!data) return "Not generated yet.";
@@ -65,6 +66,21 @@ function getAssetBadges(data) {
   if (data.bundle) return ["Bundle"];
 
   return [];
+}
+
+function getImageMetadata(data) {
+  if (!data || typeof data !== "object") return [];
+
+  return [
+    data.orientation ? ["Orientation", data.orientation] : null,
+    data.recommendedAspectRatio
+      ? ["Aspect", data.recommendedAspectRatio]
+      : data.imageFormat?.aspectRatio
+      ? ["Aspect", data.imageFormat.aspectRatio]
+      : null,
+    data.intendedUse ? ["Use", data.intendedUse] : null,
+    data.suggestedRenderingStyle ? ["Style", data.suggestedRenderingStyle] : null,
+  ].filter(Boolean);
 }
 
 const outputPresentation = {
@@ -192,15 +208,22 @@ function getPackageFilename(assets = {}) {
 }
 
 function buildDerivedAssets(activeCast, generatedOnly = false) {
+  // Package outputs may be restored from several archive-era field names.
+  // Normalize them here so export/copy UI can stay tolerant of partial records.
+  const packageOutputs = normalizePackageOutputs(activeCast);
   const explicitAssets =
     activeCast && typeof activeCast.assets === "object" ? activeCast.assets : {};
+  const normalizedAssets = {
+    ...packageOutputs,
+    ...explicitAssets,
+  };
 
   if (generatedOnly) {
-    return explicitAssets;
+    return normalizedAssets;
   }
 
   const coreCard =
-    explicitAssets.coreCard ||
+    normalizedAssets.coreCard ||
     (activeCast?.coreCard
       ? {
           title: activeCast.coreCard.title || activeCast.title || "Core Card",
@@ -211,7 +234,7 @@ function buildDerivedAssets(activeCast, generatedOnly = false) {
       : null);
 
   const echo =
-    explicitAssets.echo ||
+    normalizedAssets.echo ||
     activeCast?.shareables?.echoCard ||
     (activeCast?.echo
       ? {
@@ -222,15 +245,15 @@ function buildDerivedAssets(activeCast, generatedOnly = false) {
       : null);
 
   return {
-    ...explicitAssets,
+    ...normalizedAssets,
     coreCard,
     echo,
-    coreImagePrompt: explicitAssets.coreImagePrompt || null,
-    lyrics: explicitAssets.lyrics || null,
-    suno: explicitAssets.suno || null,
-    youtube: explicitAssets.youtube || null,
+    coreImagePrompt: normalizedAssets.coreImagePrompt || null,
+    lyrics: normalizedAssets.lyrics || null,
+    suno: normalizedAssets.suno || null,
+    youtube: normalizedAssets.youtube || null,
     fullPackage:
-      explicitAssets.fullPackage ||
+      normalizedAssets.fullPackage ||
       (coreCard || echo
         ? {
             title: activeCast?.title || "Untitled Cast",
@@ -260,6 +283,7 @@ function AssetCard({
     [data, fullText, artifactType]
   );
   const badges = useMemo(() => getAssetBadges(data), [data]);
+  const imageMetadata = useMemo(() => getImageMetadata(data), [data]);
   const hasContent = !!data;
 
   return (
@@ -293,6 +317,20 @@ function AssetCard({
             {!isOpen ? (
               <div className="mt-2 line-clamp-2 whitespace-pre-wrap text-xs leading-5 text-blue-100/62 sm:text-sm sm:leading-6">
                 {shortText}
+              </div>
+            ) : null}
+
+            {imageMetadata.length ? (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {imageMetadata.map(([label, value]) => (
+                  <span
+                    key={`${label}-${value}`}
+                    className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-blue-100/55"
+                  >
+                    <span className="text-blue-200/35">{label}</span>{" "}
+                    {value}
+                  </span>
+                ))}
               </div>
             ) : null}
           </div>

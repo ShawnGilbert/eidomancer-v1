@@ -201,6 +201,7 @@ export function castToArtifact(cast) {
     "Untitled Artifact";
 
   return {
+    artifactVersion: "v1",
     id: cast?.id || cast?.metadata?.id || `artifact-${Date.now()}`,
     title,
     subtitle: cleanText(cast?.echo) || "An Eidomancer symbolic artifact",

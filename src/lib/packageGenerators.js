@@ -337,6 +337,10 @@ export function generateCoreCardImagePrompt(record) {
     title: `${cast.title} Core Card Image Prompt`,
     prompt,
     imageFormat: IMAGE_FORMATS.CORE,
+    orientation: "tarot vertical",
+    intendedUse: IMAGE_FORMATS.CORE.intendedUse,
+    recommendedAspectRatio: IMAGE_FORMATS.CORE.aspectRatio,
+    suggestedRenderingStyle: "ornate tarot frame, symbolic core-card illustration",
     cardTitle: cast.title,
     coreObject: cast.coreObject,
     moodTone: cast.moodTone,
@@ -359,6 +363,10 @@ export function generateEcho(record) {
     concept:
       "A symbolic, meme-capable wide image prompt that compresses the cast into one emotionally sticky visual echo.",
     imageFormat: IMAGE_FORMATS.ECHO,
+    orientation: "cinematic 16:9",
+    intendedUse: IMAGE_FORMATS.ECHO.intendedUse,
+    recommendedAspectRatio: IMAGE_FORMATS.ECHO.aspectRatio,
+    suggestedRenderingStyle: "meme-dense cinematic symbolic echo",
     prompt: buildImagePrompt({ cast, type: "ECHO" }),
     shortPhrase: cast.hook,
   };

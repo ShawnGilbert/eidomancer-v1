@@ -1,40 +1,13 @@
 import CardFrame from "./CardFrame";
 import { TarotSectionCard } from "./TarotSectionCard";
 import CoreCard from "./CoreCard";
-
-function buildLegacySections(cast) {
-  if (!cast || typeof cast !== "object") return [];
-
-  return [
-    cast.signal
-      ? { type: "signal", label: "Signal", content: cast.signal }
-      : null,
-    cast.tension
-      ? { type: "tension", label: "Tension", content: cast.tension }
-      : null,
-    cast.pattern
-      ? { type: "pattern", label: "Pattern", content: cast.pattern }
-      : null,
-    cast.poem
-      ? {
-          type: "poem",
-          label: "Poem",
-          content: cast.poem,
-          shape: cast.poemShape || "free_verse",
-        }
-      : null,
-    cast.echo
-      ? { type: "echo", label: "Echo", content: cast.echo }
-      : null,
-  ].filter(Boolean);
-}
+import { getNormalizedArtifactSections } from "../lib/normalizeArtifact";
 
 function getSections(cast) {
-  if (!cast || typeof cast !== "object") return [];
-  if (Array.isArray(cast.sections) && cast.sections.length > 0) {
-    return cast.sections;
-  }
-  return buildLegacySections(cast);
+  // Reuse the artifact normalizer for older cast shapes without changing display.
+  return getNormalizedArtifactSections(cast).filter((section) =>
+    ["signal", "tension", "pattern", "poem", "echo"].includes(section.type)
+  );
 }
 
 function getTone(type) {

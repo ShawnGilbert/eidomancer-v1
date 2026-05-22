@@ -14,6 +14,10 @@ The intended V1 flow is: enter a question, tension, or focus; generate a Daily C
 
 Daily casts create artifacts that can be saved and restored from the archive. Artifacts may include cast context, depth layers, package outputs, mood, and viewing history. Older artifacts may only have partial data and should remain compatible.
 
+## Artifact Normalization
+
+V1 uses `src/lib/normalizeArtifact.js` as a defensive compatibility layer for current and legacy artifact shapes. It supplies safe defaults for rendering, section access, actions, package outputs, metadata, and `artifactVersion: "v1"` without migrating localStorage or rewriting archive history.
+
 ## Artifact Text Safety
 
 Generated artifact text can vary in length. V1 uses clamps, wrapping, and overflow safeguards to preserve the card layout. Future image-generation and export work should respect safe text zones.
@@ -22,7 +26,7 @@ Generated artifact text can vary in length. V1 uses clamps, wrapping, and overfl
 
 Package outputs are reusable materials derived from a cast: Echo Prompt, Song Package, YouTube Package, and Full Package. They can be copied or exported, and generated outputs can be saved with artifacts when available.
 
-Core Card Image Prompt is a text-only image-generation readiness output. It prepares a tarot-style Core Card prompt from the cast and artifact context, but V1 does not call an image API yet.
+Core Card Image Prompt is a text-only image-generation readiness output. It prepares a tarot-style Core Card prompt from the cast and artifact context, with lightweight metadata such as orientation, intended use, aspect ratio, and rendering style. V1 does not call an image API yet.
 
 ## Artifact Mood Note
 

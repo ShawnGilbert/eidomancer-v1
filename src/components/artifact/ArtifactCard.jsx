@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import { getArtifactInput } from "../../lib/artifactStorage";
+import { normalizeArtifact } from "../../lib/normalizeArtifact";
 
 const sectionPositions = {
   leftTop: "left-[4%] top-[26%]",
@@ -20,19 +21,21 @@ export default function ArtifactCard({ artifact }) {
 
   if (!artifact) return null;
 
-  const sections = artifact.sections || [];
+  // Normalize at the render edge so legacy archive records cannot crash the card UI.
+  const normalizedArtifact = normalizeArtifact(artifact);
+  const sections = normalizedArtifact.sections;
 
   function buildShareText() {
     return [
-      artifact.title,
-      artifact.subtitle,
-      artifact.input ? `Input: ${getArtifactInput(artifact)}` : "",
+      normalizedArtifact.title,
+      normalizedArtifact.subtitle,
+      normalizedArtifact.input ? `Input: ${getArtifactInput(normalizedArtifact)}` : "",
       "",
       ...sections.map((section) => {
         return `${section.title}: ${section.short || section.full || ""}`;
       }),
       "",
-      artifact.coreObject ? `Core Object: ${artifact.coreObject}` : "",
+      normalizedArtifact.coreObject ? `Core Object: ${normalizedArtifact.coreObject}` : "",
       "",
       "Generated with Eidomancer",
     ]
@@ -63,7 +66,7 @@ export default function ArtifactCard({ artifact }) {
       });
 
       const link = document.createElement("a");
-      link.download = `${artifact.title || "eidomancer-artifact"}.png`
+      link.download = `${normalizedArtifact.title || "eidomancer-artifact"}.png`
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "");
@@ -85,8 +88,8 @@ export default function ArtifactCard({ artifact }) {
         className="relative overflow-hidden rounded-2xl border border-amber-300/25 bg-black shadow-[0_0_32px_rgba(251,191,36,0.08)] ring-1 ring-cyan-200/5"
       >
         <img
-          src={artifact.image}
-          alt={artifact.title || "Eidomancer artifact"}
+          src={normalizedArtifact.image}
+          alt={normalizedArtifact.title || "Eidomancer artifact"}
           className="block w-full"
         />
 
@@ -96,11 +99,11 @@ export default function ArtifactCard({ artifact }) {
           </p>
 
           <h2 className="mx-auto mt-2 line-clamp-2 max-w-3xl break-words text-xl font-bold leading-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] sm:text-3xl">
-            {artifact.title}
+            {normalizedArtifact.title}
           </h2>
 
-          {artifact.subtitle && (
-            <p className="mx-auto mt-1 max-w-2xl line-clamp-2 break-words text-xs leading-5 text-slate-200/90 sm:text-sm">{artifact.subtitle}</p>
+          {normalizedArtifact.subtitle && (
+            <p className="mx-auto mt-1 max-w-2xl line-clamp-2 break-words text-xs leading-5 text-slate-200/90 sm:text-sm">{normalizedArtifact.subtitle}</p>
           )}
         </div>
 
@@ -158,14 +161,14 @@ export default function ArtifactCard({ artifact }) {
           })}
         </div>
 
-        {artifact.coreObject && (
+        {normalizedArtifact.coreObject && (
           <div className="absolute bottom-3 left-3 right-3 hidden rounded-xl border border-cyan-300/25 bg-black/80 p-3 shadow-[0_0_18px_rgba(34,211,238,0.12)] backdrop-blur-md md:block">
             <h3 className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-300">
               Core Object
             </h3>
 
             <p className="mt-1 line-clamp-3 break-words text-xs leading-relaxed text-slate-200">
-              {artifact.coreObject}
+              {normalizedArtifact.coreObject}
             </p>
           </div>
         )}
@@ -245,7 +248,7 @@ export default function ArtifactCard({ artifact }) {
             Download Image
           </button>
 
-          {artifact.input && (
+          {normalizedArtifact.input && (
             <button
               type="button"
               onClick={() => setShowInput(!showInput)}
@@ -262,9 +265,9 @@ export default function ArtifactCard({ artifact }) {
           {status && <span className="text-sm text-slate-400">{status}</span>}
         </div>
 
-        {showInput && artifact.input && (
+        {showInput && normalizedArtifact.input && (
           <div className="rounded-xl border border-amber-300/20 bg-black/70 p-4 text-sm leading-relaxed text-slate-200 backdrop-blur-md">
-            {getArtifactInput(artifact)}
+            {getArtifactInput(normalizedArtifact)}
           </div>
         )}
       </div>
