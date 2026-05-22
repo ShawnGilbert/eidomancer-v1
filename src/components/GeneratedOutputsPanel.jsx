@@ -408,7 +408,7 @@ export function GeneratedOutputsPanel({
               Package Outputs Empty
             </div>
             <p className="mt-2 text-sm leading-6 text-blue-100/70">
-              Create package outputs to turn this cast into reusable prompts, music, and publishing materials.
+              Create Echo, Song, YouTube, or Full Package outputs from this cast.
             </p>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {["Echo Prompt", "Song Package", "YouTube Package", "Full Package"].map((label) => (

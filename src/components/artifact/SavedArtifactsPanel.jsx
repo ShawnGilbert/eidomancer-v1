@@ -124,7 +124,7 @@ export default function SavedArtifactsPanel({
       </h2>
 
       <p className="mt-2 text-xs leading-5 text-slate-400">
-        Select an artifact to restore its card, context, and saved outputs when available.
+        Select an artifact to restore its card, cast context, and saved outputs.
       </p>
 
       <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em]">

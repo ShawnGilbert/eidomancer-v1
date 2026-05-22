@@ -207,7 +207,7 @@ function DepthLayers({ artifact, sourceRecord }) {
             Expand the compressed cast.
           </h3>
           <p className="mt-1 text-sm leading-6 text-slate-400">
-            Open a layer to unpack the card into signal, tension, pattern, echo, and guidance.
+            Open a layer to unpack this cast into signal, tension, pattern, echo, and guidance.
           </p>
         </div>
 

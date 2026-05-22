@@ -60,7 +60,7 @@ export default function DailyFocusInput({
 
       {!hasActiveCast ? (
         <div className="mt-3 rounded-2xl border border-cyan-300/15 bg-cyan-400/10 px-4 py-3 text-sm leading-6 text-cyan-50/80">
-          Enter a question, tension, or focus to generate your first daily symbolic cast.
+          Enter a question, tension, or focus to create your first daily cast.
         </div>
       ) : null}
 
