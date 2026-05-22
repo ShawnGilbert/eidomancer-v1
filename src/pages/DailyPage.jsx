@@ -325,6 +325,7 @@ export default function DailyPage() {
             onSubmit={handleSubmitFocus}
             onClear={handleClearFocus}
             isLoading={isLoading}
+            hasActiveCast={Boolean(selectedCast)}
           />
 
           <DailyCoreCardPreview cast={selectedCast} />

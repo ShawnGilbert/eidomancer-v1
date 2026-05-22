@@ -9,6 +9,7 @@ export default function DailyFocusInput({
   onSubmit,
   onClear,
   isLoading = false,
+  hasActiveCast = true,
   className = "",
 }) {
   const [value, setValue] = useState(initialValue);
@@ -56,6 +57,12 @@ export default function DailyFocusInput({
       <div className="mt-2 text-sm leading-6 text-white/72">
         Offer one question, tension, or area of attention. Keep it simple and real.
       </div>
+
+      {!hasActiveCast ? (
+        <div className="mt-3 rounded-2xl border border-cyan-300/15 bg-cyan-400/10 px-4 py-3 text-sm leading-6 text-cyan-50/80">
+          Enter a question, tension, or focus to generate your first daily symbolic cast.
+        </div>
+      ) : null}
 
       <form onSubmit={handleSubmit} className="mt-3 space-y-3">
         <textarea
