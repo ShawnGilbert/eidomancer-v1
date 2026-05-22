@@ -32,6 +32,16 @@ import useDailyCast from "../hooks/useDailyCast";
 
 /* ---------- COMPONENT ---------- */
 
+function FlowCue({ label }) {
+  return (
+    <div className="mb-3 mt-1 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-100/45">
+      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300/15 to-transparent" />
+      <span>{label}</span>
+      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300/15 to-transparent" />
+    </div>
+  );
+}
+
 export default function DailyPage() {
   const {
     selectedCast,
@@ -352,76 +362,85 @@ export default function DailyPage() {
 
         {/* Artifact + Saved */}
         {activeArtifact && (
-          <div className={`${palette.sectionBlock} space-y-5 sm:space-y-6`}>
-            {isViewingSaved && (
-              <div className={palette.savedBanner}>
-                <div className={palette.savedBannerText}>
-                  Viewing saved artifact
+          <>
+            <FlowCue label="Cast / Artifact / Outputs" />
+            <div className={`${palette.sectionBlock} space-y-5 sm:space-y-6`}>
+              {isViewingSaved && (
+                <div className={palette.savedBanner}>
+                  <div className={palette.savedBannerText}>
+                    Viewing saved artifact
+                  </div>
+
+                  <button
+                    onClick={handleReturnToCurrentCast}
+                    className={palette.savedBannerButton}
+                  >
+                    Return to Current Cast
+                  </button>
                 </div>
+              )}
 
-                <button
-                  onClick={handleReturnToCurrentCast}
-                  className={palette.savedBannerButton}
-                >
-                  Return to Current Cast
-                </button>
+              <div className={palette.artifactGrid}>
+                <ArtifactViewer
+                  artifact={activeArtifact}
+                  sourceRecord={activeDepthRecord}
+                  contextLabel={activeArtifactContextLabel}
+                />
+
+                <SavedArtifactsPanel
+                  key={savedRefreshKey}
+                  activeArtifact={activeArtifact}
+                  onSelectArtifact={handleSelectSavedArtifact}
+                />
               </div>
-            )}
 
-            <div className={palette.artifactGrid}>
-              <ArtifactViewer
-                artifact={activeArtifact}
-                sourceRecord={activeDepthRecord}
-                contextLabel={activeArtifactContextLabel}
+              <PackageActionsPanel
+                availableActions={[
+                  ["echo", "Create Echo Prompt"],
+                  ["song", "Create Song Package"],
+                  ["youtube", "Create YouTube Package"],
+                  ["fullPackage", "Create Full Package"],
+                ]}
+                onGenerate={handleGenerateOutput}
+                isGeneratingAsset={isGeneratingOutput}
+                statusMessage={packageStatusMessage}
               />
 
-              <SavedArtifactsPanel
-                key={savedRefreshKey}
-                activeArtifact={activeArtifact}
-                onSelectArtifact={handleSelectSavedArtifact}
+              <GeneratedOutputsPanel
+                activeCast={activeOutputCast}
+                generatedOnly
+                onClearOutputs={handleClearGeneratedOutputs}
               />
             </div>
-
-            <PackageActionsPanel
-              availableActions={[
-                ["echo", "Create Echo Prompt"],
-                ["song", "Create Song Package"],
-                ["youtube", "Create YouTube Package"],
-                ["fullPackage", "Create Full Package"],
-              ]}
-              onGenerate={handleGenerateOutput}
-              isGeneratingAsset={isGeneratingOutput}
-              statusMessage={packageStatusMessage}
-            />
-
-            <GeneratedOutputsPanel
-              activeCast={activeOutputCast}
-              generatedOnly
-              onClearOutputs={handleClearGeneratedOutputs}
-            />
-          </div>
+          </>
         )}
 
         {/* Daily Cast Details */}
         {(status === "ready" || selectedCast) && selectedCast && (
-          <div className={palette.sectionBlock}>
-            <DailyCastCard
-              cast={selectedCast}
-              onShare={handleShare}
-              shareMessage={shareMessage}
-            />
-          </div>
+          <>
+            <FlowCue label="Cast Summary" />
+            <div className={palette.sectionBlock}>
+              <DailyCastCard
+                cast={selectedCast}
+                onShare={handleShare}
+                shareMessage={shareMessage}
+              />
+            </div>
+          </>
         )}
 
         {/* History + Supporting Panels */}
         {(status === "ready" || selectedCast) && selectedCast && (
-          <DailySidebar
-            capabilities={capabilities}
-            recentCasts={recentCasts}
-            selectedCast={selectedCast}
-            onSelectCast={handleSelectSidebarCast}
-            showLens={false}
-          />
+          <>
+            <FlowCue label="Continuity" />
+            <DailySidebar
+              capabilities={capabilities}
+              recentCasts={recentCasts}
+              selectedCast={selectedCast}
+              onSelectCast={handleSelectSidebarCast}
+              showLens={false}
+            />
+          </>
         )}
       </div>
     </div>
