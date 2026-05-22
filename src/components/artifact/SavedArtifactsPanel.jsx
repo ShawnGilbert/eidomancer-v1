@@ -208,7 +208,7 @@ export default function SavedArtifactsPanel({
                       )}
 
                       <div
-                        className={`truncate text-sm font-semibold leading-5 ${
+                        className={`line-clamp-2 break-words text-sm font-semibold leading-5 ${
                           isActive ? "text-cyan-50" : "text-white"
                         }`}
                       >
@@ -224,7 +224,7 @@ export default function SavedArtifactsPanel({
                     )}
                   </div>
 
-                  <div className="mt-2 flex flex-wrap gap-1.5">
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
                     <span
                       className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] ${
                         isFullyReloadable
@@ -269,22 +269,22 @@ export default function SavedArtifactsPanel({
                   )}
 
                   {artifact.subtitle && (
-                    <div className="mt-2 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-2">
+                    <div className="mt-2.5 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-2">
                       <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
                         Essence
                       </div>
-                      <div className="mt-1 line-clamp-2 text-xs leading-5 text-slate-200/80">
+                      <div className="mt-1 line-clamp-2 break-words text-xs leading-5 text-slate-200/80">
                         {artifact.subtitle}
                       </div>
                     </div>
                   )}
 
                   {inputPreview && (
-                    <div className="mt-2 rounded-xl border border-cyan-300/10 bg-cyan-400/10 px-2.5 py-2">
+                    <div className="mt-2.5 rounded-xl border border-cyan-300/10 bg-cyan-400/10 px-2.5 py-2">
                       <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-200/70">
                         Focus
                       </div>
-                      <div className="mt-1 line-clamp-2 text-xs leading-5 text-cyan-50/85">
+                      <div className="mt-1 line-clamp-2 break-words text-xs leading-5 text-cyan-50/85">
                         {inputPreview}
                       </div>
                     </div>
