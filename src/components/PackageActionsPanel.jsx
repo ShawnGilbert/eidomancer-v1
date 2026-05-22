@@ -23,7 +23,7 @@ export function PackageActionsPanel({
         Create package outputs
       </h3>
       <p className="mt-2 text-sm leading-6 text-blue-100/65">
-        Create Echo, Song, YouTube, or Full Package outputs from the current cast.
+        Create reusable outputs from the current cast.
       </p>
 
       <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap sm:gap-2.5">
