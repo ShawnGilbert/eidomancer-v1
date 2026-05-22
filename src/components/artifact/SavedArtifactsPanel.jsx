@@ -124,7 +124,7 @@ export default function SavedArtifactsPanel({
       </h2>
 
       <p className="mt-2 text-xs leading-5 text-slate-400">
-        Select an artifact to restore its card, cast context, and saved outputs.
+        Select an artifact to restore its card, context, and outputs.
       </p>
 
       <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em]">
@@ -202,7 +202,7 @@ export default function SavedArtifactsPanel({
                             Active
                           </span>
                           <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100/55">
-                            Currently shown
+                            Shown now
                           </span>
                         </div>
                       )}
@@ -263,8 +263,8 @@ export default function SavedArtifactsPanel({
                   )}
 
                   {!isFullyReloadable && (
-                    <div className="mt-2 text-[11px] leading-5 text-amber-100/60">
-                      Older artifact: card restores, but full cast context may be missing.
+                    <div className="mt-2 rounded-xl border border-amber-300/10 bg-amber-400/[0.04] px-2.5 py-1.5 text-[11px] leading-5 text-amber-100/60">
+                      Partial record: card restores; cast context may be missing.
                     </div>
                   )}
 
