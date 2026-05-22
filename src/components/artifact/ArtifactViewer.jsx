@@ -197,7 +197,7 @@ function DepthLayers({ artifact, sourceRecord }) {
   }
 
   return (
-    <section className="mt-4 rounded-3xl border border-cyan-300/10 bg-slate-950/90 p-3 shadow-xl shadow-cyan-950/20 sm:p-4">
+    <section className="mt-5 rounded-3xl border border-cyan-300/10 bg-slate-950/90 p-3 shadow-xl shadow-cyan-950/20 sm:p-4">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-200/70">

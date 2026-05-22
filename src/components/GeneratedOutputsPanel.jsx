@@ -408,7 +408,7 @@ export function GeneratedOutputsPanel({
         ) : null}
       </div>
 
-      <div className="mt-5 space-y-4">
+      <div className="mt-5 space-y-3.5 sm:space-y-4">
         {hasGeneratedOutput ? null : (
           <div className="rounded-2xl border border-cyan-300/10 bg-[#07143a] p-3 sm:p-4">
             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-200/55">

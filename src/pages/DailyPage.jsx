@@ -352,7 +352,7 @@ export default function DailyPage() {
 
         {/* Artifact + Saved */}
         {activeArtifact && (
-          <div className={`${palette.sectionBlock} space-y-4`}>
+          <div className={`${palette.sectionBlock} space-y-5 sm:space-y-6`}>
             {isViewingSaved && (
               <div className={palette.savedBanner}>
                 <div className={palette.savedBannerText}>
