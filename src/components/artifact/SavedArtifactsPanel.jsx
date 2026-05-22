@@ -194,7 +194,7 @@ export default function SavedArtifactsPanel({
                   aria-current={isActive ? "true" : undefined}
                   className="w-full text-left"
                 >
-                  <div className="flex flex-col gap-2 pr-5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                  <div className="flex flex-col gap-2 pr-5">
                     <div className="min-w-0">
                       {isActive && (
                         <div className="mb-2 flex flex-wrap items-center gap-1.5">
@@ -217,7 +217,7 @@ export default function SavedArtifactsPanel({
                     </div>
 
                     {savedTimeLabel && (
-                      <div className="w-fit shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-300/80">
+                      <div className="w-fit max-w-full rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-300/80">
                         <span className="text-slate-500">Saved</span>{" "}
                         {savedTimeLabel}
                       </div>
