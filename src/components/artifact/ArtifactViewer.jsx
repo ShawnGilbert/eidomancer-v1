@@ -265,7 +265,11 @@ function DepthLayers({ artifact, sourceRecord }) {
   );
 }
 
-export default function ArtifactViewer({ artifact, sourceRecord }) {
+export default function ArtifactViewer({
+  artifact,
+  sourceRecord,
+  contextLabel = "Current Daily Cast",
+}) {
   const [visible, setVisible] = useState(false);
   const artifactKey = useMemo(
     () => getArtifactTransitionKey(artifact),
@@ -301,6 +305,12 @@ export default function ArtifactViewer({ artifact, sourceRecord }) {
           : "translate-y-2 scale-[0.99] opacity-0"
       }`}
     >
+      <div className="mb-2 flex justify-end">
+        <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">
+          {contextLabel}
+        </div>
+      </div>
+
       <div className={`${artifactTheme.stageFrameBase} ${moodStyle.stage}`}>
         <div className={artifactTheme.stageInset} />
         <div className={`${artifactTheme.stageRuleBase} ${moodStyle.rule}`} />

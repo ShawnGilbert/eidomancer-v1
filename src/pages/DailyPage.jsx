@@ -252,6 +252,11 @@ export default function DailyPage() {
   const activeArtifact = manualArtifact || selectedArtifact;
   const isViewingSaved = !!manualArtifact;
   const activeDepthRecord = getArtifactSourceCast(activeArtifact) || activeArtifact;
+  const activeArtifactContextLabel = isViewingSaved
+    ? getArtifactSourceCast(activeArtifact)
+      ? "Restored Artifact"
+      : "Saved Artifact"
+    : "Current Daily Cast";
   const activeOutputRecord = getArtifactSourceCast(activeArtifact) || selectedCast || activeArtifact;
   const activeOutputCast = activeOutputRecord
     ? {
@@ -367,6 +372,7 @@ export default function DailyPage() {
               <ArtifactViewer
                 artifact={activeArtifact}
                 sourceRecord={activeDepthRecord}
+                contextLabel={activeArtifactContextLabel}
               />
 
               <SavedArtifactsPanel
