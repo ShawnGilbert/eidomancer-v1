@@ -18,6 +18,10 @@ Daily casts create artifacts that can be saved and restored from the archive. Ar
 
 V1 uses `src/lib/normalizeArtifact.js` as a defensive compatibility layer for current and legacy artifact shapes. It supplies safe defaults for rendering, section access, actions, package outputs, metadata, and `artifactVersion: "v1"` without migrating localStorage or rewriting archive history.
 
+## Artifact Presentation Layer
+
+Artifact meaning data should remain stable while presentation and theme layers stay swappable. `src/lib/artifactPresentation.js` begins separating section labels, frame variants, symbolic tones, and presentation tokens from normalized artifact data so future themes can change symbolic framing and visual language while reusing proven V1 UX structures.
+
 ## Artifact Text Safety
 
 Generated artifact text can vary in length. V1 uses clamps, wrapping, and overflow safeguards to preserve the card layout. Future image-generation and export work should respect safe text zones.

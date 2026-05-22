@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getDepthLayerTypes } from "../../lib/artifactPresentation";
 import { getThemePalette } from "../../lib/themePalettes";
 import {
   getArtifactSectionText,
@@ -7,13 +8,7 @@ import {
 } from "../../lib/normalizeArtifact";
 import ArtifactCard from "./ArtifactCard";
 
-const depthLayerTypes = [
-  ["signal", "Signal"],
-  ["tension", "Tension"],
-  ["pattern", "Pattern"],
-  ["echo", "Echo"],
-  ["guidance", "Guidance"],
-];
+const depthLayerTypes = getDepthLayerTypes();
 
 const artifactTheme = getThemePalette("emergent").artifact;
 const depthLayerStyles = artifactTheme.depthLayerStyles;

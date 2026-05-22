@@ -3,15 +3,11 @@
 import { useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import { getArtifactInput } from "../../lib/artifactStorage";
+import {
+  ARTIFACT_SECTION_POSITIONS,
+  getSectionPresentation,
+} from "../../lib/artifactPresentation";
 import { normalizeArtifact } from "../../lib/normalizeArtifact";
-
-const sectionPositions = {
-  leftTop: "left-[4%] top-[26%]",
-  leftMiddle: "left-[4%] top-[47%]",
-  rightTop: "right-[4%] top-[26%]",
-  rightMiddle: "right-[4%] top-[47%]",
-  bottomCenter: "left-1/2 bottom-[8%] -translate-x-1/2",
-};
 
 export default function ArtifactCard({ artifact }) {
   const artifactRef = useRef(null);
@@ -110,8 +106,11 @@ export default function ArtifactCard({ artifact }) {
         <div className="hidden md:block">
           {sections.map((section) => {
             const isOpen = openSection === section.id;
+            const sectionPresentation = getSectionPresentation(section.type);
             const positionClass =
-              sectionPositions[section.position] || sectionPositions.leftTop;
+              ARTIFACT_SECTION_POSITIONS[section.position] ||
+              ARTIFACT_SECTION_POSITIONS[sectionPresentation.position] ||
+              ARTIFACT_SECTION_POSITIONS.leftTop;
 
             return (
               <button
@@ -126,7 +125,7 @@ export default function ArtifactCard({ artifact }) {
               >
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-[10px] font-bold uppercase tracking-[0.28em] text-amber-300">
-                    {section.title}
+                    {section.title || sectionPresentation.label}
                   </h3>
 
                   <span className="text-[9px] text-slate-400">
@@ -177,6 +176,7 @@ export default function ArtifactCard({ artifact }) {
       <div className="mt-4 grid gap-3 md:hidden">
         {sections.map((section) => {
           const isOpen = openSection === section.id;
+          const sectionPresentation = getSectionPresentation(section.type);
 
           return (
             <button
@@ -186,7 +186,7 @@ export default function ArtifactCard({ artifact }) {
               className="rounded-xl border border-white/10 bg-white/5 p-4 text-left"
             >
               <h3 className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">
-                {section.title}
+                {section.title || sectionPresentation.label}
               </h3>
 
               <div className="mt-2 space-y-2">
