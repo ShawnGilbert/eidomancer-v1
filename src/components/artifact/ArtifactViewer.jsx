@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getDepthLayerTypes } from "../../lib/artifactPresentation";
-import { getThemePalette } from "../../lib/themePalettes";
+import { DEFAULT_THEME_ID, getThemePalette } from "../../lib/themePalettes";
 import {
   getArtifactSectionText,
   getNormalizedArtifactSections,
@@ -10,7 +10,7 @@ import ArtifactCard from "./ArtifactCard";
 
 const depthLayerTypes = getDepthLayerTypes();
 
-const artifactTheme = getThemePalette("emergent").artifact;
+const artifactTheme = getThemePalette(DEFAULT_THEME_ID).artifact;
 const depthLayerStyles = artifactTheme.depthLayerStyles;
 const artifactMoodStyles = artifactTheme.moodStyles;
 

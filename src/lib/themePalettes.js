@@ -1,3 +1,62 @@
+export const DEFAULT_THEME_ID = "emergent";
+
+export const THEME_REGISTRY = {
+  emergent: {
+    id: "emergent",
+    label: "Emergent",
+    description: "The current Eidomancer V1 visual and symbolic language.",
+    symbolicLanguage: "cyber-tarot, symbolic compression, emergent signals",
+    visualTone: "dark, luminous, restrained, techno-mystic",
+    paletteHint: "deep blue-black with cyan, amber, emerald, and violet accents",
+    artifactFrameHint: "tarot artifact frame with subtle digital-codex glow",
+  },
+  technoShaman: {
+    id: "technoShaman",
+    label: "Techno-Shaman",
+    description: "Future ritual language with machine-spirit symbolism.",
+    symbolicLanguage: "ritual circuitry, synthetic spirits, signal trance",
+    visualTone: "ceremonial, electric, liminal",
+    paletteHint: "black, cyan, ultraviolet, signal green",
+    artifactFrameHint: "ritual interface frame with circuit-glyph markings",
+  },
+  christian: {
+    id: "christian",
+    label: "Christian",
+    description: "Devotional symbolic framing for reflection and discernment.",
+    symbolicLanguage: "discernment, vocation, grace, trial, witness",
+    visualTone: "reverent, contemplative, illuminated",
+    paletteHint: "midnight blue, gold, ivory, muted crimson",
+    artifactFrameHint: "illuminated manuscript frame with restrained sacred geometry",
+  },
+  wiccan: {
+    id: "wiccan",
+    label: "Wiccan",
+    description: "Nature-mystic symbolic framing for cycles and intention.",
+    symbolicLanguage: "cycles, elements, moon phases, threshold work",
+    visualTone: "earthy, lunar, ritual, organic",
+    paletteHint: "forest green, moon silver, violet, candle amber",
+    artifactFrameHint: "botanical tarot frame with lunar and elemental accents",
+  },
+  psychological: {
+    id: "psychological",
+    label: "Psychological",
+    description: "Inner-pattern framing for reflection, behavior, and integration.",
+    symbolicLanguage: "parts, patterns, shadow, integration, attention",
+    visualTone: "clinical-warm, introspective, grounded",
+    paletteHint: "charcoal, soft teal, muted gold, warm gray",
+    artifactFrameHint: "journal-card frame with subtle diagnostic structure",
+  },
+  scientific: {
+    id: "scientific",
+    label: "Scientific",
+    description: "Systems and evidence-oriented framing for pattern analysis.",
+    symbolicLanguage: "signals, models, feedback, uncertainty, systems",
+    visualTone: "precise, analytic, luminous, restrained",
+    paletteHint: "graphite, cyan, white, data-green",
+    artifactFrameHint: "instrument-panel frame with diagrammatic annotations",
+  },
+};
+
 export const THEME_PALETTES = {
   emergent: {
     id: "emergent",
@@ -97,6 +156,14 @@ export const THEME_PALETTES = {
   },
 };
 
-export function getThemePalette(themeId = "emergent") {
-  return THEME_PALETTES[themeId] || THEME_PALETTES.emergent;
+export function getThemeMetadata(themeId = DEFAULT_THEME_ID) {
+  return THEME_REGISTRY[themeId] || THEME_REGISTRY[DEFAULT_THEME_ID];
+}
+
+export function getDefaultThemeMetadata() {
+  return getThemeMetadata(DEFAULT_THEME_ID);
+}
+
+export function getThemePalette(themeId = DEFAULT_THEME_ID) {
+  return THEME_PALETTES[themeId] || THEME_PALETTES[DEFAULT_THEME_ID];
 }

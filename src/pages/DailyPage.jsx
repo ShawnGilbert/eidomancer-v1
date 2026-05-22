@@ -28,7 +28,7 @@ import {
   generateYouTubePackage,
 } from "../lib/packageGenerators";
 import { getOutputActions, getOutputSuccessMessage } from "../lib/outputRegistry";
-import { getThemePalette } from "../lib/themePalettes";
+import { DEFAULT_THEME_ID, getThemePalette } from "../lib/themePalettes";
 import useDailyCast from "../hooks/useDailyCast";
 
 
@@ -70,7 +70,7 @@ export default function DailyPage() {
     () => getFreemiumCapabilities(accessTier, 0),
     [accessTier]
   );
-  const palette = getThemePalette("emergent").daily;
+  const palette = getThemePalette(DEFAULT_THEME_ID).daily;
 
   const selectedArtifact = useMemo(
     () => castToArtifact(selectedCast),

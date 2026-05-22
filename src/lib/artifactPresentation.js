@@ -1,4 +1,8 @@
+import { DEFAULT_THEME_ID, getDefaultThemeMetadata } from "./themePalettes";
+
 export const ARTIFACT_PRESENTATION = {
+  themeId: DEFAULT_THEME_ID,
+  theme: getDefaultThemeMetadata(),
   panelStyle: "artifact-viewer",
   emphasisLevel: "primary",
   symbolicTone: "emergent-cyber-tarot",

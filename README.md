@@ -44,6 +44,10 @@ Artifact mood is currently lightweight and heuristic-based. It uses existing cas
 
 V1 currently defaults to the Emergent/Eidomancer visual language. Theme switching is not implemented yet, but visual tokens are beginning to move into `src/lib/themePalettes.js`. Future themes should reuse proven UX patterns while changing symbolic language, tone, palette, and imagery.
 
+## Theme Scaffolding
+
+V1 currently defaults to the Emergent/Eidomancer theme. Theme metadata is being centralized in `src/lib/themePalettes.js` so future user-selected themes can alter symbolic language, visual tone, palette, and artifact framing without changing artifact meaning data.
+
 ## Development Session Checklist
 
 - Start the frontend and backend before testing app behavior.
