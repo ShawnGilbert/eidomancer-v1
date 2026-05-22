@@ -369,7 +369,7 @@ export function GeneratedOutputsPanel({
     <section className="rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-xl font-semibold text-white sm:text-2xl">
+          <h3 className="text-lg font-semibold text-white sm:text-xl">
             Generated Outputs
           </h3>
           <p className="mt-1 text-sm leading-6 text-blue-100/55">

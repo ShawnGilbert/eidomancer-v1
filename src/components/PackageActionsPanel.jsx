@@ -19,10 +19,10 @@ export function PackageActionsPanel({
       <div className="text-xs uppercase tracking-[0.25em] text-blue-200/70">
         Output Tools
       </div>
-      <h3 className="mt-2 text-xl font-semibold text-white sm:text-2xl">
+      <h3 className="mt-1.5 text-lg font-semibold text-white sm:text-xl">
         Create package outputs
       </h3>
-      <p className="mt-2 text-sm leading-6 text-blue-100/65">
+      <p className="mt-1 text-sm leading-6 text-blue-100/65">
         Create reusable outputs from the current cast.
       </p>
 
