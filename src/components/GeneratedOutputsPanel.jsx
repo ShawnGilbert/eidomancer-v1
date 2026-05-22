@@ -403,8 +403,23 @@ export function GeneratedOutputsPanel({
 
       <div className="mt-5 space-y-4">
         {hasGeneratedOutput ? null : (
-          <div className="rounded-2xl border border-white/10 bg-[#07143a] p-3 text-sm leading-6 text-blue-100/70 sm:p-4">
-            Create an Echo Prompt, Song Package, YouTube Package, or Full Package to expand this cast.
+          <div className="rounded-2xl border border-cyan-300/10 bg-[#07143a] p-3 sm:p-4">
+            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-200/55">
+              Package Outputs Empty
+            </div>
+            <p className="mt-2 text-sm leading-6 text-blue-100/70">
+              Create package outputs to turn this cast into reusable prompts, music, and publishing materials.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {["Echo Prompt", "Song Package", "YouTube Package", "Full Package"].map((label) => (
+                <span
+                  key={label}
+                  className="rounded-full border border-cyan-300/15 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-100/65"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
         )}
 
