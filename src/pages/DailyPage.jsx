@@ -34,10 +34,10 @@ import useDailyCast from "../hooks/useDailyCast";
 
 function FlowCue({ label }) {
   return (
-    <div className="mb-3 mt-1 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-100/45">
-      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300/15 to-transparent" />
+    <div className="mb-3 mt-1 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-100/38">
+      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300/10 to-transparent" />
       <span>{label}</span>
-      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300/15 to-transparent" />
+      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300/10 to-transparent" />
     </div>
   );
 }
@@ -363,7 +363,7 @@ export default function DailyPage() {
         {/* Artifact + Saved */}
         {activeArtifact && (
           <>
-            <FlowCue label="Cast / Artifact / Outputs" />
+            <FlowCue label="Artifact" />
             <div className={`${palette.sectionBlock} space-y-5 sm:space-y-6`}>
               {isViewingSaved && (
                 <div className={palette.savedBanner}>
@@ -418,7 +418,7 @@ export default function DailyPage() {
         {/* Daily Cast Details */}
         {(status === "ready" || selectedCast) && selectedCast && (
           <>
-            <FlowCue label="Cast Summary" />
+            <FlowCue label="Summary" />
             <div className={palette.sectionBlock}>
               <DailyCastCard
                 cast={selectedCast}
