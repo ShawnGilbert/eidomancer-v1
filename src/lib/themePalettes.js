@@ -1,5 +1,7 @@
 export const DEFAULT_THEME_ID = "emergent";
 
+// TODO: When theme selection exists, keep symbolic language transforms separate
+// from stable cast/artifact meaning data.
 export const THEME_REGISTRY = {
   emergent: {
     id: "emergent",

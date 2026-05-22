@@ -70,6 +70,7 @@ export default function DailyPage() {
     () => getFreemiumCapabilities(accessTier, 0),
     [accessTier]
   );
+  // TODO: Replace DEFAULT_THEME_ID with a selected theme once theme picking exists.
   const palette = getThemePalette(DEFAULT_THEME_ID).daily;
 
   const selectedArtifact = useMemo(

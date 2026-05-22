@@ -5,6 +5,7 @@ export const ARTIFACT_PRESENTATION = {
   theme: getDefaultThemeMetadata(),
   panelStyle: "artifact-viewer",
   emphasisLevel: "primary",
+  // TODO: Future frame variants should map theme metadata to presentation only.
   symbolicTone: "emergent-cyber-tarot",
   frameVariant: "tarot-artifact",
   moodGlow: "subtle",

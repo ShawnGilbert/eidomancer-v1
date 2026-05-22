@@ -10,6 +10,7 @@ import ArtifactCard from "./ArtifactCard";
 
 const depthLayerTypes = getDepthLayerTypes();
 
+// TODO: Route future user-selected theme IDs here without persisting theme state yet.
 const artifactTheme = getThemePalette(DEFAULT_THEME_ID).artifact;
 const depthLayerStyles = artifactTheme.depthLayerStyles;
 const artifactMoodStyles = artifactTheme.moodStyles;
