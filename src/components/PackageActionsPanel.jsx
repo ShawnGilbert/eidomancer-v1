@@ -22,6 +22,9 @@ export function PackageActionsPanel({
       <h3 className="mt-2 text-xl font-semibold text-white sm:text-2xl">
         Create package outputs
       </h3>
+      <p className="mt-2 text-sm leading-6 text-blue-100/65">
+        Expand the current cast into prompts, song material, and publishing packages.
+      </p>
 
       <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap sm:gap-2.5">
         {onGenerateAll && (
