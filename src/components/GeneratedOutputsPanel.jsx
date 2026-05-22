@@ -373,7 +373,7 @@ export function GeneratedOutputsPanel({
             Generated Outputs
           </h3>
           <p className="mt-1 text-sm leading-6 text-blue-100/55">
-            Review, copy, or export outputs from this cast.
+            Copy or export outputs to reuse outside Eidomancer.
           </p>
         </div>
 
