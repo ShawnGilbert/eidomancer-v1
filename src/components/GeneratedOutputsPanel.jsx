@@ -149,6 +149,10 @@ function buildCardPreview(data, fullText, artifactType) {
 }
 
 function buildFullPackageText(assets = {}) {
+  if (assets.fullPackage?.bundle) {
+    return assets.fullPackage.bundle;
+  }
+
   const sections = [];
 
   if (assets.echo?.prompt) {

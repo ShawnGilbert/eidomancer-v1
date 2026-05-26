@@ -25,6 +25,8 @@ Copy `.env.example` to `.env` for local development. Safe placeholders are provi
 
 - `OPENAI_API_KEY`: server-side OpenAI API key. Required for live AI responses.
 - `OPENAI_MODEL`: optional text model override. Defaults to `gpt-4.1-mini`.
+- `IMAGE_GENERATION_ENABLED`: optional image-generation feature flag. Defaults to `false`; set to `true` to enable `/api/image`.
+- `IMAGE_MODEL`: optional image model override. Defaults to `gpt-image-1`.
 - `PORT`: optional backend port. Defaults to `3001`.
 
 Do not expose `.env` publicly. It is ignored by git.
@@ -34,6 +36,8 @@ Do not expose `.env` publicly. It is ignored by git.
 The active Daily Cast flow sends a structured prompt to `POST /api/generate`. If the backend is unavailable, the API key is missing, or the AI response cannot be used safely, Eidomancer falls back to deterministic local generation and marks the cast metadata as fallback/no-AI.
 
 Package outputs are text-only in V1. Core Card Image Prompt and Echo Prompt prepare future image-generation prompts, but V1 does not call image or audio generation APIs from the active product flow.
+
+V1.1 backend preparation includes `POST /api/image` for optional server-side image generation. It is disabled unless `IMAGE_GENERATION_ENABLED=true` and `OPENAI_API_KEY` is configured. The endpoint accepts validated Echo, Core Card, and Specterr/YouTube thumbnail requests, keeps API keys server-side, and returns a generated image data URL when enabled.
 
 ## Local Data Storage
 
@@ -50,7 +54,7 @@ For V1, the simplest production shape is one Node web service:
 - Build command: `npm install && npm run build`
 - Start command: `npm run start`
 - Required environment variable: `OPENAI_API_KEY`
-- Optional environment variables: `OPENAI_MODEL`, `PORT`
+- Optional environment variables: `OPENAI_MODEL`, `IMAGE_GENERATION_ENABLED`, `IMAGE_MODEL`, `PORT`
 
 The Express server in `server.js` keeps API routes first, serves the built Vite files from `dist/`, and falls back to `dist/index.html` for app routes. The frontend uses same-origin `/api` routes, so the browser should call the same host for both the app and API.
 

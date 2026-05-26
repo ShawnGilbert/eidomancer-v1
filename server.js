@@ -15,6 +15,7 @@ const indexPath = path.join(distPath, "index.html");
 
 const app = express();
 const port = process.env.PORT || 3001;
+const imageModel = process.env.IMAGE_MODEL || "gpt-image-1";
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -87,6 +88,31 @@ function extractTextFromResponse(response) {
   }
 
   return "";
+}
+
+const imageOutputTypes = {
+  echo: {
+    aspectRatio: "16:9",
+    size: "1536x1024",
+  },
+  specterr: {
+    aspectRatio: "16:9",
+    size: "1536x1024",
+  },
+  coreCard: {
+    aspectRatio: "2:3",
+    size: "1024x1536",
+  },
+};
+
+function getImageDataUrl(image) {
+  const imageData = image?.data?.[0];
+
+  if (imageData?.b64_json) {
+    return `data:image/png;base64,${imageData.b64_json}`;
+  }
+
+  return imageData?.url || "";
 }
 
 // ----------------------------------
@@ -248,6 +274,75 @@ app.post("/api/generate", async (req, res) => {
     console.error("Generate error:", error);
     return res.status(500).json({
       error: error?.message || "The generate request failed on the server.",
+    });
+  }
+});
+
+app.post("/api/image", async (req, res) => {
+  try {
+    if (process.env.IMAGE_GENERATION_ENABLED !== "true") {
+      return res.status(503).json({
+        error: "Image generation is disabled for this alpha.",
+      });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({
+        error: "Missing OPENAI_API_KEY on the server.",
+      });
+    }
+
+    const kind = typeof req.body?.kind === "string" ? req.body.kind.trim() : "";
+    const prompt =
+      typeof req.body?.prompt === "string" ? req.body.prompt.trim() : "";
+    const aspectRatio =
+      typeof req.body?.aspectRatio === "string"
+        ? req.body.aspectRatio.trim()
+        : "";
+    const outputType = imageOutputTypes[kind];
+
+    if (!outputType) {
+      return res.status(400).json({
+        error: "Image kind must be echo, coreCard, or specterr.",
+      });
+    }
+
+    if (!prompt) {
+      return res.status(400).json({
+        error: "Image prompt is required.",
+      });
+    }
+
+    if (aspectRatio !== outputType.aspectRatio) {
+      return res.status(400).json({
+        error: `Image aspectRatio for ${kind} must be ${outputType.aspectRatio}.`,
+      });
+    }
+
+    const image = await openai.images.generate({
+      model: imageModel,
+      prompt,
+      size: outputType.size,
+    });
+    const imageUrl = getImageDataUrl(image);
+
+    if (!imageUrl) {
+      return res.status(500).json({
+        error: "Image generation failed.",
+      });
+    }
+
+    return res.json({
+      imageUrl,
+      kind,
+      aspectRatio,
+      model: imageModel,
+      createdAt: new Date().toISOString(),
+    });
+  } catch {
+    console.error("Image generation error");
+    return res.status(500).json({
+      error: "Image generation failed.",
     });
   }
 });

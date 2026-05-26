@@ -24,6 +24,7 @@ import { getAccessTier, getFreemiumCapabilities } from "../lib/freemiumGate";
 import {
   generateCoreCardImagePrompt,
   generateEcho,
+  generateFullPackage,
   generateSongPackage,
   generateYouTubePackage,
 } from "../lib/packageGenerators";
@@ -140,17 +141,29 @@ export default function DailyPage() {
       type === "fullPackage"
         ? (() => {
             const echo = generateEcho(activeRecord);
+            const coreImagePrompt = generateCoreCardImagePrompt(imagePromptRecord);
             const song = generateSongPackage(activeRecord);
             const youtube = generateYouTubePackage({
               ...activeRecord,
               packageOutputs: {
                 ...existingOutputs,
                 echo,
+                coreImagePrompt,
                 song,
               },
             });
+            const fullPackage = generateFullPackage({
+              ...activeRecord,
+              packageOutputs: {
+                ...existingOutputs,
+                echo,
+                coreImagePrompt,
+                song,
+                youtube,
+              },
+            });
 
-            return { echo, song, youtube };
+            return { echo, coreImagePrompt, song, youtube, fullPackage };
           })()
         : null;
     const nextOutput =

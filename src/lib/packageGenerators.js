@@ -4,12 +4,32 @@ function joinTags(tags) {
   return tags.filter(Boolean).join(", ");
 }
 
-function normalizeText(value, fallback = "Not generated yet.") {
-  if (typeof value === "string" && value.trim()) return value.trim();
+const EMPTY_OUTPUT_MARKERS = new Set([
+  "not generated yet.",
+  "not generated yet",
+  "n/a",
+  "none",
+]);
+
+function cleanText(value) {
+  if (typeof value !== "string") return "";
+
+  const text = value.trim();
+
+  if (!text || EMPTY_OUTPUT_MARKERS.has(text.toLowerCase())) {
+    return "";
+  }
+
+  return text;
+}
+
+function normalizeText(value, fallback = "") {
+  const text = cleanText(value);
+  if (text) return text;
   return fallback;
 }
 
-function getSectionContent(record, type, fallback = "Not generated yet.") {
+function getSectionContent(record, type, fallback = "") {
   if (!record || !Array.isArray(record.sections)) return fallback;
 
   const match = record.sections.find(
@@ -17,15 +37,17 @@ function getSectionContent(record, type, fallback = "Not generated yet.") {
   );
   const content = match?.content || match?.full || match?.short;
 
-  if (!match || typeof content !== "string" || !content.trim()) {
+  const text = cleanText(content);
+
+  if (!match || !text) {
     return fallback;
   }
 
-  return content.trim();
+  return text;
 }
 
 function getQuestion(record) {
-  return normalizeText(record?.question || record?.input, "No question provided.");
+  return normalizeText(record?.question || record?.input, "");
 }
 
 function getTheme(record) {
@@ -42,7 +64,7 @@ function getTitle(record) {
 function getSubtitle(record) {
   return normalizeText(
     record?.coreCard?.subtitle || record?.subtitle,
-    "A pattern asks to be named."
+    ""
   );
 }
 
@@ -52,7 +74,7 @@ function getHook(record) {
       record?.coreCard?.description ||
       record?.subtitle ||
       getSectionContent(record, "echo", ""),
-    "The signal is still forming."
+    ""
   );
 }
 
@@ -114,6 +136,91 @@ function flattenRecord(record) {
     coreObject: getCoreObject(record),
     moodTone: getMoodTone(record),
     visualAtmosphere: getVisualAtmosphere(record),
+  };
+}
+
+function firstText(...values) {
+  for (const value of values) {
+    const text = cleanText(value);
+    if (text) return text;
+  }
+
+  return "";
+}
+
+export function getBestEcho(cast) {
+  return firstText(
+    cast.echo,
+    cast.hook,
+    cast.tension,
+    cast.pattern,
+    cast.signal,
+    `${cast.title} asks for one honest signal to become visible.`
+  );
+}
+
+export function getBestPoem(cast) {
+  return firstText(
+    cast.poem,
+    cast.echo,
+    cast.pattern,
+    `${getBestEcho(cast)} Let the pattern breathe before it becomes a command.`
+  );
+}
+
+export function getBestGuidance(cast) {
+  return firstText(
+    cast.guidance,
+    cast.hook,
+    cast.tension ? `Move carefully with this tension: ${cast.tension}` : "",
+    cast.pattern ? `Name the pattern and choose one grounded next step: ${cast.pattern}` : "",
+    `Name one small move that honors ${cast.title}.`
+  );
+}
+
+export function buildChorus(cast) {
+  const chorusSeed = firstText(
+    cast.echo,
+    cast.hook,
+    cast.tension,
+    cast.title
+  );
+  const titleLine =
+    cast.title && !chorusSeed.toLowerCase().includes(cast.title.toLowerCase())
+      ? `Hold the shape of ${cast.title}.`
+      : "";
+
+  return [chorusSeed, titleLine, getBestGuidance(cast)]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function completeCast(record) {
+  const cast = flattenRecord(record);
+  const echo = getBestEcho(cast);
+  const guidance = getBestGuidance({ ...cast, echo });
+
+  return {
+    ...cast,
+    subtitle:
+      cast.subtitle ||
+      `A cast about ${cast.title.toLowerCase()} becoming clear enough to act on.`,
+    hook: cast.hook || echo,
+    question:
+      cast.question ||
+      `What is ${cast.title} asking me to notice, release, or choose today?`,
+    signal:
+      cast.signal ||
+      `${cast.title} is presenting a signal that wants attention before it turns into noise.`,
+    tension:
+      cast.tension ||
+      "The pressure is between staying vague and choosing one honest next move.",
+    pattern:
+      cast.pattern ||
+      "The same shape keeps returning until it is named, witnessed, and handled with care.",
+    echo,
+    poem: getBestPoem({ ...cast, echo }),
+    guidance,
   };
 }
 
@@ -294,7 +401,7 @@ function buildImagePrompt({ cast, type }) {
 }
 
 export function generateCoreCard(record) {
-  const cast = flattenRecord(record);
+  const cast = completeCast(record);
 
   return {
     headline: cast.title,
@@ -315,7 +422,7 @@ export function generateCoreCard(record) {
 }
 
 export function generateCoreCardImagePrompt(record) {
-  const cast = flattenRecord(record);
+  const cast = completeCast(record);
   const prompt = [
     `Create a vertical tarot-style Eidomancer Core Card image for "${cast.title}".`,
     `Core symbolic object: ${cast.coreObject}`,
@@ -356,7 +463,7 @@ export function generateCoreCardImagePrompt(record) {
 }
 
 export function generateEcho(record) {
-  const cast = flattenRecord(record);
+  const cast = completeCast(record);
 
   return {
     title: cast.title,
@@ -373,7 +480,7 @@ export function generateEcho(record) {
 }
 
 export function generateLyrics(record) {
-  const cast = flattenRecord(record);
+  const cast = completeCast(record);
 
   return {
     title: cast.title,
@@ -384,7 +491,7 @@ Pre-Chorus
 ${cast.tension}
 
 Chorus
-${cast.echo}
+${buildChorus(cast)}
 
 Verse 2
 ${cast.pattern}
@@ -398,7 +505,7 @@ ${cast.hook}`,
 }
 
 export function generateSuno(record) {
-  const cast = flattenRecord(record);
+  const cast = completeCast(record);
 
   return {
     title: cast.title,
@@ -411,7 +518,7 @@ export function generateSuno(record) {
 }
 
 export function generateSongPackage(record) {
-  const cast = flattenRecord(record);
+  const cast = completeCast(record);
   const songTitle = cast.title;
   const sunoStylePrompt = limitText(
     [
@@ -436,7 +543,7 @@ export function generateSongPackage(record) {
 }
 
 export function generateSpecterr(record) {
-  const cast = flattenRecord(record);
+  const cast = completeCast(record);
 
   return {
     title: cast.title,
@@ -448,7 +555,7 @@ export function generateSpecterr(record) {
 }
 
 export function generateYouTubePackage(record) {
-  const cast = flattenRecord(record);
+  const cast = completeCast(record);
   const song = getPackageOutput(record, "song");
   const videoTitle = song?.songTitle
     ? `${song.songTitle} | Eidomancer Song`
@@ -510,13 +617,14 @@ Generated with Eidomancer.`;
 }
 
 export function generateFullPackage(record) {
-  const cast = flattenRecord(record);
+  const cast = completeCast(record);
   const youtube = generateYouTubePackage(record);
   const lyrics = generateLyrics(record);
   const suno = generateSuno(record);
   const echo = generateEcho(record);
   const specterr = generateSpecterr(record);
   const coreCard = generateCoreCard(record);
+  const coreImagePrompt = generateCoreCardImagePrompt(record);
 
   const bundle = [
     "============================",
@@ -563,6 +671,11 @@ export function generateFullPackage(record) {
     cast.echo,
     "",
     "----------------------------",
+    "GUIDANCE",
+    "----------------------------",
+    cast.guidance,
+    "",
+    "----------------------------",
     "YOUTUBE TITLE OPTIONS",
     "----------------------------",
     ...youtube.titleOptions,
@@ -575,12 +688,12 @@ export function generateFullPackage(record) {
     "----------------------------",
     "TAGS",
     "----------------------------",
-    youtube.tagString || youtube.tags.join(", "),
+    youtube.tagString || youtube.tags || "",
     "",
     "----------------------------",
     "CORE CARD IMAGE PROMPT",
     "----------------------------",
-    coreCard.imagePrompt,
+    coreImagePrompt.prompt,
     "",
     "----------------------------",
     "ECHO IMAGE PROMPT",
