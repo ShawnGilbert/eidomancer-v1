@@ -96,12 +96,12 @@ export default function ArtifactCard({ artifact }) {
             Eidomancer Artifact
           </p>
 
-          <h2 className="mx-auto mt-2 line-clamp-2 max-w-3xl break-words text-xl font-bold leading-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] sm:text-3xl">
+          <h2 className="mx-auto mt-2 line-clamp-2 max-w-3xl break-words text-xl font-bold leading-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] [overflow-wrap:anywhere] sm:text-3xl">
             {normalizedArtifact.title}
           </h2>
 
           {normalizedArtifact.subtitle && (
-            <p className="mx-auto mt-1 max-w-2xl line-clamp-2 break-words text-xs leading-5 text-slate-200/90 sm:text-sm">{normalizedArtifact.subtitle}</p>
+            <p className="mx-auto mt-1 max-w-2xl line-clamp-2 break-words text-xs leading-5 text-slate-200/90 [overflow-wrap:anywhere] sm:text-sm">{normalizedArtifact.subtitle}</p>
           )}
         </div>
 
@@ -124,31 +124,31 @@ export default function ArtifactCard({ artifact }) {
                   isOpen
                     ? `z-30 scale-[1.03] bg-slate-950/95 ${sectionAccent.openPanel}`
                     : `z-10 scale-100 bg-black/50 opacity-70 hover:scale-[1.01] hover:opacity-100 ${sectionAccent.closedPanel}`
-                } w-[25%] rounded-xl border p-3 text-left shadow-xl backdrop-blur-md transition-all duration-200 ease-out hover:bg-slate-950/85`}
+                } max-h-[38%] w-[25%] min-w-0 overflow-hidden rounded-xl border p-3 text-left shadow-xl backdrop-blur-md transition-all duration-200 ease-out hover:bg-slate-950/85`}
               >
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className={`text-[10px] font-bold uppercase tracking-[0.28em] ${sectionAccent.label}`}>
+                <div className="flex min-w-0 items-start justify-between gap-2">
+                  <h3 className={`line-clamp-2 min-w-0 break-words text-[10px] font-bold uppercase tracking-[0.28em] [overflow-wrap:anywhere] ${sectionAccent.label}`}>
                     {section.title || sectionPresentation.label}
                   </h3>
 
-                  <span className="text-[9px] text-slate-400">
+                  <span className="shrink-0 text-[9px] text-slate-400">
                     {isOpen ? "Close" : "Open"}
                   </span>
                 </div>
 
                 <div className="mt-2 space-y-2 overflow-hidden">
-  <p className={`${isOpen ? "" : "line-clamp-3"} break-words text-xs leading-relaxed text-slate-100`}>
+  <p className={`${isOpen ? "" : "line-clamp-3"} break-words text-xs leading-relaxed text-slate-100 [overflow-wrap:anywhere]`}>
     {section.short}
   </p>
 
   {isOpen && (
   <div className="space-y-2 border-t border-white/10 pt-2">
-    <div className="max-h-28 overflow-auto break-words text-[11px] leading-relaxed text-slate-300">
+    <div className="max-h-28 overflow-auto break-words text-[11px] leading-relaxed text-slate-300 [overflow-wrap:anywhere]">
       {section.full || "No deeper interpretation yet."}
     </div>
 
     {section.action && (
-      <div className="max-h-24 overflow-auto rounded-lg border border-emerald-300/20 bg-emerald-400/10 p-2 text-[11px] leading-relaxed text-emerald-100">
+      <div className="max-h-24 overflow-auto rounded-lg border border-emerald-300/20 bg-emerald-400/10 p-2 text-[11px] leading-relaxed text-emerald-100 [overflow-wrap:anywhere]">
         <span className="font-bold uppercase tracking-[0.18em]">
           Next Move:
         </span>{" "}
@@ -164,12 +164,12 @@ export default function ArtifactCard({ artifact }) {
         </div>
 
         {normalizedArtifact.coreObject && (
-          <div className="absolute bottom-3 left-3 right-3 hidden rounded-xl border border-cyan-300/25 bg-black/80 p-3 shadow-[0_0_18px_rgba(34,211,238,0.12)] backdrop-blur-md md:block">
+          <div className="absolute bottom-3 left-3 right-3 hidden max-h-[24%] overflow-hidden rounded-xl border border-cyan-300/25 bg-black/80 p-3 shadow-[0_0_18px_rgba(34,211,238,0.12)] backdrop-blur-md md:block">
             <h3 className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-300">
               Core Object
             </h3>
 
-            <p className="mt-1 line-clamp-3 break-words text-xs leading-relaxed text-slate-200">
+            <p className="mt-1 line-clamp-3 break-words text-xs leading-relaxed text-slate-200 [overflow-wrap:anywhere]">
               {normalizedArtifact.coreObject}
             </p>
           </div>
@@ -189,21 +189,21 @@ export default function ArtifactCard({ artifact }) {
               onClick={() => setOpenSection(isOpen ? null : section.id)}
               className={`rounded-xl border border-l-2 p-4 text-left transition hover:bg-white/[0.08] ${sectionAccent.mobilePanel}`}
             >
-              <h3 className={`text-xs font-bold uppercase tracking-[0.25em] ${sectionAccent.label}`}>
+              <h3 className={`break-words text-xs font-bold uppercase tracking-[0.25em] [overflow-wrap:anywhere] ${sectionAccent.label}`}>
                 {section.title || sectionPresentation.label}
               </h3>
 
               <div className="mt-2 space-y-2">
-  <p className="line-clamp-3 break-words text-sm text-slate-200">{section.short}</p>
+  <p className="line-clamp-3 break-words text-sm text-slate-200 [overflow-wrap:anywhere]">{section.short}</p>
 
   {isOpen && (
   <div className="space-y-2 border-t border-white/10 pt-2">
-    <div className="max-h-40 overflow-auto break-words text-[11px] leading-relaxed text-slate-300">
+    <div className="max-h-40 overflow-auto break-words text-[11px] leading-relaxed text-slate-300 [overflow-wrap:anywhere]">
       {section.full || "No deeper interpretation yet."}
     </div>
 
     {section.action && (
-      <div className="max-h-32 overflow-auto rounded-lg border border-emerald-300/20 bg-emerald-400/10 p-2 text-[11px] leading-relaxed text-emerald-100">
+      <div className="max-h-32 overflow-auto rounded-lg border border-emerald-300/20 bg-emerald-400/10 p-2 text-[11px] leading-relaxed text-emerald-100 [overflow-wrap:anywhere]">
         <span className="font-bold uppercase tracking-[0.18em]">
           Next Move:
         </span>{" "}
@@ -222,7 +222,7 @@ export default function ArtifactCard({ artifact }) {
     <h3 className={`text-xs font-bold uppercase tracking-[0.25em] ${guidanceAccent.label}`}>
       Guidance
     </h3>
-    <p className="mt-2 line-clamp-4 break-words text-sm leading-relaxed">
+    <p className="mt-2 line-clamp-4 break-words text-sm leading-relaxed [overflow-wrap:anywhere]">
       {sections.find((section) => section.action)?.action}
     </p>
   </div>
@@ -270,7 +270,7 @@ export default function ArtifactCard({ artifact }) {
         </div>
 
         {showInput && normalizedArtifact.input && (
-          <div className="rounded-xl border border-amber-300/20 bg-black/70 p-4 text-sm leading-relaxed text-slate-200 backdrop-blur-md">
+          <div className="rounded-xl border border-amber-300/20 bg-black/70 p-4 text-sm leading-relaxed text-slate-200 backdrop-blur-md [overflow-wrap:anywhere]">
             {getArtifactInput(normalizedArtifact)}
           </div>
         )}

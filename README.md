@@ -1,4 +1,4 @@
-# React + Vite
+# Eidomancer V1
 
 ## Quick Start
 
@@ -45,7 +45,16 @@ Clearing browser site data can remove local casts and saved artifacts.
 
 Use `npm run build` to create the production frontend bundle in `dist/`. Use `npm run preview` to preview the built frontend locally. Use `npm run server` or `npm run start` to run the Express backend.
 
-For a hosted V1, deploy the Vite frontend and `server.js` backend together or configure the frontend host to route `/api` requests to the backend. Keep `OPENAI_API_KEY` only on the backend host.
+For V1, the simplest production shape is one Node web service:
+
+- Build command: `npm install && npm run build`
+- Start command: `npm run start`
+- Required environment variable: `OPENAI_API_KEY`
+- Optional environment variables: `OPENAI_MODEL`, `PORT`
+
+The Express server in `server.js` keeps API routes first, serves the built Vite files from `dist/`, and falls back to `dist/index.html` for app routes. The frontend uses same-origin `/api` routes, so the browser should call the same host for both the app and API.
+
+On Render, create a Web Service from this app directory, set the build and start commands above, and add the environment variables in the Render dashboard. Keep `OPENAI_API_KEY` only on the server host.
 
 ## V1 Smoke Test Checklist
 
@@ -134,14 +143,3 @@ V1 currently defaults to the Emergent/Eidomancer theme. Theme metadata is being 
 - Run `npm run build` after each stabilization pass.
 - Commit stable checkpoints.
 - Avoid reinventing basic UX patterns for V1.
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

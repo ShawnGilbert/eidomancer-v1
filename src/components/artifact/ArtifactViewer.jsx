@@ -125,6 +125,7 @@ function DepthLayers({ artifact, sourceRecord }) {
   const [openLayers, setOpenLayers] = useState({});
   const [copiedLayer, setCopiedLayer] = useState("");
   const [copiedAllLayers, setCopiedAllLayers] = useState(false);
+  const [copyError, setCopyError] = useState("");
 
   const layers = useMemo(
     () =>
@@ -142,6 +143,7 @@ function DepthLayers({ artifact, sourceRecord }) {
     setOpenLayers({});
     setCopiedLayer("");
     setCopiedAllLayers(false);
+    setCopyError("");
   }, [artifact?.id, artifact?.savedAt, sourceRecord?.id]);
 
   const hasLayers = layers.length > 0;
@@ -156,9 +158,16 @@ function DepthLayers({ artifact, sourceRecord }) {
   async function copyLayer(type, text) {
     if (!text) return;
 
-    await navigator.clipboard.writeText(text);
-    setCopiedLayer(type);
-    window.setTimeout(() => setCopiedLayer(""), 1500);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyError("");
+      setCopiedLayer(type);
+      window.setTimeout(() => setCopiedLayer(""), 1500);
+    } catch {
+      setCopiedLayer("");
+      setCopyError("Copy failed.");
+      window.setTimeout(() => setCopyError(""), 2000);
+    }
   }
 
   async function copyAllLayers() {
@@ -168,9 +177,16 @@ function DepthLayers({ artifact, sourceRecord }) {
 
     if (!text) return;
 
-    await navigator.clipboard.writeText(text);
-    setCopiedAllLayers(true);
-    window.setTimeout(() => setCopiedAllLayers(false), 1500);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyError("");
+      setCopiedAllLayers(true);
+      window.setTimeout(() => setCopiedAllLayers(false), 1500);
+    } catch {
+      setCopiedAllLayers(false);
+      setCopyError("Copy failed.");
+      window.setTimeout(() => setCopyError(""), 2000);
+    }
   }
 
   return (
@@ -180,7 +196,7 @@ function DepthLayers({ artifact, sourceRecord }) {
           <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-200/70">
             Depth Layers
           </div>
-          <h3 className="mt-1 text-lg font-semibold text-white">
+          <h3 className="mt-1 break-words text-lg font-semibold text-white [overflow-wrap:anywhere]">
             Expand the compressed cast.
           </h3>
           <p className="mt-1 text-sm leading-6 text-slate-400">
@@ -203,6 +219,12 @@ function DepthLayers({ artifact, sourceRecord }) {
           ) : null}
         </div>
       </div>
+
+      {copyError ? (
+        <div className="mt-3 rounded-xl border border-red-300/20 bg-red-400/10 px-3 py-2 text-xs font-semibold text-red-100/80">
+          {copyError}
+        </div>
+      ) : null}
 
       <div className="mt-4 grid gap-2.5">
         {!hasLayers ? (
@@ -240,7 +262,7 @@ function DepthLayers({ artifact, sourceRecord }) {
                     className={`h-2 w-2 rounded-full ${layerStyle.marker}`}
                     aria-hidden="true"
                   />
-                  <div className={`text-xs font-bold uppercase tracking-[0.24em] ${layerStyle.label}`}>
+                  <div className={`break-words text-xs font-bold uppercase tracking-[0.24em] [overflow-wrap:anywhere] ${layerStyle.label}`}>
                     {layer.label}
                   </div>
                 </div>
@@ -251,7 +273,7 @@ function DepthLayers({ artifact, sourceRecord }) {
               </button>
 
               <div
-                className={`mt-2 whitespace-pre-wrap text-sm ${
+                className={`mt-2 whitespace-pre-wrap break-words text-sm [overflow-wrap:anywhere] ${
                   isOpen
                     ? "rounded-xl border border-white/10 bg-black/20 p-3.5 leading-7 text-slate-100"
                     : "line-clamp-2 leading-6 text-slate-300/70"

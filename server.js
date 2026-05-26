@@ -2,12 +2,19 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import OpenAI from "openai";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const distPath = path.join(__dirname, "dist");
+const indexPath = path.join(distPath, "index.html");
+
 const app = express();
 const port = process.env.PORT || 3001;
-console.log("SERVER FILE LOADED");
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -183,9 +190,7 @@ app.post("/api/generate", async (req, res) => {
       typeof req.body?.imagePrompt === "string"
         ? req.body.imagePrompt.trim()
         : "";
-console.log("GENERATE BODY:", req.body);
-console.log("PROMPT:", prompt);
-console.log("IMAGE PROMPT:", imagePrompt);
+
     if (!process.env.OPENAI_API_KEY) {
       return res
         .status(500)
@@ -199,8 +204,6 @@ console.log("IMAGE PROMPT:", imagePrompt);
         prompt: imagePrompt,
         size: "1024x1024",
       });
-
-      console.log("RAW IMAGE RESPONSE:", image);
 
       const imageData = image?.data?.[0];
       let imageUrl = "";
@@ -248,6 +251,14 @@ console.log("IMAGE PROMPT:", imagePrompt);
     });
   }
 });
+
+if (fs.existsSync(indexPath)) {
+  app.use(express.static(distPath));
+
+  app.get("*", (_req, res) => {
+    res.sendFile(indexPath);
+  });
+}
 
 app.listen(port, () => {
   console.log(`Eidomancer server listening on port ${port}`);

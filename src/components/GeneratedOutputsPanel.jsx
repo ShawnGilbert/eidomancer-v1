@@ -389,26 +389,43 @@ export function GeneratedOutputsPanel({
     youtube: false,
     fullPackage: false,
   });
+  const [copyError, setCopyError] = useState("");
 
   function markCopied(key) {
     setCopied(key);
     setTimeout(() => setCopied(""), 1500);
   }
 
-  function handleCopy(key, value) {
+  function markCopyFailed() {
+    setCopied("");
+    setCopyError("Copy failed.");
+    setTimeout(() => setCopyError(""), 2000);
+  }
+
+  async function handleCopy(key, value) {
     const text = stringifyAsset(value);
     if (!text || text === "Not generated yet.") return;
 
-    navigator.clipboard.writeText(text);
-    markCopied(key);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyError("");
+      markCopied(key);
+    } catch {
+      markCopyFailed();
+    }
   }
 
-  function handleCopyFullPackage() {
+  async function handleCopyFullPackage() {
     const text = buildFullPackageText(assets);
     if (!text) return;
 
-    navigator.clipboard.writeText(text);
-    markCopied("fullPackageTop");
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyError("");
+      markCopied("fullPackageTop");
+    } catch {
+      markCopyFailed();
+    }
   }
 
   function handleExportFullPackage() {
@@ -474,6 +491,12 @@ export function GeneratedOutputsPanel({
           </div>
         ) : null}
       </div>
+
+      {copyError ? (
+        <div className="mt-4 rounded-xl border border-red-300/20 bg-red-400/10 px-3 py-2 text-sm text-red-100/80">
+          {copyError}
+        </div>
+      ) : null}
 
       <div className="mt-5 space-y-3.5 sm:space-y-4">
         {hasGeneratedOutput ? null : (

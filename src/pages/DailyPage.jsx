@@ -440,6 +440,18 @@ export default function DailyPage() {
             />
           </>
         )}
+
+        <footer className="mt-10 flex flex-wrap justify-center gap-3 border-t border-white/10 py-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40 sm:justify-start">
+          <a href="#/about" className="transition hover:text-cyan-100">
+            About
+          </a>
+          <a href="#/privacy" className="transition hover:text-cyan-100">
+            Privacy Policy
+          </a>
+          <a href="#/terms" className="transition hover:text-cyan-100">
+            Terms / Disclaimer
+          </a>
+        </footer>
       </div>
     </div>
   );

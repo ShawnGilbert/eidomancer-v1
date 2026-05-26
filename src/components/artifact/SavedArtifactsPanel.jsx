@@ -1,6 +1,6 @@
 // D:\EidomancerProject\eidomancer-app\src\components\artifact\SavedArtifactsPanel.jsx
 
-import { useState } from "react";
+import { useReducer } from "react";
 import {
   deleteSavedArtifact,
   getArtifactFingerprint,
@@ -96,11 +96,11 @@ export default function SavedArtifactsPanel({
   activeArtifact,
   onSelectArtifact,
 }) {
-  const [refresh, setRefresh] = useState(0);
+  const [, forceRefresh] = useReducer((value) => value + 1, 0);
 
   function deleteArtifact(index) {
     deleteSavedArtifact(index);
-    setRefresh((v) => v + 1);
+    forceRefresh();
   }
 
   const savedArtifacts = loadSavedArtifacts();
@@ -149,7 +149,7 @@ export default function SavedArtifactsPanel({
           <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-200/70">
             Archive Empty
           </div>
-          <p className="mt-2 text-sm leading-6 text-slate-300/85">
+          <p className="mt-2 text-sm leading-6 text-slate-300/85 [overflow-wrap:anywhere]">
             Saved artifacts will appear here after you generate a cast. They preserve the card, cast context, and any package outputs you create.
           </p>
         </div>
@@ -189,9 +189,10 @@ export default function SavedArtifactsPanel({
                 <button
                   type="button"
                   onClick={() => deleteArtifact(index)}
+                  aria-label="Delete saved artifact"
                   className="absolute right-2 top-2 text-xs text-red-300 opacity-0 hover:text-red-200 group-hover:opacity-100"
                 >
-                  ✕
+                  &times;
                 </button>
 
                 <button
@@ -214,7 +215,7 @@ export default function SavedArtifactsPanel({
                       )}
 
                       <div
-                        className={`line-clamp-2 break-words text-sm font-semibold leading-5 ${
+                        className={`line-clamp-2 break-words text-sm font-semibold leading-5 [overflow-wrap:anywhere] ${
                           isActive ? "text-cyan-50" : "text-white"
                         }`}
                       >
@@ -279,7 +280,7 @@ export default function SavedArtifactsPanel({
                       <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
                         Essence
                       </div>
-                      <div className="mt-1 line-clamp-2 break-words text-xs leading-5 text-slate-200/80">
+                      <div className="mt-1 line-clamp-2 break-words text-xs leading-5 text-slate-200/80 [overflow-wrap:anywhere]">
                         {artifact.subtitle}
                       </div>
                     </div>
@@ -290,7 +291,7 @@ export default function SavedArtifactsPanel({
                       <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-200/70">
                         Focus
                       </div>
-                      <div className="mt-1 line-clamp-2 break-words text-xs leading-5 text-cyan-50/85">
+                      <div className="mt-1 line-clamp-2 break-words text-xs leading-5 text-cyan-50/85 [overflow-wrap:anywhere]">
                         {inputPreview}
                       </div>
                     </div>
