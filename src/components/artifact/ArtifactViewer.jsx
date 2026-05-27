@@ -500,6 +500,9 @@ function ResonancePanel({ matches }) {
       <p className="mt-1 text-sm leading-6 text-slate-400">
         This artifact echoes patterns already present in the archive.
       </p>
+      <p className="mt-1 text-xs leading-5 text-slate-500">
+        Compared against prior saved artifacts.
+      </p>
 
       <div className="mt-3 grid gap-2.5">
         {matches.map((match) => (
@@ -514,7 +517,7 @@ function ResonancePanel({ matches }) {
               {match.memoryLabel}
             </div>
             <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-              Seen {match.count} times
+              Previously seen {match.count} times
             </div>
           </div>
         ))}
