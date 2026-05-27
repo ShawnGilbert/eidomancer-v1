@@ -4,6 +4,50 @@ function cleanText(value = "") {
   return String(value || "").trim();
 }
 
+const GENERIC_MEMORY_LABELS = new Set([
+  "signal",
+  "tension",
+  "pattern",
+  "insight",
+  "guidance",
+  "recommendation",
+  "echo",
+  "essence",
+  "core object",
+  "section",
+]);
+
+function compactMemoryLabel(value = "", maxLength = 48) {
+  const cleaned = cleanText(value).replace(/\s+/g, " ");
+  const base = cleaned.replace(/[.!?:;,\-–—]+$/g, "");
+
+  if (!base) return "";
+  if (cleaned.endsWith("...") && cleaned.length <= maxLength + 3) return cleaned;
+  if (base.length <= maxLength) return base;
+
+  return `${base.slice(0, maxLength).trim().replace(/[.!?:;,\-–—]+$/g, "")}...`;
+}
+
+function firstMeaningfulPhrase(value = "") {
+  const cleaned = cleanText(value).replace(/\s+/g, " ");
+  const firstSentence = cleaned.split(/[.!?]/).find((part) => cleanText(part));
+  const firstClause = cleanText(firstSentence || cleaned)
+    .split(/[,;:–—]/)
+    .find((part) => cleanText(part));
+
+  return cleanText(firstClause || firstSentence || cleaned);
+}
+
+function deriveMemoryLabel({ title = "", name = "", label = "", text = "" } = {}) {
+  const explicit = cleanText(title || name || label);
+
+  if (explicit && !GENERIC_MEMORY_LABELS.has(explicit.toLowerCase())) {
+    return compactMemoryLabel(explicit);
+  }
+
+  return compactMemoryLabel(firstMeaningfulPhrase(text));
+}
+
 function getSection(cast, type) {
   const sections = Array.isArray(cast?.sections) ? cast.sections : [];
   const match = sections.find(
@@ -11,6 +55,16 @@ function getSection(cast, type) {
   );
 
   return cleanText(match?.content || "");
+}
+
+function getCastSection(cast, type) {
+  const sections = Array.isArray(cast?.sections) ? cast.sections : [];
+
+  return (
+    sections.find(
+      (section) => String(section?.type || "").toLowerCase() === type
+    ) || {}
+  );
 }
 
 function hashString(value = "") {
@@ -144,6 +198,10 @@ ${nodes}
 }
 
 function buildSections(cast) {
+  const signalSection = getCastSection(cast, "signal");
+  const tensionSection = getCastSection(cast, "tension");
+  const patternSection = getCastSection(cast, "pattern");
+  const insightSection = getCastSection(cast, "insight");
   const signal = getSection(cast, "signal");
   const tension = getSection(cast, "tension");
   const pattern = getSection(cast, "pattern");
@@ -160,6 +218,12 @@ function buildSections(cast) {
       position: "leftTop",
       short: signal,
       full: signal,
+      memoryLabel: deriveMemoryLabel({
+        title: signalSection.title,
+        name: signalSection.name,
+        label: signalSection.label,
+        text: signal,
+      }),
     },
     {
       id: "tension",
@@ -167,6 +231,12 @@ function buildSections(cast) {
       position: "rightTop",
       short: tension,
       full: tension,
+      memoryLabel: deriveMemoryLabel({
+        title: tensionSection.title,
+        name: tensionSection.name,
+        label: tensionSection.label,
+        text: tension,
+      }),
     },
     {
       id: "pattern",
@@ -174,6 +244,12 @@ function buildSections(cast) {
       position: "leftMiddle",
       short: pattern,
       full: pattern,
+      memoryLabel: deriveMemoryLabel({
+        title: patternSection.title,
+        name: patternSection.name,
+        label: patternSection.label,
+        text: pattern,
+      }),
     },
     {
       id: "insight",
@@ -181,6 +257,12 @@ function buildSections(cast) {
       position: "rightMiddle",
       short: insight,
       full: insight,
+      memoryLabel: deriveMemoryLabel({
+        title: insightSection.title,
+        name: insightSection.name,
+        label: insightSection.label,
+        text: insight,
+      }),
     },
     {
       id: "essence",
@@ -188,6 +270,10 @@ function buildSections(cast) {
       position: "bottomCenter",
       short: essence,
       full: essence,
+      memoryLabel: deriveMemoryLabel({
+        title: cast?.coreCard?.name || cast?.coreCard?.title,
+        text: essence,
+      }),
     },
   ].filter((section) => section.short || section.full);
 }
@@ -221,6 +307,53 @@ export function castToArtifact(cast) {
       cleanText(cast?.coreCard?.description) ||
       cleanText(cast?.coreCard?.imagePrompt) ||
       "No core object defined.",
+
+    memoryLabels: {
+      signal: deriveMemoryLabel({
+        title: getCastSection(cast, "signal").title,
+        name: getCastSection(cast, "signal").name,
+        label: getCastSection(cast, "signal").label,
+        text: getSection(cast, "signal"),
+      }),
+      tension: deriveMemoryLabel({
+        title: getCastSection(cast, "tension").title,
+        name: getCastSection(cast, "tension").name,
+        label: getCastSection(cast, "tension").label,
+        text: getSection(cast, "tension"),
+      }),
+      pattern: deriveMemoryLabel({
+        title: getCastSection(cast, "pattern").title,
+        name: getCastSection(cast, "pattern").name,
+        label: getCastSection(cast, "pattern").label,
+        text: getSection(cast, "pattern"),
+      }),
+      insight: deriveMemoryLabel({
+        title: getCastSection(cast, "insight").title,
+        name: getCastSection(cast, "insight").name,
+        label: getCastSection(cast, "insight").label,
+        text: getSection(cast, "insight"),
+      }),
+      guidance: deriveMemoryLabel({
+        title:
+          getCastSection(cast, "recommendation").title ||
+          getCastSection(cast, "guidance").title,
+        name:
+          getCastSection(cast, "recommendation").name ||
+          getCastSection(cast, "guidance").name,
+        label:
+          getCastSection(cast, "recommendation").label ||
+          getCastSection(cast, "guidance").label,
+        text: getSection(cast, "recommendation") || getSection(cast, "guidance"),
+      }),
+      echo: deriveMemoryLabel({
+        title: cast?.shareables?.echoCard?.title,
+        text: cleanText(cast?.echo) || getSection(cast, "echo"),
+      }),
+      coreObject: deriveMemoryLabel({
+        title: cast?.coreCard?.name || cast?.coreCard?.title,
+        text: cast?.coreCard?.description || cast?.coreCard?.imagePrompt,
+      }),
+    },
 
     sections: buildSections(cast),
 

@@ -26,6 +26,56 @@ function cleanArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
 }
 
+const GENERIC_MEMORY_LABELS = new Set([
+  "signal",
+  "tension",
+  "pattern",
+  "insight",
+  "guidance",
+  "recommendation",
+  "echo",
+  "essence",
+  "core object",
+  "section",
+]);
+
+function compactMemoryLabel(value = "", maxLength = 48) {
+  const cleaned = cleanText(value).replace(/\s+/g, " ");
+  const base = cleaned.replace(/[.!?:;,\-–—]+$/g, "");
+
+  if (!base) return "";
+  if (cleaned.endsWith("...") && cleaned.length <= maxLength + 3) return cleaned;
+  if (base.length <= maxLength) return base;
+
+  return `${base.slice(0, maxLength).trim().replace(/[.!?:;,\-–—]+$/g, "")}...`;
+}
+
+function firstMeaningfulPhrase(value = "") {
+  const cleaned = cleanText(value).replace(/\s+/g, " ");
+  const firstSentence = cleaned.split(/[.!?]/).find((part) => cleanText(part));
+  const firstClause = cleanText(firstSentence || cleaned)
+    .split(/[,;:–—]/)
+    .find((part) => cleanText(part));
+
+  return cleanText(firstClause || firstSentence || cleaned);
+}
+
+function deriveMemoryLabel({ memoryLabel = "", title = "", name = "", label = "", text = "" } = {}) {
+  const existing = compactMemoryLabel(memoryLabel);
+
+  if (existing && !GENERIC_MEMORY_LABELS.has(existing.toLowerCase())) {
+    return existing;
+  }
+
+  const explicit = cleanText(title || name || label);
+
+  if (explicit && !GENERIC_MEMORY_LABELS.has(explicit.toLowerCase())) {
+    return compactMemoryLabel(explicit);
+  }
+
+  return compactMemoryLabel(firstMeaningfulPhrase(text));
+}
+
 function getSectionType(section = {}) {
   return cleanText(section.type || section.id || section.title).toLowerCase();
 }
@@ -48,6 +98,7 @@ function normalizeSection(section, index = 0) {
       title: "Section",
       short: cleanText(section),
       full: cleanText(section),
+      memoryLabel: deriveMemoryLabel({ text: section }),
       action: "",
       position: "",
     };
@@ -67,6 +118,13 @@ function normalizeSection(section, index = 0) {
     short: cleanText(safeSection.short) || content,
     full: cleanText(safeSection.full) || content,
     content,
+    memoryLabel: deriveMemoryLabel({
+      memoryLabel: safeSection.memoryLabel,
+      title: safeSection.title,
+      name: safeSection.name,
+      label: safeSection.label,
+      text: content,
+    }),
     action: cleanText(safeSection.action),
     position: cleanText(safeSection.position),
   };
@@ -168,6 +226,21 @@ export function getArtifactSectionText(artifact = {}, type) {
 export function normalizeArtifact(artifact = {}) {
   const safeArtifact = cleanObject(artifact);
   const metadata = cleanObject(safeArtifact.metadata);
+  const memoryLabels = cleanObject(safeArtifact.memoryLabels);
+  const sections = getNormalizedArtifactSections(safeArtifact);
+  const sectionMemoryLabels = sections.reduce((labels, section) => {
+    const type = cleanText(section.type || section.id).toLowerCase();
+
+    if (type && section.memoryLabel && !labels[type]) {
+      labels[type] = section.memoryLabel;
+    }
+
+    if (section.title === "Guidance" && section.memoryLabel && !labels.guidance) {
+      labels.guidance = section.memoryLabel;
+    }
+
+    return labels;
+  }, {});
   const sourceCast = cleanObject(
     safeArtifact.sourceCast ||
       safeArtifact.fullCast ||
@@ -186,7 +259,19 @@ export function normalizeArtifact(artifact = {}) {
     image: cleanText(safeArtifact.image),
     input: safeArtifact.input || "",
     coreObject: cleanText(safeArtifact.coreObject),
-    sections: getNormalizedArtifactSections(safeArtifact),
+    sections,
+    memoryLabels: {
+      ...sectionMemoryLabels,
+      ...memoryLabels,
+      coreObject: deriveMemoryLabel({
+        memoryLabel: memoryLabels.coreObject,
+        title:
+          safeArtifact.coreCard?.name ||
+          safeArtifact.coreCard?.title ||
+          safeArtifact.title,
+        text: safeArtifact.coreObject || safeArtifact.coreCard?.description,
+      }),
+    },
     actions: cleanArray(safeArtifact.actions),
     packageOutputs: normalizePackageOutputs(safeArtifact),
     mood: cleanText(safeArtifact.mood || safeArtifact.tone),

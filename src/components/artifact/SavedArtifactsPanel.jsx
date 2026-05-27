@@ -24,7 +24,25 @@ const GENERIC_SECTION_TITLES = {
   signal: "signal",
   tension: "tension",
   pattern: "pattern",
+  insight: "insight",
+  guidance: "guidance",
+  recommendation: "recommendation",
+  echo: "echo",
+  essence: "essence",
 };
+
+const GENERIC_MEMORY_LABELS = new Set([
+  "signal",
+  "tension",
+  "pattern",
+  "insight",
+  "guidance",
+  "recommendation",
+  "echo",
+  "essence",
+  "core object",
+  "section",
+]);
 
 function cleanText(value = "") {
   return String(value || "").trim();
@@ -32,10 +50,13 @@ function cleanText(value = "") {
 
 function compactMemoryLabel(value = "", maxLength = 52) {
   const cleaned = cleanText(value).replace(/\s+/g, " ");
+  const base = cleaned.replace(/[.!?:;,\-–—]+$/g, "");
 
-  if (cleaned.length <= maxLength) return cleaned;
+  if (!base) return "";
+  if (cleaned.endsWith("...") && cleaned.length <= maxLength + 3) return cleaned;
+  if (base.length <= maxLength) return base;
 
-  return `${cleaned.slice(0, maxLength).trim()}...`;
+  return `${base.slice(0, maxLength).trim().replace(/[.!?:;,\-–—]+$/g, "")}...`;
 }
 
 function getSectionType(section = {}) {
@@ -53,6 +74,15 @@ function getSectionContent(section = {}) {
 }
 
 function getMemorySectionLabel(record = {}, type) {
+  const explicitMemoryLabel = cleanText(record?.memoryLabels?.[type]);
+
+  if (
+    explicitMemoryLabel &&
+    !GENERIC_MEMORY_LABELS.has(explicitMemoryLabel.toLowerCase())
+  ) {
+    return compactMemoryLabel(explicitMemoryLabel);
+  }
+
   const sections = Array.isArray(record?.sections) ? record.sections : [];
   const section = sections.find((item) => {
     const sectionType = getSectionType(item);
@@ -61,6 +91,15 @@ function getMemorySectionLabel(record = {}, type) {
   });
 
   if (!section) return "";
+
+  const sectionMemoryLabel = cleanText(section.memoryLabel);
+
+  if (
+    sectionMemoryLabel &&
+    !GENERIC_MEMORY_LABELS.has(sectionMemoryLabel.toLowerCase())
+  ) {
+    return compactMemoryLabel(sectionMemoryLabel);
+  }
 
   const title = cleanText(section.title || section.label || section.name);
   const genericTitle = GENERIC_SECTION_TITLES[type];
@@ -73,6 +112,17 @@ function getMemorySectionLabel(record = {}, type) {
 }
 
 function getCoreObjectLabel(artifact = {}, sourceCast = {}) {
+  const explicitMemoryLabel = cleanText(
+    artifact?.memoryLabels?.coreObject || sourceCast?.memoryLabels?.coreObject
+  );
+
+  if (
+    explicitMemoryLabel &&
+    !GENERIC_MEMORY_LABELS.has(explicitMemoryLabel.toLowerCase())
+  ) {
+    return compactMemoryLabel(explicitMemoryLabel);
+  }
+
   return compactMemoryLabel(
     sourceCast?.coreCard?.name ||
       sourceCast?.coreCard?.title ||
@@ -116,8 +166,8 @@ function buildArtifactMemory(savedArtifacts = []) {
     MEMORY_SECTIONS.forEach(([type]) => {
       addMemoryCount(
         memoryCounts[type],
-        getMemorySectionLabel(sourceCast, type) ||
-          getMemorySectionLabel(artifact, type)
+        getMemorySectionLabel(artifact, type) ||
+          getMemorySectionLabel(sourceCast, type)
       );
     });
 
