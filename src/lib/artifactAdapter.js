@@ -303,6 +303,7 @@ export function castToArtifact(cast) {
 
     image:
       coreCard.imageUrl ||
+      coreCard.generatedImageUrl ||
       buildGeneratedArtifactImage(adaptedCast) ||
       `${window.location.origin}/metronome_core.png`,
 

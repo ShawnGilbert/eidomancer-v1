@@ -73,7 +73,9 @@ function getCoreCard(cast) {
   const hook = normalizeText(
     derivedCoreCard.hook || visual.subject || visual.atmosphere
   );
-  const imageUrl = normalizeText(derivedCoreCard.imageUrl);
+  const imageUrl = normalizeText(
+    derivedCoreCard.imageUrl || derivedCoreCard.generatedImageUrl
+  );
   if (!title && !subtitle && !hook && !imageUrl) return null;
 
   return {

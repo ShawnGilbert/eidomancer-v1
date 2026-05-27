@@ -266,7 +266,10 @@ export function normalizeArtifact(artifact = {}) {
     id: cleanText(safeArtifact.id),
     title: cleanText(safeArtifact.title) || cleanText(coreCard.title) || "Untitled Artifact",
     subtitle: cleanText(safeArtifact.subtitle) || cleanText(coreCard.subtitle),
-    image: cleanText(safeArtifact.image),
+    image:
+      cleanText(safeArtifact.image) ||
+      cleanText(coreCard.imageUrl) ||
+      cleanText(coreCard.generatedImageUrl),
     input: safeArtifact.input || "",
     coreObject: cleanText(safeArtifact.coreObject) || cleanText(coreCard.coreObject),
     coreCard,

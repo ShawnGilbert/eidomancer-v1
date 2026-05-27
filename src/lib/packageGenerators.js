@@ -470,6 +470,58 @@ export function generateCoreCardImagePrompt(record) {
   };
 }
 
+export async function generateCoreCardImage(record) {
+  const coreCard = deriveCoreCardFromCast(record);
+  const prompt = cleanText(coreCard.imagePrompt);
+  const existingImageUrl = cleanText(
+    coreCard.imageUrl || coreCard.generatedImageUrl
+  );
+
+  if (existingImageUrl) {
+    return {
+      imageUrl: existingImageUrl,
+      reused: true,
+      prompt,
+      cardTitle: coreCard.title,
+      coreObject: coreCard.coreObject,
+      archetype: coreCard.archetype,
+      themeColor: coreCard.themeColor,
+      generatedAt: coreCard.imageGeneratedAt || "",
+    };
+  }
+
+  if (!prompt) {
+    throw new Error("No Core Card image prompt is available.");
+  }
+
+  const response = await fetch("/api/image", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      kind: "coreCard",
+      aspectRatio: IMAGE_FORMATS.CORE.aspectRatio,
+      prompt,
+    }),
+  });
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok || !data?.imageUrl) {
+    throw new Error(data?.error || "Core Card image generation failed.");
+  }
+
+  return {
+    ...data,
+    prompt,
+    cardTitle: coreCard.title,
+    coreObject: coreCard.coreObject,
+    archetype: coreCard.archetype,
+    themeColor: coreCard.themeColor,
+    generatedAt: data.createdAt || new Date().toISOString(),
+  };
+}
+
 export function generateEcho(record) {
   const cast = completeCast(record);
 

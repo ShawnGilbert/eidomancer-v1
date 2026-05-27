@@ -23,6 +23,7 @@ import {
 import { getAccessTier, getFreemiumCapabilities } from "../lib/freemiumGate";
 import {
   generateCoreCardImagePrompt,
+  generateCoreCardImage,
   generateEcho,
   generateFullPackage,
   generateSongPackage,
@@ -122,7 +123,7 @@ export default function DailyPage() {
     }
   }
 
-  function handleGenerateOutput(type) {
+  async function handleGenerateOutput(type) {
     const activeRecord = getArtifactSourceCast(activeArtifact) || selectedCast || activeArtifact;
 
     if (!activeRecord) return;
@@ -166,8 +167,70 @@ export default function DailyPage() {
             return { echo, coreImagePrompt, song, youtube, fullPackage };
           })()
         : null;
-    const nextOutput =
-      fullPackageOutputs
+    try {
+      if (type === "coreCardImage") {
+        const imageOutput = await generateCoreCardImage(imagePromptRecord);
+        const currentCoreCard = activeArtifact?.coreCard || activeRecord?.coreCard || {};
+        const nextCoreCard = {
+          ...currentCoreCard,
+          imagePrompt:
+            currentCoreCard.imagePrompt ||
+            imageOutput.prompt ||
+            activeRecord?.coreCard?.imagePrompt ||
+            "",
+          imageUrl: imageOutput.imageUrl,
+          generatedImageUrl: imageOutput.imageUrl,
+          imageGeneratedAt: imageOutput.generatedAt || new Date().toISOString(),
+          imageModel: imageOutput.model || "",
+        };
+        const sourceCast = getArtifactSourceCast(activeArtifact);
+        const updatedSourceCast = sourceCast
+          ? {
+              ...sourceCast,
+              coreCard: {
+                ...(sourceCast.coreCard || {}),
+                ...nextCoreCard,
+              },
+            }
+          : null;
+        const updatedSelectedCast =
+          !updatedSourceCast && selectedCast
+            ? {
+                ...selectedCast,
+                coreCard: {
+                  ...(selectedCast.coreCard || {}),
+                  ...nextCoreCard,
+                },
+              }
+            : null;
+        const updatedArtifact = {
+          ...activeArtifact,
+          coreCard: nextCoreCard,
+          sourceCast: updatedSourceCast || updatedSelectedCast || activeArtifact?.sourceCast,
+          image: imageOutput.imageUrl,
+        };
+        const { artifact } = updateSavedArtifact(activeArtifact, {
+          coreCard: nextCoreCard,
+          ...(updatedSourceCast ? { sourceCast: updatedSourceCast } : {}),
+          image: imageOutput.imageUrl,
+        });
+
+        setManualArtifact(artifact || updatedArtifact);
+        if (updatedSourceCast || updatedSelectedCast) {
+          handleSelectRecentCast(updatedSourceCast || updatedSelectedCast);
+        }
+        setSavedRefreshKey((value) => value + 1);
+        setPackageStatusMessage(
+          imageOutput.reused
+            ? "Core Card Image already available"
+            : getOutputSuccessMessage(type)
+        );
+        setIsGeneratingOutput(false);
+        return;
+      }
+
+      const nextOutput =
+        fullPackageOutputs
         ? fullPackageOutputs
         : type === "youtube"
         ? generateYouTubePackage({
@@ -184,41 +247,47 @@ export default function DailyPage() {
         ? generateCoreCardImagePrompt(imagePromptRecord)
         : null;
 
-    if (!nextOutput) {
-      setIsGeneratingOutput(false);
-      return;
-    }
-    const packageOutputs = {
-      ...existingOutputs,
-      ...(fullPackageOutputs || { [type]: nextOutput }),
-    };
-    const updatedArtifact = {
-      ...activeArtifact,
-      packageOutputs,
-      ...(packageOutputs.echo ? { echoPrompt: packageOutputs.echo.prompt } : {}),
-    };
-
-    setGeneratedOutputs((outputs) => ({
-      ...outputs,
-      ...(fullPackageOutputs || { [type]: nextOutput }),
-    }));
-
-    const { artifact } = updateSavedArtifact(activeArtifact, {
-      packageOutputs,
-      ...(packageOutputs.echo ? { echoPrompt: packageOutputs.echo.prompt } : {}),
-    });
-
-    if (artifact) {
-      if (isViewingSaved) {
-        setManualArtifact(artifact);
+      if (!nextOutput) {
+        setIsGeneratingOutput(false);
+        return;
       }
-      setSavedRefreshKey((value) => value + 1);
-    } else if (isViewingSaved) {
-      setManualArtifact(updatedArtifact);
-    }
+      const packageOutputs = {
+        ...existingOutputs,
+        ...(fullPackageOutputs || { [type]: nextOutput }),
+      };
+      const updatedArtifact = {
+        ...activeArtifact,
+        packageOutputs,
+        ...(packageOutputs.echo ? { echoPrompt: packageOutputs.echo.prompt } : {}),
+      };
 
-    setPackageStatusMessage(getOutputSuccessMessage(type));
-    setIsGeneratingOutput(false);
+      setGeneratedOutputs((outputs) => ({
+        ...outputs,
+        ...(fullPackageOutputs || { [type]: nextOutput }),
+      }));
+
+      const { artifact } = updateSavedArtifact(activeArtifact, {
+        packageOutputs,
+        ...(packageOutputs.echo ? { echoPrompt: packageOutputs.echo.prompt } : {}),
+      });
+
+      if (artifact) {
+        if (isViewingSaved) {
+          setManualArtifact(artifact);
+        }
+        setSavedRefreshKey((value) => value + 1);
+      } else if (isViewingSaved) {
+        setManualArtifact(updatedArtifact);
+      }
+
+      setPackageStatusMessage(getOutputSuccessMessage(type));
+      setIsGeneratingOutput(false);
+    } catch (generationError) {
+      setPackageStatusMessage(
+        generationError?.message || "Package output generation failed"
+      );
+      setIsGeneratingOutput(false);
+    }
   }
 
   function handleClearGeneratedOutputs() {

@@ -1,4 +1,5 @@
 export const OUTPUT_KEYS = {
+  CORE_CARD_IMAGE: "coreCardImage",
   CORE_IMAGE_PROMPT: "coreImagePrompt",
   ECHO: "echo",
   SONG: "song",
@@ -7,6 +8,17 @@ export const OUTPUT_KEYS = {
 };
 
 export const OUTPUT_REGISTRY = {
+  [OUTPUT_KEYS.CORE_CARD_IMAGE]: {
+    key: OUTPUT_KEYS.CORE_CARD_IMAGE,
+    aliases: ["coreCardGeneratedImage"],
+    label: "Core Card Image",
+    actionLabel: "Generate Core Card Image",
+    successMessage: "Core Card Image generated",
+    description: "Generate the real Core Card image from the prepared prompt.",
+    intendedUse: "Create the primary tarot-style Core Card artwork.",
+    category: "image",
+    copyExportCategory: "image",
+  },
   [OUTPUT_KEYS.CORE_IMAGE_PROMPT]: {
     key: OUTPUT_KEYS.CORE_IMAGE_PROMPT,
     aliases: ["coreCardImagePrompt", "coreImagePrompt"],
@@ -67,6 +79,7 @@ export const OUTPUT_REGISTRY = {
 export const OUTPUT_ACTION_ORDER = [
   OUTPUT_KEYS.ECHO,
   OUTPUT_KEYS.CORE_IMAGE_PROMPT,
+  OUTPUT_KEYS.CORE_CARD_IMAGE,
   OUTPUT_KEYS.SONG,
   OUTPUT_KEYS.YOUTUBE,
   OUTPUT_KEYS.FULL_PACKAGE,
