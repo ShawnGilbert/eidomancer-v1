@@ -82,36 +82,84 @@ export const ARTIFACT_SECTION_ACCENTS = {
 
 export const CORE_CARD_DERIVED_AURAS = [
   {
+    key: "cyan",
     primary: "rgba(34, 211, 238, 0.18)",
     secondary: "rgba(14, 165, 233, 0.1)",
     halo: "rgba(125, 211, 252, 0.16)",
     frame: "border-cyan-200/15",
   },
   {
+    key: "amber",
     primary: "rgba(251, 191, 36, 0.16)",
     secondary: "rgba(245, 158, 11, 0.08)",
     halo: "rgba(253, 224, 71, 0.12)",
     frame: "border-amber-200/15",
   },
   {
+    key: "violet",
     primary: "rgba(167, 139, 250, 0.17)",
     secondary: "rgba(124, 58, 237, 0.08)",
     halo: "rgba(196, 181, 253, 0.13)",
     frame: "border-violet-200/15",
   },
   {
+    key: "emerald",
     primary: "rgba(52, 211, 153, 0.15)",
     secondary: "rgba(16, 185, 129, 0.08)",
     halo: "rgba(110, 231, 183, 0.12)",
     frame: "border-emerald-200/15",
   },
   {
+    key: "crimson",
     primary: "rgba(232, 121, 249, 0.15)",
-    secondary: "rgba(192, 38, 211, 0.08)",
-    halo: "rgba(240, 171, 252, 0.12)",
-    frame: "border-fuchsia-200/15",
+    secondary: "rgba(244, 63, 94, 0.08)",
+    halo: "rgba(251, 113, 133, 0.13)",
+    frame: "border-rose-200/15",
   },
 ];
+
+export const CORE_CARD_THEME_VISUALS = {
+  amber: {
+    name: "Amber",
+    palette: ["#120b0b", "#f59e0b", "#facc15", "#fed7aa"],
+    background:
+      "radial-gradient(circle at 50% 28%, rgba(251,191,36,0.28), transparent 34%), linear-gradient(145deg, #160c08, #071019 68%)",
+    aura: "rgba(251, 191, 36, 0.24)",
+    footer: "Work / Endurance",
+  },
+  cyan: {
+    name: "Cyan",
+    palette: ["#071019", "#22d3ee", "#38bdf8", "#a5f3fc"],
+    background:
+      "radial-gradient(circle at 50% 25%, rgba(34,211,238,0.27), transparent 34%), linear-gradient(145deg, #04131f, #020817 72%)",
+    aura: "rgba(34, 211, 238, 0.24)",
+    footer: "Signal / Clarity",
+  },
+  violet: {
+    name: "Violet",
+    palette: ["#100718", "#a78bfa", "#f0abfc", "#c4b5fd"],
+    background:
+      "radial-gradient(circle at 50% 25%, rgba(167,139,250,0.28), transparent 36%), linear-gradient(145deg, #12071f, #020817 72%)",
+    aura: "rgba(167, 139, 250, 0.24)",
+    footer: "Mystery / Threshold",
+  },
+  emerald: {
+    name: "Emerald",
+    palette: ["#06111f", "#34d399", "#a7f3d0", "#22d3ee"],
+    background:
+      "radial-gradient(circle at 50% 26%, rgba(52,211,153,0.26), transparent 35%), linear-gradient(145deg, #031713, #020817 72%)",
+    aura: "rgba(52, 211, 153, 0.22)",
+    footer: "Growth / Repair",
+  },
+  crimson: {
+    name: "Crimson",
+    palette: ["#18070c", "#fb7185", "#f97316", "#fecdd3"],
+    background:
+      "radial-gradient(circle at 50% 25%, rgba(251,113,133,0.27), transparent 34%), linear-gradient(145deg, #19070c, #020817 72%)",
+    aura: "rgba(251, 113, 133, 0.22)",
+    footer: "Urgency / Conflict",
+  },
+};
 
 export const ARTIFACT_SECTION_PRESENTATION = {
   signal: {
@@ -199,4 +247,8 @@ export function getDepthLayerTypes() {
 
 export function getCoreDerivedAuras() {
   return CORE_CARD_DERIVED_AURAS;
+}
+
+export function getCoreCardThemeVisual(themeColor = "cyan") {
+  return CORE_CARD_THEME_VISUALS[themeColor] || CORE_CARD_THEME_VISUALS.cyan;
 }

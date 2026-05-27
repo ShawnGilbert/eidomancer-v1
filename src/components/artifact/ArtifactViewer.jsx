@@ -267,7 +267,12 @@ function getCoreCardDerivedSeed(artifact, sourceRecord) {
 
 function deriveCoreCardPresentation(artifact, sourceRecord) {
   const seed = getCoreCardDerivedSeed(artifact, sourceRecord);
-  const aura = coreDerivedAuras[hashText(seed) % coreDerivedAuras.length];
+  const themeColor = cleanText(
+    sourceRecord?.coreCard?.themeColor || artifact?.coreCard?.themeColor
+  ).toLowerCase();
+  const aura =
+    coreDerivedAuras.find((item) => item.key === themeColor) ||
+    coreDerivedAuras[hashText(seed) % coreDerivedAuras.length];
 
   return {
     ...aura,
