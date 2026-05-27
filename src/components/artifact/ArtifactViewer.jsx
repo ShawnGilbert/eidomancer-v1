@@ -6,14 +6,51 @@ import {
   getNormalizedArtifactSections,
   normalizeArtifact,
 } from "../../lib/normalizeArtifact";
+import {
+  getArtifactSourceCast,
+  loadSavedArtifacts,
+} from "../../lib/artifactStorage";
 import ArtifactCard from "./ArtifactCard";
 
 const depthLayerTypes = getDepthLayerTypes();
+const RESONANCE_TYPES = [
+  ["signal", "Signal"],
+  ["tension", "Tension"],
+  ["pattern", "Pattern"],
+  ["coreObject", "Core Object"],
+];
+const RESONANCE_THRESHOLD = 2;
+const GENERIC_MEMORY_LABELS = new Set([
+  "signal",
+  "tension",
+  "pattern",
+  "insight",
+  "guidance",
+  "recommendation",
+  "echo",
+  "essence",
+  "core object",
+  "section",
+]);
 
 // TODO: Route future user-selected theme IDs here without persisting theme state yet.
 const artifactTheme = getThemePalette(DEFAULT_THEME_ID).artifact;
 const depthLayerStyles = artifactTheme.depthLayerStyles;
 const artifactMoodStyles = artifactTheme.moodStyles;
+
+function cleanText(value = "") {
+  return String(value || "").trim();
+}
+
+function getMemoryKey(value = "") {
+  return cleanText(value).toLowerCase();
+}
+
+function isUsefulMemoryLabel(value = "") {
+  const label = cleanText(value);
+
+  return Boolean(label) && !GENERIC_MEMORY_LABELS.has(label.toLowerCase());
+}
 
 function getArtifactTransitionKey(artifact) {
   return [
@@ -24,6 +61,107 @@ function getArtifactTransitionKey(artifact) {
   ]
     .filter(Boolean)
     .join("::");
+}
+
+function getSectionMemoryLabel(record = {}, type) {
+  const explicit = cleanText(record?.memoryLabels?.[type]);
+
+  if (isUsefulMemoryLabel(explicit)) return explicit;
+
+  const sections = getNormalizedArtifactSections(record);
+  const section = sections.find((item) => {
+    const sectionType = cleanText(item.type || item.id).toLowerCase();
+    const sectionTitle = cleanText(item.title).toLowerCase();
+
+    return sectionType === type || sectionTitle === type;
+  });
+
+  if (!section) return "";
+
+  if (isUsefulMemoryLabel(section.memoryLabel)) return section.memoryLabel;
+  if (isUsefulMemoryLabel(section.title)) return section.title;
+
+  return "";
+}
+
+function getCoreObjectMemoryLabel(record = {}) {
+  const explicit = cleanText(record?.memoryLabels?.coreObject);
+
+  if (isUsefulMemoryLabel(explicit)) return explicit;
+
+  return cleanText(
+    record?.coreCard?.name ||
+      record?.coreCard?.title ||
+      record?.title ||
+      record?.coreObject
+  );
+}
+
+function getRecordMemoryLabel(record = {}, type) {
+  return type === "coreObject"
+    ? getCoreObjectMemoryLabel(record)
+    : getSectionMemoryLabel(record, type);
+}
+
+function addResonanceCount(map, type, label) {
+  if (!isUsefulMemoryLabel(label)) return;
+
+  const key = getMemoryKey(label);
+  const current = map[type].get(key);
+
+  map[type].set(key, {
+    label: current?.label || label,
+    count: (current?.count || 0) + 1,
+  });
+}
+
+function buildSavedResonanceMap() {
+  const resonanceMap = {
+    signal: new Map(),
+    tension: new Map(),
+    pattern: new Map(),
+    coreObject: new Map(),
+  };
+
+  loadSavedArtifacts().forEach((savedArtifact) => {
+    const normalizedArtifact = normalizeArtifact(savedArtifact);
+    const normalizedSource = normalizeArtifact(
+      getArtifactSourceCast(savedArtifact) || {}
+    );
+
+    RESONANCE_TYPES.forEach(([type]) => {
+      addResonanceCount(
+        resonanceMap,
+        type,
+        getRecordMemoryLabel(normalizedArtifact, type) ||
+          getRecordMemoryLabel(normalizedSource, type)
+      );
+    });
+  });
+
+  return resonanceMap;
+}
+
+function getArtifactResonance(artifact, sourceRecord) {
+  const resonanceMap = buildSavedResonanceMap();
+
+  return RESONANCE_TYPES.map(([type, label]) => {
+    const currentLabel =
+      getRecordMemoryLabel(artifact, type) ||
+      getRecordMemoryLabel(sourceRecord, type);
+    const savedMatch = resonanceMap[type].get(getMemoryKey(currentLabel));
+
+    if (!currentLabel || !savedMatch || savedMatch.count < RESONANCE_THRESHOLD) {
+      return null;
+    }
+
+    return {
+      type,
+      label,
+      memoryLabel: savedMatch.label,
+      count: savedMatch.count,
+    };
+  }).filter(Boolean);
 }
 
 function collectMoodText(artifact, sourceRecord) {
@@ -351,6 +489,40 @@ function DepthLayers({ artifact, sourceRecord }) {
   );
 }
 
+function ResonancePanel({ matches }) {
+  if (!matches.length) return null;
+
+  return (
+    <section className="mt-5 rounded-3xl border border-emerald-300/10 bg-emerald-400/[0.04] p-3 shadow-lg shadow-emerald-950/10 sm:p-4">
+      <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-emerald-200/70">
+        Resonance
+      </div>
+      <p className="mt-1 text-sm leading-6 text-slate-400">
+        This artifact echoes patterns already present in the archive.
+      </p>
+
+      <div className="mt-3 grid gap-2.5">
+        {matches.map((match) => (
+          <div
+            key={`${match.type}-${match.memoryLabel}`}
+            className="rounded-2xl border border-white/10 bg-black/20 p-3"
+          >
+            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/65">
+              {match.label}
+            </div>
+            <div className="mt-1 break-words text-sm font-semibold leading-6 text-slate-100 [overflow-wrap:anywhere]">
+              {match.memoryLabel}
+            </div>
+            <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+              Seen {match.count} times
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function ArtifactViewer({
   artifact,
   sourceRecord,
@@ -371,6 +543,13 @@ export default function ArtifactViewer({
   );
   const artifactMood = useMemo(
     () => inferArtifactMood(normalizedArtifact, normalizedSourceRecord),
+    [normalizedArtifact, normalizedSourceRecord]
+  );
+  const resonanceMatches = useMemo(
+    () =>
+      normalizedArtifact
+        ? getArtifactResonance(normalizedArtifact, normalizedSourceRecord)
+        : [],
     [normalizedArtifact, normalizedSourceRecord]
   );
   const moodStyle = artifactMoodStyles[artifactMood] || artifactMoodStyles.calm;
@@ -419,6 +598,7 @@ export default function ArtifactViewer({
         artifact={normalizedArtifact}
         sourceRecord={normalizedSourceRecord}
       />
+      <ResonancePanel matches={resonanceMatches} />
     </div>
   );
 }
