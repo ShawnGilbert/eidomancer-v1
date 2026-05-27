@@ -25,7 +25,7 @@ Copy `.env.example` to `.env` for local development. Safe placeholders are provi
 
 - `OPENAI_API_KEY`: server-side OpenAI API key. Required for live AI responses.
 - `OPENAI_MODEL`: optional text model override. Defaults to `gpt-4.1-mini`.
-- `IMAGE_GENERATION_ENABLED`: optional image-generation feature flag. Defaults to `false`; set to `true` to enable `/api/image`.
+- `IMAGE_GENERATION_ENABLED`: optional image-generation feature flag. Defaults to `false`; set to `true` to enable the guarded `/api/image` route and the Generate Core Card Image workflow.
 - `IMAGE_MODEL`: optional image model override. Defaults to `gpt-image-1`.
 - `PORT`: optional backend port. Defaults to `3001`.
 
@@ -35,9 +35,9 @@ Do not expose `.env` publicly. It is ignored by git.
 
 The active Daily Cast flow sends a structured prompt to `POST /api/generate`. If the backend is unavailable, the API key is missing, or the AI response cannot be used safely, Eidomancer falls back to deterministic local generation and marks the cast metadata as fallback/no-AI.
 
-Package outputs are text-only in V1. Core Card Image Prompt and Echo Prompt prepare future image-generation prompts, but V1 does not call image or audio generation APIs from the active product flow.
+Most package outputs are text-only in V1. Core Card Image Prompt and Echo Prompt prepare reusable image prompts. Core Card Image Generation v1 can generate a real Core Card image from `coreCard.imagePrompt`, but only when `IMAGE_GENERATION_ENABLED=true` and the user explicitly clicks Generate Core Card Image.
 
-V1.1 backend preparation includes `POST /api/image` for optional server-side image generation. It is disabled unless `IMAGE_GENERATION_ENABLED=true` and `OPENAI_API_KEY` is configured. The endpoint accepts validated Echo, Core Card, and Specterr/YouTube thumbnail requests, keeps API keys server-side, and returns a generated image data URL when enabled.
+`POST /api/image` handles optional server-side image generation. It is disabled unless `IMAGE_GENERATION_ENABLED=true` and `OPENAI_API_KEY` is configured. The endpoint accepts validated Echo, Core Card, and Specterr/YouTube thumbnail requests, keeps API keys server-side, and returns a generated image data URL when enabled.
 
 ## Local Data Storage
 
@@ -60,6 +60,8 @@ The Express server in `server.js` keeps API routes first, serves the built Vite 
 
 On Render, create a Web Service from this app directory, set the build and start commands above, and add the environment variables in the Render dashboard. Keep `OPENAI_API_KEY` only on the server host.
 
+To enable Core Card image generation on Render, also set `IMAGE_GENERATION_ENABLED=true`. `IMAGE_MODEL` is optional and defaults to `gpt-image-1`. Leave `IMAGE_GENERATION_ENABLED=false` or unset for a lower-cost alpha where the app still shows procedural Core Card visuals and text-only image prompts.
+
 ## V1 Smoke Test Checklist
 
 - Start the backend with `npm run server` or `npm run start`; confirm `http://localhost:3001/health` returns `{ "ok": true }`.
@@ -71,6 +73,7 @@ On Render, create a Web Service from this app directory, set the build and start
 - Open Depth Layers and confirm Signal, Tension, Pattern, Echo, and Guidance expand when available.
 - Use Copy Layer and Copy All Layers; confirm clipboard text is sectioned and readable.
 - Create Echo Prompt, Core Card Image Prompt, Song Package, YouTube Package, and Full Package outputs.
+- If image generation is enabled, click Generate Core Card Image once and confirm the generated image replaces the procedural Core Card visual.
 - Copy one individual generated output.
 - Use Copy Full Package and Export Full Package; confirm exported `.txt` content is readable.
 - Confirm generated artifacts are saved automatically in Saved Artifacts.
@@ -82,6 +85,7 @@ On Render, create a Web Service from this app directory, set the build and start
 ## Private Alpha Release Checklist
 
 - Configure server environment variables: `OPENAI_API_KEY`, optional `OPENAI_MODEL`, and optional `PORT`.
+- Decide whether image generation is enabled for the alpha. If yes, set `IMAGE_GENERATION_ENABLED=true` and optionally `IMAGE_MODEL=gpt-image-1`.
 - Deploy the Express backend from `server.js`.
 - Deploy the Vite frontend build from `dist/`.
 - Confirm `/api` requests from the frontend reach the backend in the hosted environment.
@@ -110,6 +114,8 @@ Daily casts create artifacts that can be saved and restored from the archive. Ar
 
 V1 uses `src/lib/normalizeArtifact.js` as a defensive compatibility layer for current and legacy artifact shapes. It supplies safe defaults for rendering, section access, actions, package outputs, metadata, and `artifactVersion: "v1"` without migrating localStorage or rewriting archive history.
 
+Generated Core Card images are preserved through the same compatibility layer. Current image fields are `coreCard.imageUrl`, `coreCard.generatedImageUrl`, `coreCard.imageGeneratedAt`, and `coreCard.imageModel`. The top-level artifact `image` field may also point at the generated Core Card image so older artifact views can render it safely.
+
 ## Artifact Presentation Layer
 
 Artifact meaning data should remain stable while presentation and theme layers stay swappable. `src/lib/artifactPresentation.js` begins separating section labels, frame variants, symbolic tones, and presentation tokens from normalized artifact data so future themes can change symbolic framing and visual language while reusing proven V1 UX structures.
@@ -120,9 +126,11 @@ Generated artifact text can vary in length. V1 uses clamps, wrapping, and overfl
 
 ## V1 Package Outputs
 
-Package outputs are reusable materials derived from a cast: Echo Prompt, Song Package, YouTube Package, and Full Package. They can be copied or exported, and generated outputs can be saved with artifacts when available.
+Package outputs are reusable materials derived from a cast: Echo Prompt, Core Card Image Prompt, Core Card Image, Song Package, YouTube Package, and Full Package. Text outputs can be copied or exported, and generated outputs can be saved with artifacts when available.
 
-Core Card Image Prompt is a text-only image-generation readiness output. It prepares a tarot-style Core Card prompt from the cast and artifact context, with lightweight metadata such as orientation, intended use, aspect ratio, and rendering style. V1 does not call an image API yet.
+Core Card Image Prompt is a text-only output. It prepares a tarot-style Core Card prompt from the cast and artifact context, with metadata such as orientation, intended use, aspect ratio, rendering style, archetype, and theme color.
+
+Core Card Image Generation v1 adds the Generate Core Card Image action. It sends `coreCard.imagePrompt` to the guarded `/api/image` route and stores the returned image as `coreCard.imageUrl` and `coreCard.generatedImageUrl`, with `coreCard.imageGeneratedAt` and `coreCard.imageModel` when available. The app does not generate images automatically on every cast; image generation happens only from an explicit user action and reuses an existing image URL when present.
 
 ## Output Routing
 

@@ -339,8 +339,19 @@ app.post("/api/image", async (req, res) => {
       model: imageModel,
       createdAt: new Date().toISOString(),
     });
-  } catch {
-    console.error("Image generation error");
+  } catch (error) {
+    // Keep image failures diagnosable without logging prompts or API keys.
+    console.error("Image generation error:", {
+      name: error?.name,
+      message: error?.message,
+      status: error?.status,
+      code: error?.code,
+      type: error?.type,
+      causeCode: error?.cause?.code,
+      causeErrno: error?.cause?.errno,
+      causeType: error?.cause?.type,
+      stack: error?.stack?.split("\n").slice(0, 3).join("\n"),
+    });
     return res.status(500).json({
       error: "Image generation failed.",
     });
