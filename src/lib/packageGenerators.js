@@ -1,5 +1,7 @@
 // D:\eidomancer\src\lib\packageGenerators.js
 
+import { deriveCoreCardFromCast } from "./castToArtifact";
+
 function joinTags(tags) {
   return tags.filter(Boolean).join(", ");
 }
@@ -82,6 +84,7 @@ function getCoreObject(record) {
   return normalizeText(
     record?.coreObject ||
       record?.artifact?.coreObject ||
+      record?.coreCard?.coreObject ||
       record?.coreCard?.visual?.subject ||
       record?.coreCard?.visual?.archetypeFigure ||
       record?.coreCard?.visual?.primaryMotif ||
@@ -423,7 +426,8 @@ export function generateCoreCard(record) {
 
 export function generateCoreCardImagePrompt(record) {
   const cast = completeCast(record);
-  const prompt = [
+  const coreCard = deriveCoreCardFromCast(record);
+  const prompt = cleanText(coreCard.imagePrompt) || [
     `Create a vertical tarot-style Eidomancer Core Card image for "${cast.title}".`,
     `Core symbolic object: ${cast.coreObject}`,
     `Mood/tone: ${cast.moodTone}`,
@@ -441,15 +445,19 @@ export function generateCoreCardImagePrompt(record) {
     .join(" ");
 
   return {
-    title: `${cast.title} Core Card Image Prompt`,
+    title: `${coreCard.title || cast.title} Core Card Image Prompt`,
     prompt,
     imageFormat: IMAGE_FORMATS.CORE,
     orientation: "tarot vertical",
     intendedUse: IMAGE_FORMATS.CORE.intendedUse,
     recommendedAspectRatio: IMAGE_FORMATS.CORE.aspectRatio,
-    suggestedRenderingStyle: "ornate tarot frame, symbolic core-card illustration",
-    cardTitle: cast.title,
-    coreObject: cast.coreObject,
+    suggestedRenderingStyle:
+      "ornate tarot frame, symbolic core-card illustration, occult-digital codex",
+    cardTitle: coreCard.title || cast.title,
+    cardSubtitle: coreCard.subtitle || cast.subtitle,
+    coreObject: coreCard.coreObject || cast.coreObject,
+    archetype: coreCard.archetype || "",
+    themeColor: coreCard.themeColor || "",
     moodTone: cast.moodTone,
     visualAtmosphere: cast.visualAtmosphere,
     symbolicElements: {

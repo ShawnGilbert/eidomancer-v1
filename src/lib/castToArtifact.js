@@ -104,6 +104,49 @@ const THEME_MODES = [
   },
 ];
 
+const THEME_IMAGE_GUIDES = {
+  amber: {
+    palette: "burnished gold, ember orange, dark umber, warm black",
+    mood: "burdened endurance, craft, pressure becoming usable force",
+    atmosphere: "workshop heat, ritual metal, slow luminous grit",
+  },
+  cyan: {
+    palette: "electric cyan, cold blue, black glass, pale white signal light",
+    mood: "clarity, distance, analysis, technological signal",
+    atmosphere: "clean signal field, luminous circuitry, precise digital air",
+  },
+  violet: {
+    palette: "deep violet, ultraviolet haze, bruised indigo, moonlit silver",
+    mood: "mystery, uncertainty, inner conflict, threshold perception",
+    atmosphere: "dreamlike archive light, soft shadows, liminal mist",
+  },
+  emerald: {
+    palette: "emerald green, dark moss, soft teal, living gold",
+    mood: "repair, growth, body wisdom, restoration",
+    atmosphere: "living roots, healing glass, organic light under darkness",
+  },
+  crimson: {
+    palette: "crimson red, hot orange, black iron, warning rose",
+    mood: "urgency, conflict, danger, volatile truth",
+    atmosphere: "charged air, ember storm, ritual alarm light",
+  },
+};
+
+const OBJECT_IMAGE_GUIDES = {
+  engine: "a compact symbolic engine with visible gears, pressure valves, and a quiet inner furnace",
+  root: "a luminous root system gripping dark soil and carrying light upward through branching veins",
+  bridge: "a narrow bridge suspended between two symbolic worlds, with tension visible beneath it",
+  storm: "a contained storm-cloud sigil, lightning folded into an architectural ritual shape",
+  archive: "a sealed codex archive with layered pages, glowing index marks, and memory drawers",
+  mask: "a ritual mask hovering in front of a hidden face-shaped shadow, protective and unsettling",
+  compass: "a compass needle suspended over an uncertain map of branching paths",
+  threshold: "a doorway or threshold frame opening into a charged symbolic interior",
+  hollow: "a dark central hollow ringed by light, absence shaped into a visible vessel",
+  beacon: "a vertical beacon tower emitting a narrow signal through darkness",
+  lantern: "a lantern containing a small impossible star, casting patterned light",
+  gate: "an ornate locked gate with one visible keyhole and a luminous seam",
+};
+
 const CONCRETE_OBJECTS = [
   { label: "Gate", tests: ["gate", "door", "lock", "threshold", "choice"] },
   { label: "Lantern", tests: ["lantern", "light", "clarity", "guide", "focus"] },
@@ -165,6 +208,10 @@ function truncateAtWord(value = "", maxLength = 84) {
   const lastSpace = sliced.lastIndexOf(" ");
 
   return (lastSpace > 36 ? sliced.slice(0, lastSpace) : sliced).trim();
+}
+
+function stripTerminalPunctuation(value = "") {
+  return cleanText(value).replace(/[.!?:;,\-]+$/g, "");
 }
 
 function hashString(value = "") {
@@ -496,6 +543,59 @@ function deriveThemeColor(cast = {}) {
   return scoreOptions(cast, THEME_MODES, "") || "cyan";
 }
 
+function getThemeImageGuide(themeColor = "cyan") {
+  return THEME_IMAGE_GUIDES[themeColor] || THEME_IMAGE_GUIDES.cyan;
+}
+
+function getObjectImageGuide(coreObject = "") {
+  const key = normalizeKey(coreObject);
+  const match = Object.entries(OBJECT_IMAGE_GUIDES).find(([objectKey]) =>
+    key.includes(objectKey)
+  );
+
+  return match?.[1] || `a concrete symbolic object representing ${cleanText(coreObject) || "the cast's core meaning"}`;
+}
+
+function buildCoreCardImagePrompt({
+  title,
+  subtitle,
+  coreObject,
+  archetype,
+  themeColor,
+  signal,
+  tension,
+  pattern,
+  insight,
+  guidance,
+  essence,
+  existingPrompt,
+}) {
+  const theme = getThemeImageGuide(themeColor);
+  const foreground = getObjectImageGuide(coreObject);
+
+  return [
+    `Create a full vertical tarot-style Eidomancer Core Card image titled "${title}".`,
+    `Central symbolic scene: ${foreground}.`,
+    `Foreground object: ${coreObject}, treated as the primary sacred object of the card.`,
+    `Archetype: ${archetype}. Subtitle meaning: ${stripTerminalPunctuation(subtitle)}.`,
+    `Color palette: ${theme.palette}.`,
+    `Mood: ${theme.mood}.`,
+    `Background atmosphere: ${theme.atmosphere}.`,
+    signal ? `Signal detail to encode visually: ${truncateAtWord(signal, 130)}.` : "",
+    tension ? `Tension detail to encode visually: ${truncateAtWord(tension, 130)}.` : "",
+    pattern ? `Pattern detail to encode visually: ${truncateAtWord(pattern, 130)}.` : "",
+    insight ? `Insight detail to encode visually: ${truncateAtWord(insight, 130)}.` : "",
+    guidance ? `Guidance detail to encode visually: ${truncateAtWord(guidance, 130)}.` : "",
+    essence ? `Essence detail: ${truncateAtWord(essence, 120)}.` : "",
+    existingPrompt ? `Legacy visual seed to preserve only if compatible: ${truncateAtWord(existingPrompt, 160)}.` : "",
+    "Composition: 2:3 portrait tarot card, single strong central symbolic object or scene, ornate but readable frame, layered symbolic details, polished occult-digital codex style.",
+    "Text policy: leave a clean readable title area for the card title only; do not render subtitles, UI labels, watermarks, logos, or extra readable text.",
+    "Style: symbolic illustration, not a photorealistic portrait, not a dashboard, not a collage, not a generic fantasy poster.",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
 function deriveArchetype(cast = {}) {
   const focus = normalizeKey([cast?.question, cast?.input].filter(Boolean).join(" "));
 
@@ -554,6 +654,7 @@ function buildMemoryLabels(cast = {}, coreObject = "") {
 }
 
 export function deriveCoreCardFromCast(cast = {}) {
+  const existing = cast?.coreCard && typeof cast.coreCard === "object" ? cast.coreCard : {};
   const sourceText = collectCastText(cast);
   const signal = getSectionText(cast, "signal");
   const tension = getSectionText(cast, "tension");
@@ -568,19 +669,29 @@ export function deriveCoreCardFromCast(cast = {}) {
     cleanText(cast?.essence || cast?.coreObject) ||
     cleanText(cast?.echo) ||
     getSectionText(cast, "essence");
-  const coreObject = deriveSymbolicObject({
+  const derivedCoreObject = deriveSymbolicObject({
     ...cast,
     essence,
   });
+  const coreObject =
+    cleanText(existing.coreObject) && !isAdviceLike(existing.coreObject)
+      ? cleanText(existing.coreObject)
+      : derivedCoreObject;
   const title = deriveTitle(cast, [sourceText, coreObject].join(" :: "), coreObject);
-  const archetype = deriveArchetype({
+  const derivedArchetype = deriveArchetype({
     ...cast,
     coreObject,
   });
-  const themeColor = deriveThemeColor({
+  const archetype = cleanText(existing.archetype) || derivedArchetype;
+  const derivedThemeColor = deriveThemeColor({
     ...cast,
     coreObject,
   });
+  const themeColor = ["amber", "cyan", "violet", "emerald", "crimson"].includes(
+    cleanText(existing.themeColor).toLowerCase()
+  )
+    ? cleanText(existing.themeColor).toLowerCase()
+    : derivedThemeColor;
   const subtitle = deriveSubtitle({
     title,
     archetype,
@@ -589,7 +700,20 @@ export function deriveCoreCardFromCast(cast = {}) {
     tension,
   });
   const memoryLabels = buildMemoryLabels(cast, coreObject);
-  const existing = cast?.coreCard && typeof cast.coreCard === "object" ? cast.coreCard : {};
+  const imagePrompt = buildCoreCardImagePrompt({
+    title,
+    subtitle,
+    coreObject,
+    archetype,
+    themeColor,
+    signal,
+    tension,
+    pattern,
+    insight,
+    guidance,
+    essence,
+    existingPrompt: cleanText(existing.imagePrompt),
+  });
 
   return {
     ...existing,
@@ -602,20 +726,6 @@ export function deriveCoreCardFromCast(cast = {}) {
     themeColor,
     memoryLabels,
     hook: cleanText(existing.hook) || subtitle,
-    imagePrompt:
-      cleanText(existing.imagePrompt) ||
-      [
-        `${title}, tarot-style symbolic core card`,
-        `core object: ${coreObject}`,
-        `archetype: ${archetype}`,
-        `theme color: ${themeColor}`,
-        signal ? `signal: ${compact(signal, 96)}` : "",
-        tension ? `tension: ${compact(tension, 96)}` : "",
-        pattern ? `pattern: ${compact(pattern, 96)}` : "",
-        insight ? `insight: ${compact(insight, 96)}` : "",
-        guidance ? `guidance: ${compact(guidance, 96)}` : "",
-      ]
-        .filter(Boolean)
-        .join(" | "),
+    imagePrompt,
   };
 }
