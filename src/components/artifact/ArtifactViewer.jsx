@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { getDepthLayerTypes } from "../../lib/artifactPresentation";
+import {
+  getCoreDerivedAuras,
+  getDepthLayerTypes,
+} from "../../lib/artifactPresentation";
 import { DEFAULT_THEME_ID, getThemePalette } from "../../lib/themePalettes";
 import {
   getArtifactSectionText,
@@ -37,6 +40,7 @@ const GENERIC_MEMORY_LABELS = new Set([
 const artifactTheme = getThemePalette(DEFAULT_THEME_ID).artifact;
 const depthLayerStyles = artifactTheme.depthLayerStyles;
 const artifactMoodStyles = artifactTheme.moodStyles;
+const coreDerivedAuras = getCoreDerivedAuras();
 
 function cleanText(value = "") {
   return String(value || "").trim();
@@ -44,6 +48,13 @@ function cleanText(value = "") {
 
 function getMemoryKey(value = "") {
   return cleanText(value).toLowerCase();
+}
+
+function hashText(value = "") {
+  return Array.from(cleanText(value)).reduce(
+    (hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0,
+    7
+  );
 }
 
 function isUsefulMemoryLabel(value = "") {
@@ -219,6 +230,50 @@ function formatMoodLabel(mood) {
   if (!mood) return "Calm";
 
   return `${mood.charAt(0).toUpperCase()}${mood.slice(1)}`;
+}
+
+function getCoreCardDerivedSeed(artifact, sourceRecord) {
+  const artifactSections = getNormalizedArtifactSections(artifact);
+  const sourceSections = getNormalizedArtifactSections(sourceRecord);
+  const dominantSections = [...sourceSections, ...artifactSections]
+    .map((section) =>
+      [
+        section?.type,
+        section?.title,
+        section?.memoryLabel,
+        previewText(section?.full || section?.content || section?.short, 48),
+      ]
+        .filter(Boolean)
+        .join(":")
+    )
+    .filter(Boolean)
+    .slice(0, 7)
+    .join("|");
+
+  return [
+    sourceRecord?.coreCard?.name,
+    sourceRecord?.coreCard?.title,
+    sourceRecord?.coreCard?.visual?.subject,
+    sourceRecord?.coreCard?.visual?.primaryMotif,
+    sourceRecord?.coreCard?.description,
+    artifact?.title,
+    artifact?.coreObject,
+    artifact?.essence,
+    dominantSections,
+  ]
+    .filter(Boolean)
+    .join(" :: ");
+}
+
+function deriveCoreCardPresentation(artifact, sourceRecord) {
+  const seed = getCoreCardDerivedSeed(artifact, sourceRecord);
+  const aura = coreDerivedAuras[hashText(seed) % coreDerivedAuras.length];
+
+  return {
+    ...aura,
+    background: `radial-gradient(circle at 50% 18%, ${aura.primary} 0%, transparent 36%), radial-gradient(circle at 50% 78%, ${aura.secondary} 0%, transparent 58%)`,
+    haloShadow: `0 0 70px ${aura.halo}, inset 0 0 38px rgba(255, 255, 255, 0.03)`,
+  };
 }
 
 function getDepthLayerText(type, sourceRecord, artifact) {
@@ -555,6 +610,13 @@ export default function ArtifactViewer({
         : [],
     [normalizedArtifact, normalizedSourceRecord]
   );
+  const corePresentation = useMemo(
+    () =>
+      normalizedArtifact
+        ? deriveCoreCardPresentation(normalizedArtifact, normalizedSourceRecord)
+        : null,
+    [normalizedArtifact, normalizedSourceRecord]
+  );
   const moodStyle = artifactMoodStyles[artifactMood] || artifactMoodStyles.calm;
 
   useEffect(() => {
@@ -587,13 +649,25 @@ export default function ArtifactViewer({
         </div>
       </div>
 
-      <div className={`${artifactTheme.stageFrameBase} ${moodStyle.stage}`}>
+      <div
+        className={`${artifactTheme.stageFrameBase} ${moodStyle.stage} ${corePresentation.frame} overflow-hidden`}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 rounded-[2rem] opacity-80"
+          style={{ background: corePresentation.background }}
+        />
+        <div
+          className="pointer-events-none absolute left-1/2 top-7 h-44 w-44 -translate-x-1/2 rounded-full border border-white/10 opacity-70 sm:h-60 sm:w-60"
+          style={{ boxShadow: corePresentation.haloShadow }}
+        />
+        <div className="pointer-events-none absolute inset-x-8 top-1/2 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
+        <div className="pointer-events-none absolute left-1/2 top-8 h-[72%] w-[58%] -translate-x-1/2 rounded-[2rem] border border-white/10 opacity-55" />
         <div className={artifactTheme.stageInset} />
         <div className={`${artifactTheme.stageRuleBase} ${moodStyle.rule}`} />
         <div className={artifactTheme.moodBadge}>
           Mood: {formatMoodLabel(artifactMood)}
         </div>
-        <div className="relative">
+        <div className="relative z-[1]">
           <ArtifactCard artifact={normalizedArtifact} />
         </div>
       </div>

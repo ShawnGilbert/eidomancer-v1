@@ -80,6 +80,39 @@ export const ARTIFACT_SECTION_ACCENTS = {
   },
 };
 
+export const CORE_CARD_DERIVED_AURAS = [
+  {
+    primary: "rgba(34, 211, 238, 0.18)",
+    secondary: "rgba(14, 165, 233, 0.1)",
+    halo: "rgba(125, 211, 252, 0.16)",
+    frame: "border-cyan-200/15",
+  },
+  {
+    primary: "rgba(251, 191, 36, 0.16)",
+    secondary: "rgba(245, 158, 11, 0.08)",
+    halo: "rgba(253, 224, 71, 0.12)",
+    frame: "border-amber-200/15",
+  },
+  {
+    primary: "rgba(167, 139, 250, 0.17)",
+    secondary: "rgba(124, 58, 237, 0.08)",
+    halo: "rgba(196, 181, 253, 0.13)",
+    frame: "border-violet-200/15",
+  },
+  {
+    primary: "rgba(52, 211, 153, 0.15)",
+    secondary: "rgba(16, 185, 129, 0.08)",
+    halo: "rgba(110, 231, 183, 0.12)",
+    frame: "border-emerald-200/15",
+  },
+  {
+    primary: "rgba(232, 121, 249, 0.15)",
+    secondary: "rgba(192, 38, 211, 0.08)",
+    halo: "rgba(240, 171, 252, 0.12)",
+    frame: "border-fuchsia-200/15",
+  },
+];
+
 export const ARTIFACT_SECTION_PRESENTATION = {
   signal: {
     label: "Signal",
@@ -162,4 +195,8 @@ export function getDepthLayerTypes() {
     const presentation = getSectionPresentation(type);
     return [type, presentation.label];
   });
+}
+
+export function getCoreDerivedAuras() {
+  return CORE_CARD_DERIVED_AURAS;
 }
