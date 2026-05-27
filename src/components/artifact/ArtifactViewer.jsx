@@ -452,23 +452,23 @@ function DepthLayers({ artifact, sourceRecord }) {
                 </div>
               </button>
 
-              <div
-                className={`mt-2 whitespace-pre-wrap break-words text-sm [overflow-wrap:anywhere] ${
-                  isOpen
-                    ? `rounded-xl border border-white/10 bg-black/20 p-3.5 leading-7 ${
-                        layer.hasContent ? "text-slate-100" : "text-slate-500"
-                      }`
-                    : `line-clamp-2 leading-6 ${
-                        layer.hasContent ? "text-slate-300/70" : "text-slate-500"
-                      }`
-                }`}
-              >
-                {layer.hasContent
-                  ? isOpen
-                    ? layer.text
-                    : previewText(layer.text)
-                  : "No layer text available yet."}
-              </div>
+              {!isOpen && layer.hasContent ? (
+                <div className="mt-2 line-clamp-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-300/70 [overflow-wrap:anywhere]">
+                  {previewText(layer.text)}
+                </div>
+              ) : null}
+
+              {isOpen && layer.hasContent ? (
+                <div className="mt-2 whitespace-pre-wrap break-words rounded-xl border border-white/10 bg-black/20 p-3.5 text-sm leading-7 text-slate-100 [overflow-wrap:anywhere]">
+                  {layer.text}
+                </div>
+              ) : null}
+
+              {!layer.hasContent ? (
+                <div className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-500 [overflow-wrap:anywhere]">
+                  No layer text available yet.
+                </div>
+              ) : null}
 
               {isOpen && layer.hasContent ? (
                 <div className="mt-3 flex justify-end">
