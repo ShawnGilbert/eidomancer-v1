@@ -132,18 +132,6 @@ function getCoreObjectLabel(artifact = {}, sourceCast = {}) {
   );
 }
 
-function addMemoryCount(counts, value) {
-  const label = cleanText(value);
-  if (!label) return;
-
-  const key = label.toLowerCase();
-  const current = counts.get(key);
-
-  counts.set(key, {
-    label: current?.label || label,
-    count: (current?.count || 0) + 1,
-  });
-}
 function getArtifactMemoryTime(artifact = {}) {
   const timestamp =
     artifact.savedAt ||
@@ -164,7 +152,18 @@ function getArtifactMemoryTime(artifact = {}) {
   return date.getTime();
 }
 
-function addMemoryOccurrence(counts, value, timestamp) {
+function getArtifactMemoryTitle(artifact = {}) {
+  return cleanText(
+    artifact.title ||
+      artifact.coreCard?.name ||
+      artifact.coreCard?.title ||
+      artifact.sourceCast?.coreCard?.name ||
+      artifact.sourceCast?.coreCard?.title ||
+      artifact.sourceCast?.title
+  ) || "Untitled Artifact";
+}
+
+function addMemoryOccurrence(counts, value, timestamp, artifact) {
   const label = cleanText(value);
   if (!label) return;
 
@@ -184,12 +183,28 @@ function addMemoryOccurrence(counts, value, timestamp) {
     count: (current?.count || 0) + 1,
     firstSeen,
     lastSeen,
+    contributors: [
+      ...(current?.contributors || []),
+      {
+        title: getArtifactMemoryTitle(artifact),
+        timestamp: timestamp || null,
+      },
+    ],
   });
 }
 
 function getTopRecurringItems(counts) {
   return Array.from(counts.values())
     .filter((item) => item.count >= MEMORY_REPEAT_THRESHOLD)
+    .map((item) => ({
+      ...item,
+      contributors: [...(item.contributors || [])].sort((a, b) => {
+        if (a.timestamp && b.timestamp) return a.timestamp - b.timestamp;
+        if (a.timestamp) return -1;
+        if (b.timestamp) return 1;
+        return a.title.localeCompare(b.title);
+      }),
+    }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
     .slice(0, MEMORY_MAX_ITEMS);
 }
@@ -209,16 +224,18 @@ function buildArtifactMemory(savedArtifacts = []) {
     MEMORY_SECTIONS.forEach(([type]) => {
       addMemoryOccurrence(
         memoryCounts[type],
-        getMemorySectionLabel(artifact, type) ||
+          getMemorySectionLabel(artifact, type) ||
           getMemorySectionLabel(sourceCast, type),
-        memoryTime
+        memoryTime,
+        artifact
       );
     });
 
     addMemoryOccurrence(
       memoryCounts.coreObject,
       getCoreObjectLabel(artifact, sourceCast),
-      memoryTime
+      memoryTime,
+      artifact
     );
   });
 
@@ -326,6 +343,14 @@ function formatMoodLabel(mood) {
 }
 
 function MemoryList({ title, items }) {
+  const [openMemoryItems, toggleMemoryItem] = useReducer(
+    (state, key) => ({
+      ...state,
+      [key]: !state[key],
+    }),
+    {}
+  );
+
   if (!items.length) return null;
 
   return (
@@ -341,10 +366,20 @@ function MemoryList({ title, items }) {
           >
             <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300/55" />
             <span className="min-w-0 space-y-1 break-words [overflow-wrap:anywhere]">
-              <span>
-                {item.label}{" "}
-                <span className="text-slate-500">({item.count})</span>
-              </span>
+              <button
+                type="button"
+                onClick={() => toggleMemoryItem(`${title}-${item.label}`)}
+                aria-expanded={Boolean(openMemoryItems[`${title}-${item.label}`])}
+                className="flex w-full items-start justify-between gap-2 text-left text-slate-300/90 transition hover:text-cyan-100"
+              >
+                <span className="min-w-0">
+                  {item.label}{" "}
+                  <span className="text-slate-500">({item.count})</span>
+                </span>
+                <span className="shrink-0 text-[10px] uppercase tracking-[0.14em] text-slate-500">
+                  {openMemoryItems[`${title}-${item.label}`] ? "Hide" : "Show"}
+                </span>
+              </button>
 
               {(item.firstSeen || item.lastSeen) && (
                 <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
@@ -362,6 +397,30 @@ function MemoryList({ title, items }) {
                     </>
                   )}
                 </span>
+              )}
+
+              {openMemoryItems[`${title}-${item.label}`] && (
+                <div className="mt-2 space-y-1 rounded-xl border border-white/10 bg-black/20 px-2.5 py-2">
+                  {(item.contributors || []).map((contributor, index) => {
+                    const dateLabel = formatMemoryDate(contributor.timestamp);
+
+                    return (
+                      <div
+                        key={`${item.label}-${contributor.title}-${index}`}
+                        className="flex flex-col gap-0.5 text-[11px] leading-5 text-slate-400 sm:flex-row sm:gap-2"
+                      >
+                        {dateLabel && (
+                          <span className="shrink-0 font-semibold uppercase tracking-[0.12em] text-cyan-200/55">
+                            {dateLabel}
+                          </span>
+                        )}
+                        <span className="min-w-0 break-words text-slate-300/80 [overflow-wrap:anywhere]">
+                          {contributor.title}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </span>
           </div>
