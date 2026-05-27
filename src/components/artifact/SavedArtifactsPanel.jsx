@@ -144,6 +144,48 @@ function addMemoryCount(counts, value) {
     count: (current?.count || 0) + 1,
   });
 }
+function getArtifactMemoryTime(artifact = {}) {
+  const timestamp =
+    artifact.savedAt ||
+    artifact.createdAt ||
+    artifact.updatedAt ||
+    artifact.date ||
+    artifact.dateKey ||
+    artifact.sourceCast?.savedAt ||
+    artifact.sourceCast?.createdAt ||
+    artifact.sourceCast?.dateKey;
+
+  if (!timestamp) return null;
+
+  const date = new Date(timestamp);
+
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.getTime();
+}
+
+function addMemoryOccurrence(counts, value, timestamp) {
+  const label = cleanText(value);
+  if (!label) return;
+
+  const key = label.toLowerCase();
+  const current = counts.get(key);
+  const firstSeen =
+    timestamp && current?.firstSeen
+      ? Math.min(current.firstSeen, timestamp)
+      : current?.firstSeen || timestamp || null;
+  const lastSeen =
+    timestamp && current?.lastSeen
+      ? Math.max(current.lastSeen, timestamp)
+      : current?.lastSeen || timestamp || null;
+
+  counts.set(key, {
+    label: current?.label || label,
+    count: (current?.count || 0) + 1,
+    firstSeen,
+    lastSeen,
+  });
+}
 
 function getTopRecurringItems(counts) {
   return Array.from(counts.values())
@@ -162,16 +204,22 @@ function buildArtifactMemory(savedArtifacts = []) {
 
   savedArtifacts.forEach((artifact) => {
     const sourceCast = getArtifactSourceCast(artifact);
+    const memoryTime = getArtifactMemoryTime(artifact);
 
     MEMORY_SECTIONS.forEach(([type]) => {
-      addMemoryCount(
+      addMemoryOccurrence(
         memoryCounts[type],
         getMemorySectionLabel(artifact, type) ||
-          getMemorySectionLabel(sourceCast, type)
+          getMemorySectionLabel(sourceCast, type),
+        memoryTime
       );
     });
 
-    addMemoryCount(memoryCounts.coreObject, getCoreObjectLabel(artifact, sourceCast));
+    addMemoryOccurrence(
+      memoryCounts.coreObject,
+      getCoreObjectLabel(artifact, sourceCast),
+      memoryTime
+    );
   });
 
   return {
@@ -196,6 +244,19 @@ function formatSavedTimestamp(savedAt) {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
+  });
+}
+
+function formatMemoryDate(timestamp) {
+  if (!timestamp) return "";
+
+  const date = new Date(timestamp);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
   });
 }
 
@@ -279,9 +340,29 @@ function MemoryList({ title, items }) {
             className="flex items-start gap-2 text-xs leading-5 text-slate-300/85"
           >
             <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300/55" />
-            <span className="min-w-0 break-words [overflow-wrap:anywhere]">
-              {item.label}{" "}
-              <span className="text-slate-500">({item.count})</span>
+            <span className="min-w-0 space-y-1 break-words [overflow-wrap:anywhere]">
+              <span>
+                {item.label}{" "}
+                <span className="text-slate-500">({item.count})</span>
+              </span>
+
+              {(item.firstSeen || item.lastSeen) && (
+                <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                  {item.count} occurrences
+                  {item.firstSeen && (
+                    <>
+                      {" "}
+                      · First {formatMemoryDate(item.firstSeen)}
+                    </>
+                  )}
+                  {item.lastSeen && (
+                    <>
+                      {" "}
+                      · Last {formatMemoryDate(item.lastSeen)}
+                    </>
+                  )}
+                </span>
+              )}
             </span>
           </div>
         ))}
