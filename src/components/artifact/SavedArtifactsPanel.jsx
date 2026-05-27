@@ -11,6 +11,128 @@ import {
 } from "../../lib/artifactStorage";
 
 const MAX_SAVED_ARTIFACTS_DISPLAY = 5;
+const MEMORY_REPEAT_THRESHOLD = 2;
+const MEMORY_MAX_ITEMS = 3;
+
+const MEMORY_SECTIONS = [
+  ["signal", "Recurring Signals"],
+  ["tension", "Recurring Tensions"],
+  ["pattern", "Recurring Patterns"],
+];
+
+const GENERIC_SECTION_TITLES = {
+  signal: "signal",
+  tension: "tension",
+  pattern: "pattern",
+};
+
+function cleanText(value = "") {
+  return String(value || "").trim();
+}
+
+function compactMemoryLabel(value = "", maxLength = 52) {
+  const cleaned = cleanText(value).replace(/\s+/g, " ");
+
+  if (cleaned.length <= maxLength) return cleaned;
+
+  return `${cleaned.slice(0, maxLength).trim()}...`;
+}
+
+function getSectionType(section = {}) {
+  return cleanText(section.type || section.id || section.title).toLowerCase();
+}
+
+function getSectionContent(section = {}) {
+  return cleanText(
+    section.short ||
+      section.content ||
+      section.full ||
+      section.body ||
+      section.description
+  );
+}
+
+function getMemorySectionLabel(record = {}, type) {
+  const sections = Array.isArray(record?.sections) ? record.sections : [];
+  const section = sections.find((item) => {
+    const sectionType = getSectionType(item);
+
+    return sectionType === type || cleanText(item?.title).toLowerCase() === type;
+  });
+
+  if (!section) return "";
+
+  const title = cleanText(section.title || section.label || section.name);
+  const genericTitle = GENERIC_SECTION_TITLES[type];
+
+  if (title && title.toLowerCase() !== genericTitle) {
+    return compactMemoryLabel(title);
+  }
+
+  return compactMemoryLabel(getSectionContent(section));
+}
+
+function getCoreObjectLabel(artifact = {}, sourceCast = {}) {
+  return compactMemoryLabel(
+    sourceCast?.coreCard?.name ||
+      sourceCast?.coreCard?.title ||
+      sourceCast?.coreCard?.description ||
+      artifact?.coreObject ||
+      artifact?.title
+  );
+}
+
+function addMemoryCount(counts, value) {
+  const label = cleanText(value);
+  if (!label) return;
+
+  const key = label.toLowerCase();
+  const current = counts.get(key);
+
+  counts.set(key, {
+    label: current?.label || label,
+    count: (current?.count || 0) + 1,
+  });
+}
+
+function getTopRecurringItems(counts) {
+  return Array.from(counts.values())
+    .filter((item) => item.count >= MEMORY_REPEAT_THRESHOLD)
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+    .slice(0, MEMORY_MAX_ITEMS);
+}
+
+function buildArtifactMemory(savedArtifacts = []) {
+  const memoryCounts = {
+    signal: new Map(),
+    tension: new Map(),
+    pattern: new Map(),
+    coreObject: new Map(),
+  };
+
+  savedArtifacts.forEach((artifact) => {
+    const sourceCast = getArtifactSourceCast(artifact);
+
+    MEMORY_SECTIONS.forEach(([type]) => {
+      addMemoryCount(
+        memoryCounts[type],
+        getMemorySectionLabel(sourceCast, type) ||
+          getMemorySectionLabel(artifact, type)
+      );
+    });
+
+    addMemoryCount(memoryCounts.coreObject, getCoreObjectLabel(artifact, sourceCast));
+  });
+
+  return {
+    sections: MEMORY_SECTIONS.map(([type, title]) => ({
+      type,
+      title,
+      items: getTopRecurringItems(memoryCounts[type]),
+    })),
+    coreObjects: getTopRecurringItems(memoryCounts.coreObject),
+  };
+}
 
 function formatSavedTimestamp(savedAt) {
   if (!savedAt) return "";
@@ -92,6 +214,32 @@ function formatMoodLabel(mood) {
   return `${mood.charAt(0).toUpperCase()}${mood.slice(1)}`;
 }
 
+function MemoryList({ title, items }) {
+  if (!items.length) return null;
+
+  return (
+    <div>
+      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-200/65">
+        {title}
+      </div>
+      <div className="mt-1.5 space-y-1">
+        {items.map((item) => (
+          <div
+            key={`${title}-${item.label}`}
+            className="flex items-start gap-2 text-xs leading-5 text-slate-300/85"
+          >
+            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300/55" />
+            <span className="min-w-0 break-words [overflow-wrap:anywhere]">
+              {item.label}{" "}
+              <span className="text-slate-500">({item.count})</span>
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function SavedArtifactsPanel({
   activeArtifact,
   onSelectArtifact,
@@ -105,6 +253,10 @@ export default function SavedArtifactsPanel({
 
   const savedArtifacts = loadSavedArtifacts();
   const visibleArtifacts = savedArtifacts.slice(0, MAX_SAVED_ARTIFACTS_DISPLAY);
+  const artifactMemory = buildArtifactMemory(savedArtifacts);
+  const hasArtifactMemory =
+    artifactMemory.coreObjects.length > 0 ||
+    artifactMemory.sections.some((section) => section.items.length > 0);
   const fullCastCount = savedArtifacts.filter((artifact) =>
     Boolean(getArtifactSourceCast(artifact))
   ).length;
@@ -142,6 +294,32 @@ export default function SavedArtifactsPanel({
         <span className="rounded-full border border-purple-300/20 bg-purple-400/10 px-2 py-0.5 text-purple-100/70">
           {packageOutputCount} outputs
         </span>
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.04] p-3">
+        <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-200/70">
+          Memory
+        </div>
+
+        {hasArtifactMemory ? (
+          <div className="mt-3 space-y-3">
+            {artifactMemory.sections.map((section) => (
+              <MemoryList
+                key={section.type}
+                title={section.title}
+                items={section.items}
+              />
+            ))}
+            <MemoryList
+              title="Recurring Core Objects"
+              items={artifactMemory.coreObjects}
+            />
+          </div>
+        ) : (
+          <p className="mt-2 text-xs leading-5 text-slate-400">
+            More casts are needed before patterns emerge.
+          </p>
+        )}
       </div>
 
       {visibleArtifacts.length === 0 ? (
