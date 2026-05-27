@@ -1,3 +1,5 @@
+import { deriveCoreCardFromCast } from "./castToArtifact";
+
 const SECTION_LABELS = {
   signal: "Signal",
   tension: "Tension",
@@ -228,6 +230,21 @@ export function normalizeArtifact(artifact = {}) {
   const metadata = cleanObject(safeArtifact.metadata);
   const memoryLabels = cleanObject(safeArtifact.memoryLabels);
   const sections = getNormalizedArtifactSections(safeArtifact);
+  const sourceCast = cleanObject(
+    safeArtifact.sourceCast ||
+      safeArtifact.fullCast ||
+      safeArtifact.cast ||
+      safeArtifact.source?.cast
+  );
+  const coreCard = deriveCoreCardFromCast({
+    ...sourceCast,
+    ...safeArtifact,
+    coreCard: {
+      ...cleanObject(sourceCast.coreCard),
+      ...cleanObject(safeArtifact.coreCard),
+    },
+    sections,
+  });
   const sectionMemoryLabels = sections.reduce((labels, section) => {
     const type = cleanText(section.type || section.id).toLowerCase();
 
@@ -241,35 +258,30 @@ export function normalizeArtifact(artifact = {}) {
 
     return labels;
   }, {});
-  const sourceCast = cleanObject(
-    safeArtifact.sourceCast ||
-      safeArtifact.fullCast ||
-      safeArtifact.cast ||
-      safeArtifact.source?.cast
-  );
-
   // Artifact records can come from current casts, saved archives, or older prototypes.
   // This defensive layer keeps rendering stable without forcing a storage migration.
   return {
     ...safeArtifact,
     artifactVersion: cleanText(safeArtifact.artifactVersion) || "v1",
     id: cleanText(safeArtifact.id),
-    title: cleanText(safeArtifact.title) || "Untitled Artifact",
-    subtitle: cleanText(safeArtifact.subtitle),
+    title: cleanText(safeArtifact.title) || cleanText(coreCard.title) || "Untitled Artifact",
+    subtitle: cleanText(safeArtifact.subtitle) || cleanText(coreCard.subtitle),
     image: cleanText(safeArtifact.image),
     input: safeArtifact.input || "",
-    coreObject: cleanText(safeArtifact.coreObject),
+    coreObject: cleanText(safeArtifact.coreObject) || cleanText(coreCard.coreObject),
+    coreCard,
     sections,
     memoryLabels: {
       ...sectionMemoryLabels,
+      ...(coreCard.memoryLabels || {}),
       ...memoryLabels,
       coreObject: deriveMemoryLabel({
         memoryLabel: memoryLabels.coreObject,
         title:
-          safeArtifact.coreCard?.name ||
-          safeArtifact.coreCard?.title ||
+          coreCard.name ||
+          coreCard.title ||
           safeArtifact.title,
-        text: safeArtifact.coreObject || safeArtifact.coreCard?.description,
+        text: safeArtifact.coreObject || coreCard.coreObject || coreCard.description,
       }),
     },
     actions: cleanArray(safeArtifact.actions),

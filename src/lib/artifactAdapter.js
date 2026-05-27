@@ -1,5 +1,7 @@
 // D:\EidomancerProject\eidomancer-app\src\lib\artifactAdapter.js
 
+import { deriveCoreCardFromCast } from "./castToArtifact";
+
 function cleanText(value = "") {
   return String(value || "").trim();
 }
@@ -281,21 +283,27 @@ function buildSections(cast) {
 export function castToArtifact(cast) {
   if (!cast) return null;
 
-  const title =
-    cleanText(cast?.coreCard?.name) ||
-    cleanText(cast?.cardName) ||
-    "Untitled Artifact";
+  const coreCard = deriveCoreCardFromCast(cast);
+  const adaptedCast = {
+    ...cast,
+    coreCard,
+    coreObject: cleanText(cast?.coreObject) || coreCard.coreObject,
+  };
+  const title = cleanText(coreCard.title || coreCard.name) || "Untitled Artifact";
 
   return {
     artifactVersion: "v1",
     id: cast?.id || cast?.metadata?.id || `artifact-${Date.now()}`,
     title,
-    subtitle: cleanText(cast?.echo) || "An Eidomancer symbolic artifact",
+    subtitle:
+      cleanText(coreCard.subtitle) ||
+      cleanText(cast?.echo) ||
+      "An Eidomancer symbolic artifact",
     createdAt: cast?.createdAt || new Date().toISOString(),
 
     image:
-      cast?.coreCard?.imageUrl ||
-      buildGeneratedArtifactImage(cast) ||
+      coreCard.imageUrl ||
+      buildGeneratedArtifactImage(adaptedCast) ||
       `${window.location.origin}/metronome_core.png`,
 
     input:
@@ -304,11 +312,15 @@ export function castToArtifact(cast) {
       "No explicit input was provided for this cast.",
 
     coreObject:
-      cleanText(cast?.coreCard?.description) ||
-      cleanText(cast?.coreCard?.imagePrompt) ||
+      cleanText(coreCard.coreObject) ||
+      cleanText(coreCard.description) ||
+      cleanText(coreCard.imagePrompt) ||
       "No core object defined.",
 
+    coreCard,
+
     memoryLabels: {
+      ...(coreCard.memoryLabels || {}),
       signal: deriveMemoryLabel({
         title: getCastSection(cast, "signal").title,
         name: getCastSection(cast, "signal").name,
@@ -350,13 +362,13 @@ export function castToArtifact(cast) {
         text: cleanText(cast?.echo) || getSection(cast, "echo"),
       }),
       coreObject: deriveMemoryLabel({
-        title: cast?.coreCard?.name || cast?.coreCard?.title,
-        text: cast?.coreCard?.description || cast?.coreCard?.imagePrompt,
+        title: coreCard.name || coreCard.title,
+        text: coreCard.coreObject || coreCard.description || coreCard.imagePrompt,
       }),
     },
 
-    sections: buildSections(cast),
+    sections: buildSections(adaptedCast),
 
-    sourceCast: cast,
+    sourceCast: adaptedCast,
   };
 }
