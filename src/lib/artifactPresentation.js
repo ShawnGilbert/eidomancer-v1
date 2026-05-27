@@ -129,6 +129,8 @@ export const DEPTH_LAYER_ORDER = [
   "signal",
   "tension",
   "pattern",
+  "insight",
+  "essence",
   "echo",
   "guidance",
 ];

@@ -122,6 +122,20 @@ function getDepthLayerText(type, sourceRecord, artifact) {
     );
   }
 
+  if (type === "essence") {
+    return (
+      getArtifactSectionText(sourceRecord, "essence") ||
+      sourceRecord?.essence ||
+      sourceRecord?.coreObject ||
+      sourceRecord?.coreCard?.description ||
+      sourceRecord?.echo ||
+      getArtifactSectionText(artifact, "essence") ||
+      artifact?.essence ||
+      artifact?.coreObject ||
+      artifact?.subtitle
+    );
+  }
+
   return (
     getArtifactSectionText(sourceRecord, type) ||
     getArtifactSectionText(artifact, type)
@@ -143,13 +157,16 @@ function DepthLayers({ artifact, sourceRecord }) {
 
   const layers = useMemo(
     () =>
-      depthLayerTypes
-        .map(([type, label]) => ({
+      depthLayerTypes.map(([type, label]) => {
+        const text = getDepthLayerText(type, sourceRecord, artifact);
+
+        return {
           type,
           label,
-          text: getDepthLayerText(type, sourceRecord, artifact),
-        }))
-        .filter((layer) => Boolean(layer.text)),
+          text,
+          hasContent: Boolean(String(text || "").trim()),
+        };
+      }),
     [artifact, sourceRecord]
   );
 
@@ -160,7 +177,8 @@ function DepthLayers({ artifact, sourceRecord }) {
     setCopyError("");
   }, [artifact?.id, artifact?.savedAt, sourceRecord?.id]);
 
-  const hasLayers = layers.length > 0;
+  const availableLayers = layers.filter((layer) => layer.hasContent);
+  const hasAvailableLayers = availableLayers.length > 0;
 
   function toggleLayer(type) {
     setOpenLayers((current) => ({
@@ -185,7 +203,7 @@ function DepthLayers({ artifact, sourceRecord }) {
   }
 
   async function copyAllLayers() {
-    const text = layers
+    const text = availableLayers
       .map((layer) => `${layer.label.toUpperCase()}\n${layer.text}`)
       .join("\n\n");
 
@@ -214,15 +232,15 @@ function DepthLayers({ artifact, sourceRecord }) {
             Expand the compressed cast.
           </h3>
           <p className="mt-1 text-sm leading-6 text-slate-400">
-            Open a layer to inspect signal, tension, pattern, echo, and guidance.
+            Open a layer to inspect signal, tension, pattern, insight, essence, echo, and guidance.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="text-xs text-slate-400">
-            {layers.length} available
+            {availableLayers.length} available
           </div>
-          {hasLayers ? (
+          {hasAvailableLayers ? (
             <button
               type="button"
               onClick={copyAllLayers}
@@ -241,7 +259,7 @@ function DepthLayers({ artifact, sourceRecord }) {
       ) : null}
 
       <div className="mt-4 grid gap-2.5">
-        {!hasLayers ? (
+        {!hasAvailableLayers ? (
           <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-200/65">
               Cast Context Needed
@@ -255,6 +273,9 @@ function DepthLayers({ artifact, sourceRecord }) {
         {layers.map((layer) => {
           const isOpen = Boolean(openLayers[layer.type]);
           const layerStyle = depthLayerStyles[layer.type] || depthLayerStyles.signal;
+          const presenceLabel = layer.hasContent
+            ? `${layer.label} content available`
+            : `${layer.label} content not available`;
 
           return (
             <div
@@ -262,7 +283,7 @@ function DepthLayers({ artifact, sourceRecord }) {
               className={`rounded-2xl border border-l-2 text-left transition-all duration-200 ease-out ${layerStyle.edge} ${
                 isOpen
                   ? `${layerStyle.open || "border-cyan-300/45 bg-cyan-400/12"} p-4 shadow-[0_0_24px_rgba(34,211,238,0.08)]`
-                  : `border-white/10 bg-white/[0.04] p-3 shadow-sm shadow-black/10 ${layerStyle.hover || "hover:border-cyan-300/25"} hover:bg-white/[0.07]`
+                  : `border-white/10 bg-white/[0.04] p-3 shadow-sm shadow-black/10 ${layer.hasContent ? layerStyle.hover || "hover:border-cyan-300/25" : "hover:border-white/15"} hover:bg-white/[0.07]`
               }`}
             >
               <button
@@ -273,10 +294,17 @@ function DepthLayers({ artifact, sourceRecord }) {
               >
                 <div className="flex items-center gap-2">
                   <span
-                    className={`h-2 w-2 rounded-full ${layerStyle.marker}`}
-                    aria-hidden="true"
+                    className={`h-2 w-2 shrink-0 rounded-full ${
+                      layer.hasContent
+                        ? layerStyle.marker
+                        : "border border-white/25 bg-transparent"
+                    }`}
+                    title={presenceLabel}
+                    aria-label={presenceLabel}
                   />
-                  <div className={`break-words text-xs font-bold uppercase tracking-[0.24em] [overflow-wrap:anywhere] ${layerStyle.label}`}>
+                  <div className={`break-words text-xs font-bold uppercase tracking-[0.24em] [overflow-wrap:anywhere] ${
+                    layer.hasContent ? layerStyle.label : "text-slate-500"
+                  }`}>
                     {layer.label}
                   </div>
                 </div>
@@ -289,14 +317,22 @@ function DepthLayers({ artifact, sourceRecord }) {
               <div
                 className={`mt-2 whitespace-pre-wrap break-words text-sm [overflow-wrap:anywhere] ${
                   isOpen
-                    ? "rounded-xl border border-white/10 bg-black/20 p-3.5 leading-7 text-slate-100"
-                    : "line-clamp-2 leading-6 text-slate-300/70"
+                    ? `rounded-xl border border-white/10 bg-black/20 p-3.5 leading-7 ${
+                        layer.hasContent ? "text-slate-100" : "text-slate-500"
+                      }`
+                    : `line-clamp-2 leading-6 ${
+                        layer.hasContent ? "text-slate-300/70" : "text-slate-500"
+                      }`
                 }`}
               >
-                {isOpen ? layer.text : previewText(layer.text)}
+                {layer.hasContent
+                  ? isOpen
+                    ? layer.text
+                    : previewText(layer.text)
+                  : "No layer text available yet."}
               </div>
 
-              {isOpen ? (
+              {isOpen && layer.hasContent ? (
                 <div className="mt-3 flex justify-end">
                   <button
                     type="button"
