@@ -7,6 +7,9 @@ const SECTION_LABELS = {
   echo: "Echo",
   poem: "Poem",
   guidance: "Guidance",
+  recommendation: "Guidance",
+  advice: "Guidance",
+  action: "Guidance",
 };
 
 function cleanText(value = "") {
@@ -78,7 +81,13 @@ function buildLegacySections(artifact = {}) {
     ["essence", artifact.essence || artifact.coreObject],
     ["poem", artifact.poem],
     ["echo", artifact.echo],
-    ["guidance", artifact.guidance || artifact.recommendation],
+    [
+      "guidance",
+      artifact.guidance ||
+        artifact.recommendation ||
+        artifact.advice ||
+        artifact.action,
+    ],
   ]
     .filter(([, value]) => cleanText(value))
     .map(([type, value]) =>

@@ -101,10 +101,24 @@ function getDepthLayerText(type, sourceRecord, artifact) {
     return (
       sourceRecord?.guidance ||
       sourceRecord?.recommendation ||
+      sourceRecord?.advice ||
+      sourceRecord?.action ||
       sourceRecord?.coreCard?.guidance ||
+      sourceRecord?.coreCard?.recommendation ||
+      sourceRecord?.coreCard?.advice ||
       getArtifactSectionText(sourceRecord, "guidance") ||
+      getArtifactSectionText(sourceRecord, "recommendation") ||
+      getArtifactSectionText(sourceRecord, "advice") ||
+      getArtifactSectionText(sourceRecord, "action") ||
       artifactGuidance ||
-      getArtifactSectionText(artifact, "guidance")
+      artifact?.guidance ||
+      artifact?.recommendation ||
+      artifact?.advice ||
+      artifact?.action ||
+      getArtifactSectionText(artifact, "guidance") ||
+      getArtifactSectionText(artifact, "recommendation") ||
+      getArtifactSectionText(artifact, "advice") ||
+      getArtifactSectionText(artifact, "action")
     );
   }
 
