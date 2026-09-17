@@ -84,7 +84,25 @@ Essence is a first-class symbolic compression, not a copy of Echo or Guidance.
 At the input boundary, `recommendation`, `advice`, and `next_move` normalize to
 Guidance.
 
-The Core Card requires a name, description, and concrete image prompt.
+The Core Card requires a name, description, and concrete image prompt. An
+explicit `symbolic_object` is preserved when supplied; otherwise package
+generation identifies Essence as the selected symbolic object without changing
+the Core Cast.
+
+## Downstream authority
+
+The v0.2 package adapter is isolated from the legacy v0.1 heuristic imagery
+generator. The Core Cast remains authoritative downstream:
+
+- Core Card name, description, symbolic object, and image prompt are preserved.
+- Essence, Echo, Guidance, Hook, Core Card description, and image prompt remain
+  distinct fields. A missing Hook stays empty rather than borrowing Echo or the
+  card description.
+- Presentation may restyle expression but may not substitute a competing
+  symbolic object, archetype, setting, or metaphor.
+- Historical `occult-digital`, `Storm Architect`, and `Silent Storm` motifs are
+  not v0.2 defaults. They can be requested as presentation cues, but cannot
+  replace the meaning or exact Core Card image prompt chosen by the lens.
 
 ## Outputs
 
@@ -107,8 +125,10 @@ Historical aliases remain accepted and normalize to canonical manifest keys:
 | `youtube` | `youtube_package` |
 | `fullPackage` | `full_package` |
 
-Every artifact envelope carries completion state and provenance. Core Cast
-provenance is field-level; derived packages identify their source layers.
+Every artifact envelope carries completion state and provenance. Provenance
+separates the caller-supplied intelligence provider/model from the lens or
+package transformation stage. Core Cast provenance is field-level; derived
+packages identify their source layers.
 
 ## Two-pass agent use
 

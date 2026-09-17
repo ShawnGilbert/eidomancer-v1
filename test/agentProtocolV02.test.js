@@ -4,6 +4,10 @@ import {
   processAgentRequestV02,
   PROTOCOL_VERSION_V02,
 } from "../src/lib/agentProtocolV02.js";
+import {
+  turnstileAtTheOrchard,
+  turnstileRequest,
+} from "./fixtures/turnstile-at-the-orchard.js";
 
 const completeIntelligence = {
   title: "The Borrowed Tomorrow",
@@ -177,4 +181,91 @@ test("presentation changes do not alter strict AI meaning", async () => {
     austere.pipeline.presentation_theme,
     mythic.pipeline.presentation_theme
   );
+});
+
+test("Turnstile Core Card remains authoritative through every v0.2 package", async () => {
+  const result = await processAgentRequestV02({
+    ...turnstileRequest,
+    outputs: ["core_cast", "image_prompts", "song_package", "youtube_package", "full_package"],
+  });
+  assert.equal(result.ok, true);
+
+  const coreCast = result.artifacts.core_cast.content;
+  const images = result.artifacts.image_prompts.content;
+  const song = result.artifacts.song_package.content;
+  const youtube = result.artifacts.youtube_package.content;
+  const full = result.artifacts.full_package.content;
+  const sections = Object.fromEntries(
+    turnstileAtTheOrchard.sections.map(({ type, content }) => [type, content])
+  );
+
+  assert.deepEqual(coreCast.core_card, turnstileAtTheOrchard.core_card);
+  assert.equal(images.core_card.card_name, turnstileAtTheOrchard.core_card.name);
+  assert.equal(images.core_card.description, turnstileAtTheOrchard.core_card.description);
+  assert.equal(images.core_card.prompt, turnstileAtTheOrchard.core_card.image_prompt);
+  assert.equal(images.core_card.symbolic_object, sections.essence);
+  assert.equal(images.core_card.prompt_authority, "core_cast.core_card.image_prompt");
+
+  for (const value of [images.core_card.prompt, images.echo.prompt]) {
+    assert.match(value, /orchard/i);
+    assert.match(value, /turnstile/i);
+    assert.doesNotMatch(value, /Silent Storm|Storm Architect|occult-digital/i);
+  }
+
+  assert.equal(song.essence, sections.essence);
+  assert.equal(song.echo, turnstileAtTheOrchard.echo);
+  assert.equal(song.guidance, sections.guidance);
+  assert.equal(song.hook, "");
+  assert.notEqual(song.essence, song.echo);
+  assert.notEqual(song.echo, song.guidance);
+  assert.match(song.lyrics, /\[Break — Essence\]/);
+  assert.match(song.lyrics, /\[Coda — Guidance\]/);
+
+  assert.equal(youtube.hook, "");
+  assert.equal(youtube.echo, turnstileAtTheOrchard.echo);
+  assert.equal(youtube.symbolic_object, sections.essence);
+  assert.equal(full.core_cast_semantics.essence, sections.essence);
+  assert.equal(full.core_cast_semantics.echo, turnstileAtTheOrchard.echo);
+  assert.equal(full.core_cast_semantics.guidance, sections.guidance);
+  assert.equal(full.core_cast_semantics.hook, "");
+  assert.deepEqual(full.core_card, {
+    ...turnstileAtTheOrchard.core_card,
+    symbolic_object: sections.essence,
+  });
+});
+
+test("Turnstile presentation cannot replace the lens-selected symbolic concept", async () => {
+  const requestedLegacyTheme = await processAgentRequestV02({
+    ...turnstileRequest,
+    presentation: {
+      theme: "occult-digital",
+      imagery: ["Silent Storm", "Storm Architect"],
+    },
+    outputs: ["core_cast", "image_prompts"],
+  });
+
+  const card = requestedLegacyTheme.artifacts.image_prompts.content.core_card;
+  assert.equal(card.prompt, turnstileAtTheOrchard.core_card.image_prompt);
+  assert.match(card.prompt, /orchard/i);
+  assert.match(card.prompt, /turnstile/i);
+  assert.doesNotMatch(card.prompt, /Silent Storm|Storm Architect|occult-digital/i);
+  assert.equal(card.presentation.theme, "occult-digital");
+});
+
+test("Turnstile provenance distinguishes intelligence from downstream transformation", async () => {
+  const result = await processAgentRequestV02({
+    ...turnstileRequest,
+    outputs: ["core_cast", "image_prompts"],
+  });
+  const castProvenance = result.artifacts.core_cast.provenance;
+  const packageProvenance = result.artifacts.image_prompts.provenance;
+
+  assert.deepEqual(castProvenance.intelligence, {
+    source: "caller_supplied_ai",
+    provider: "OpenAI",
+    model: "same assistant/model family as control",
+  });
+  assert.equal(castProvenance.transformation.stage, "eidomancer_lens");
+  assert.equal(packageProvenance.transformation.stage, "package_generation");
+  assert.deepEqual(packageProvenance.derived_from, ["core_cast", "presentation"]);
 });

@@ -1,11 +1,10 @@
 import { buildSeed, generateCastFromSeed } from "./castEngine.js";
 import {
-  generateCoreCardImagePrompt,
-  generateEcho,
-  generateFullPackage,
-  generateSongPackage,
-  generateYouTubePackage,
-} from "./packageGenerators.js";
+  generateFullPackageV02,
+  generateImagePromptsV02,
+  generateSongPackageV02,
+  generateYouTubePackageV02,
+} from "./packageGeneratorsV02.js";
 import {
   CAST_V02_CONTRACT,
   CAST_V02_FIELDS,
@@ -91,6 +90,7 @@ function coreCard(cast = {}) {
   return {
     name: text(card.name || card.title || cast.cardName || cast.title, 300),
     description: text(card.description || card.coreObject, 8000),
+    symbolic_object: text(card.symbolic_object || card.symbolicObject, 8000),
     image_prompt: text(card.image_prompt || card.imagePrompt || card.imageGeneration?.prompt, 12000),
   };
 }
@@ -174,13 +174,30 @@ export function normalizeAgentRequestV02(raw) {
   };
 }
 
-function provenance(source, request, detail = {}) {
+function intelligenceProvenance(request, supplied = true) {
+  if (!supplied) return null;
   return {
-    source,
-    intelligence: source === "model_generated" ? {
-      provider: request.intelligence.provider,
-      model: request.intelligence.model,
-    } : null,
+    source: "caller_supplied_ai",
+    provider: request.intelligence.provider,
+    model: request.intelligence.model,
+  };
+}
+
+function provenance(stage, request, detail = {}) {
+  const operations = {
+    lens_instruction_generation: "compile_lens_instructions",
+    eidomancer_lens: "validate_normalize_and_preserve_meaning",
+    package_generation: "derive_package_without_replacing_core_symbol",
+  };
+  return {
+    intelligence: intelligenceProvenance(
+      request,
+      request.execution.mode !== "deterministic_preview"
+    ),
+    transformation: {
+      stage,
+      operation: operations[stage] || "unspecified_transformation",
+    },
     ...detail,
   };
 }
@@ -196,10 +213,20 @@ function normalizeModelCast(parsed, request) {
     title: inspected.card.name,
     question: request.input.intent,
     sections,
-    core_card: inspected.card,
+    core_card: {
+      name: inspected.card.name,
+      description: inspected.card.description,
+      ...(inspected.card.symbolic_object
+        ? { symbolic_object: inspected.card.symbolic_object }
+        : {}),
+      image_prompt: inspected.card.image_prompt,
+    },
     coreCard: {
       name: inspected.card.name,
       description: inspected.card.description,
+      ...(inspected.card.symbolic_object
+        ? { symbolicObject: inspected.card.symbolic_object }
+        : {}),
       imagePrompt: inspected.card.image_prompt,
     },
     echo: inspected.sections.echo || "",
@@ -232,6 +259,7 @@ function mergeHybrid(modelCast, deterministicCast, request) {
     core_card: {
       name: supplied.card?.name || local.card?.name || "",
       description: supplied.card?.description || local.card?.description || "",
+      symbolic_object: supplied.card?.symbolic_object || local.card?.symbolic_object || "",
       image_prompt: supplied.card?.image_prompt || local.card?.image_prompt || "",
     },
   };
@@ -242,17 +270,30 @@ function buildFieldProvenance(cast, suppliedCast, request, deterministicOnly) {
   const supplied = inspectCast(suppliedCast);
   const fields = {};
   for (const type of CAST_V02_FIELDS) {
-    fields[`sections.${type}`] = provenance(
+    fields[`sections.${type}`] = {
+      ...provenance("eidomancer_lens", request),
+      source:
       !deterministicOnly && supplied.sections?.[type] ? "model_generated" : "deterministically_derived",
-      request
-    );
+    };
   }
-  fields.echo = provenance(!deterministicOnly && supplied.sections?.echo ? "model_generated" : "deterministically_derived", request);
+  fields.echo = {
+    ...provenance("eidomancer_lens", request),
+    source: !deterministicOnly && supplied.sections?.echo
+      ? "model_generated" : "deterministically_derived",
+  };
   for (const field of ["name", "description", "image_prompt"]) {
-    fields[`core_card.${field}`] = provenance(
+    fields[`core_card.${field}`] = {
+      ...provenance("eidomancer_lens", request),
+      source:
       !deterministicOnly && supplied.card?.[field] ? "model_generated" : "deterministically_derived",
-      request
-    );
+    };
+  }
+  if (coreCard(cast).symbolic_object) {
+    fields["core_card.symbolic_object"] = {
+      ...provenance("eidomancer_lens", request),
+      source: !deterministicOnly && supplied.card?.symbolic_object
+        ? "model_generated" : "deterministically_derived",
+    };
   }
   return fields;
 }
@@ -290,13 +331,16 @@ function unavailable(type, missingFields) {
 }
 
 function envelope(type, mediaType, content, request, detail = {}) {
+  const stage = type === "core_cast" ? "eidomancer_lens"
+    : type === "lens_instructions" ? "lens_instruction_generation"
+      : "package_generation";
   return {
     type,
     media_type: mediaType,
     status: "complete",
     partial: false,
     content,
-    provenance: provenance("lens_transformed", request, detail),
+    provenance: provenance(stage, request, detail),
   };
 }
 
@@ -395,12 +439,22 @@ export async function processAgentRequestV02(raw) {
         artifacts[type] = unavailable(type, missing);
         continue;
       }
-      if (type === "image_prompts") artifacts[type] = envelope(type, "application/json", {
-        core_card: generateCoreCardImagePrompt(record), echo: generateEcho(record),
-      }, request, { derived_from: ["core_cast", "presentation"] });
-      if (type === "song_package") artifacts[type] = envelope(type, "application/json", generateSongPackage(record), request, { derived_from: ["core_cast", "presentation"] });
-      if (type === "youtube_package") artifacts[type] = envelope(type, "application/json", generateYouTubePackage(record), request, { derived_from: ["core_cast", "presentation"] });
-      if (type === "full_package") artifacts[type] = envelope(type, "text/plain", generateFullPackage(record), request, { derived_from: ["core_cast", "presentation"] });
+      if (type === "image_prompts") artifacts[type] = envelope(
+        type, "application/json", generateImagePromptsV02(record, request.presentation),
+        request, { derived_from: ["core_cast", "presentation"] }
+      );
+      if (type === "song_package") artifacts[type] = envelope(
+        type, "application/json", generateSongPackageV02(record, request.presentation),
+        request, { derived_from: ["core_cast", "presentation"] }
+      );
+      if (type === "youtube_package") artifacts[type] = envelope(
+        type, "application/json", generateYouTubePackageV02(record, request.presentation),
+        request, { derived_from: ["core_cast", "presentation"] }
+      );
+      if (type === "full_package") artifacts[type] = envelope(
+        type, "application/json", generateFullPackageV02(record, request.presentation),
+        request, { derived_from: ["core_cast", "presentation"] }
+      );
     }
   }
 
