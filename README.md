@@ -42,6 +42,22 @@ request ID, pipeline provenance, artifact manifest, typed artifacts, and
 diagnostics. See `AGENT_NATIVE_PROTOTYPE.md` for the contract, architecture,
 inventory, and remaining work.
 
+### Canonical v0.2 draft
+
+The original `eidomancer.agent.v0.1` route remains available and unchanged.
+The reconciled v0.2 architecture is exposed separately:
+
+```bash
+node scripts/eidomancer-agent.js --v0.2 examples/agent-request-v0.2.json
+curl -s http://localhost:3001/api/v2/lens \
+  -H 'content-type: application/json' \
+  --data @examples/agent-request-v0.2.json
+```
+
+v0.2 separates the underlying intelligence (The Emergent Ones), the Eidomancer
+lens, and presentation. See `EIDOMANCER_AGENT_V0.2.md` for execution modes,
+evidence and memory classes, Essence, provenance, aliases, and migration notes.
+
 ## Production Runtime Overview
 
 Eidomancer V1 is currently a React/Vite frontend with a small Express backend in `server.js`. The frontend owns the Daily Cast UI, artifact viewer, archive, output tools, and local persistence. The backend owns AI connectivity through `/api/generate`, `/api/cast`, and `/api/ai/status`.

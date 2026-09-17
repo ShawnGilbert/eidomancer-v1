@@ -6,6 +6,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { processAgentRequest } from "./src/lib/agentProtocol.js";
+import { processAgentRequestV02 } from "./src/lib/agentProtocolV02.js";
 
 dotenv.config();
 
@@ -57,6 +58,13 @@ app.get("/api/ai/status", async (_req, res) => {
 // intelligence in the request for Eidomancer to refract.
 app.post("/api/v1/lens", async (req, res) => {
   const result = await processAgentRequest(req.body);
+  return res.status(result.ok ? 200 : 400).json(result);
+});
+
+// v0.2 preserves v0.1 while making intelligence, lens doctrine, and
+// presentation separate protocol layers.
+app.post("/api/v2/lens", async (req, res) => {
+  const result = await processAgentRequestV02(req.body);
   return res.status(result.ok ? 200 : 400).json(result);
 });
 

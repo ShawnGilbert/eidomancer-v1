@@ -116,6 +116,13 @@ Remaining work:
 8. Add observability, latency/cost metadata, content-safety policy, caching,
    retries, and deployment tests.
 
+## v0.2 reconciliation
+
+The additional local project history was reconciled in a separate v0.2
+implementation. v0.1 remains intact as the known-good baseline. See
+`EIDOMANCER_AGENT_V0.2.md` for the canonical intelligence/lens/presentation
+separation and the backward-compatible protocol additions.
+
 ## Verification
 
 Run:

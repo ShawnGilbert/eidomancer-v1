@@ -1,0 +1,30 @@
+{
+  "protocol_version": "eidomancer.agent.v0.2",
+  "request_id": "example-agent-v02-001",
+  "execution": { "mode": "deterministic_preview" },
+  "input": {
+    "intent": "Turn the conflict between preparing for future danger and helping people now into a memorable cultural artifact.",
+    "source_material": "Resources spent preparing for tomorrow cannot relieve every need today; spending everything today can leave tomorrow defenseless.",
+    "constraints": ["No supernatural certainty", "Do not erase material tradeoffs"],
+    "audience": "thoughtful adults interested in technology and social change"
+  },
+  "lens": {
+    "viewpoint": "global",
+    "avoid": ["generic optimism", "false balance"]
+  },
+  "evidence": {
+    "facts": ["Time and money allocated to one intervention cannot be spent twice."],
+    "reported_claims": ["People often describe preparation as selfish."],
+    "inferences": ["The conflict may partly be a dispute over time horizons."]
+  },
+  "memory": {
+    "continuity_signals": ["This tension has previously produced the phrase: the plight of now."]
+  },
+  "presentation": {
+    "theme": "techno-shaman",
+    "voice": "dark, lucid, humane",
+    "imagery": ["a shelter casting a shadow over a crowded road"],
+    "visual_language": ["ancient-digital", "materially grounded"]
+  },
+  "outputs": ["lens_instructions", "core_cast", "image_prompts", "song_package"]
+}

@@ -10,7 +10,7 @@
     "build": "vite build --emptyOutDir",
     "preview": "vite preview",
     "agent": "node scripts/eidomancer-agent.js",
-    "test:agent": "node --test test/agentProtocol.test.js"
+    "test:agent": "node --test test/*.test.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
