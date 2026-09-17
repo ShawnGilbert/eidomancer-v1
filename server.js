@@ -5,6 +5,7 @@ import OpenAI from "openai";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { processAgentRequest } from "./src/lib/agentProtocol.js";
 
 dotenv.config();
 
@@ -16,9 +17,9 @@ const indexPath = path.join(distPath, "index.html");
 const app = express();
 const port = process.env.PORT || 3001;
 const imageModel = process.env.IMAGE_MODEL || "gpt-image-1";
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
 
 app.use(cors());
 app.use(express.json());
@@ -49,6 +50,14 @@ app.get("/api/ai/status", async (_req, res) => {
       reason: error?.message || "Unknown status error.",
     });
   }
+});
+
+// Stable, machine-readable entry point for other agents. This route is local
+// and deterministic by default; callers may optionally supply prior model
+// intelligence in the request for Eidomancer to refract.
+app.post("/api/v1/lens", async (req, res) => {
+  const result = await processAgentRequest(req.body);
+  return res.status(result.ok ? 200 : 400).json(result);
 });
 
 function safeParseJson(text) {

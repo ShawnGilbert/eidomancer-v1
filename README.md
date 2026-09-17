@@ -13,6 +13,35 @@ npm run dev
 
 The Vite frontend runs on its normal local dev port and proxies `/api` requests to the Express backend at `http://localhost:3001`.
 
+## Agent-native prototype
+
+Eidomancer now exposes the same lens as a structured local CLI and HTTP API.
+It works without an API key by using the existing deterministic cast engine.
+Another agent may also provide its own structured model output in
+`intelligence.content`; Eidomancer then normalizes and refracts that output into
+the requested artifact package.
+
+CLI:
+
+```bash
+npm run agent -- examples/agent-request.json
+cat examples/agent-request.json | npm run agent
+```
+
+HTTP:
+
+```bash
+npm run server
+curl -s http://localhost:3001/api/v1/lens \
+  -H 'content-type: application/json' \
+  --data @examples/agent-request.json
+```
+
+The response is always JSON and contains a versioned protocol identifier,
+request ID, pipeline provenance, artifact manifest, typed artifacts, and
+diagnostics. See `AGENT_NATIVE_PROTOTYPE.md` for the contract, architecture,
+inventory, and remaining work.
+
 ## Production Runtime Overview
 
 Eidomancer V1 is currently a React/Vite frontend with a small Express backend in `server.js`. The frontend owns the Daily Cast UI, artifact viewer, archive, output tools, and local persistence. The backend owns AI connectivity through `/api/generate`, `/api/cast`, and `/api/ai/status`.

@@ -8,7 +8,9 @@
     "server": "node server.js",
     "start": "node server.js",
     "build": "vite build --emptyOutDir",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "agent": "node scripts/eidomancer-agent.js",
+    "test:agent": "node --test test/agentProtocol.test.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

@@ -1,0 +1,18 @@
+{
+  "protocol_version": "eidomancer.agent.v0.1",
+  "request_id": "example-agent-001",
+  "input": {
+    "intent": "Turn the conflict between preparing for future danger and helping people now into a memorable cultural artifact.",
+    "source_material": "A society has limited attention and money. Preparing for tomorrow can become an excuse to ignore today's suffering; spending everything today can leave tomorrow defenseless.",
+    "context": ["The artifact should hold both truths without flattening either one."],
+    "constraints": ["No supernatural certainty", "Avoid generic optimism"],
+    "audience": "thoughtful adults interested in technology and social change"
+  },
+  "lens": {
+    "mode": "symbolic-compression",
+    "tone": "dark, lucid, humane",
+    "theme": "The Emergent Ones",
+    "avoid": ["corporate jargon", "false balance"]
+  },
+  "outputs": ["core_cast", "image_prompts", "song_package", "youtube_package"]
+}

@@ -1,6 +1,6 @@
 // D:\eidomancer\src\lib\packageGenerators.js
 
-import { deriveCoreCardFromCast } from "./castToArtifact";
+import { deriveCoreCardFromCast } from "./castToArtifact.js";
 
 function joinTags(tags) {
   return tags.filter(Boolean).join(", ");
