@@ -1,0 +1,45 @@
+{
+  "seed": "Memory village",
+  "world_mode": "fictional",
+  "calls": 3,
+  "usage": "unknown",
+  "provider": "OpenAI (caller reported)",
+  "model": "GPT-5.6 Sol (caller reported)",
+  "request_ids": [
+    "mv-b1",
+    "mv-b2",
+    "mv-eval-1"
+  ],
+  "request_sha256": [
+    "d6b61161bb22d1d228f821dc71ebc9653e76172913114c6e1bb1185efeac0cc2",
+    "b1df8d754529b16c0d1abeeb0bc491bcc89a99b88d3dca341626fc64a714f918",
+    "8b9876160d1c0f0704c4fac7e9414ebd237a2892a23e35c798e94fd4e71e79aa"
+  ],
+  "response_sha256": [
+    "8ee017f6eaf46f4226cf9ce0c3cd222e72061457ab1844fa204d9da29df99601",
+    "48181959f6a8f82313514fbd22df620e8505f8c17717d1ef7839e94512b17594",
+    "2cba5a3387731d1f5042f512be1ee91a41da666f4225ebab4425f8080b349b0d"
+  ],
+  "evaluation_response_record_id": "record:sha256:1692ab946cb706b40f856412c20c5478beca36b8a4bfd578be131bf114065700",
+  "extraction_operation_id": "record:sha256:08fbaaad58ff419222b06620dc22ee55b35d88d0543d360ceac829e28a194e5b",
+  "b1": {
+    "transition_id": "record:sha256:76372f729ce1a2d3bd481df594ef8deff90b9ab28d3ab2d3c85452d15b5e0048",
+    "evaluation_id": "record:sha256:ad5eeac9719371ce123764d0ff1b64211d022fdada3ca29da843a227f774111f",
+    "audit_id": "record:sha256:c0faa903e943974ee29ed2eb8b698f8cd11c28d3012a8d82544327abdf1def8b",
+    "status": "retained"
+  },
+  "b2": {
+    "transition_id": "record:sha256:ff2148803d5af06db2ba5a7db889f1798b43de23d5cdafcf5350152b72038ad2",
+    "evaluation_id": "record:sha256:eb4d3f50e5148be5ecce6ca5c61c7829853c9a00bb4dbba253846fc8abec1b84",
+    "crack_id": "record:sha256:338e66ec5c62852daac6b6b2e31b325846280b979057b28b20bad349b13245f3",
+    "audit_id": "record:sha256:3dee7cd23acea64f6aa5233532222c02de293248c9d62c802091135aae8255ef",
+    "status": "pruned",
+    "successor_world_state_id": "none"
+  },
+  "crystal_id": "crystal:sha256:4aa872f8a984e052de828e648f93b7888338712876fded39895f7585db654d5d",
+  "closure_status": "complete",
+  "verified_reference_count": 22,
+  "direct_question_comparison": "The exploration appears somewhat richer than a likely direct answer because it preserves a valid consequence and an independently rejected boundary case with an explicit Crack, but this single commissioning run is not sufficient to establish an advantage over direct prompting.",
+  "direct_baseline_was_run": false,
+  "store": "/workspace/scratch/b3ed5454e0cf/recovery-inspection/eidomancer-agent-prototype/commissioning/memory-village/objects-v0.1"
+}

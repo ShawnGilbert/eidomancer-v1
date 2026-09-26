@@ -1,0 +1,14 @@
+{
+  "request_id": "mv-eval-1",
+  "provider": "OpenAI",
+  "model": "GPT-5.6 Sol",
+  "identification_status": "caller_reported",
+  "completion_status": "complete",
+  "provider_request_id": "unknown",
+  "usage": "unknown",
+  "content_type": "application/json",
+  "encoding": "utf-8",
+  "request_sha256": "8b9876160d1c0f0704c4fac7e9414ebd237a2892a23e35c798e94fd4e71e79aa",
+  "response_sha256": "2cba5a3387731d1f5042f512be1ee91a41da666f4225ebab4425f8080b349b0d",
+  "provenance_limit": "User pasted visible model output; provider transport bytes, actual submitted UI prompt, and provider-side usage are not observable."
+}

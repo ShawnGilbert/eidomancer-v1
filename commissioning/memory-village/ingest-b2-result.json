@@ -1,0 +1,32 @@
+{
+  "request_sha256": "b1df8d754529b16c0d1abeeb0bc491bcc89a99b88d3dca341626fc64a714f918",
+  "response_sha256": "48181959f6a8f82313514fbd22df620e8505f8c17717d1ef7839e94512b17594",
+  "response_length": 374,
+  "response_record_id": "record:sha256:7dfd00c7bd61f268bc0199c1fb7c143e3f0fb59c092e3db2266e777d08c138fe",
+  "selection_operation_id": "record:sha256:8f2fef0aafc5698064ca14d658499f8442eedc2f04d210b2c66e1cdc5fdf9e3d",
+  "transition_id": "record:sha256:ff2148803d5af06db2ba5a7db889f1798b43de23d5cdafcf5350152b72038ad2",
+  "successor_world_state_id": "none",
+  "mechanical_check": {
+    "predicate": "private_recall_max_v1",
+    "rule_set_ref": {
+      "kind": "rule_set",
+      "id": "record:sha256:1eb5569dacae190af04748bb77298047dd7ef3786a6c6ac3633be2f098d17e25",
+      "schema_version": "eidomancer.record.schema.v0.1",
+      "required": true
+    },
+    "constraint_ref": {
+      "kind": "constraint",
+      "id": "record:sha256:58100aece4889134fa03ba2c339f0a95ce85c4adc192426cdf4d927531665060",
+      "schema_version": "eidomancer.record.schema.v0.1",
+      "required": true
+    },
+    "passed": false,
+    "observed": 4,
+    "maximum": 3
+  },
+  "transition_status": "rejected",
+  "open_crack_id": "record:sha256:338e66ec5c62852daac6b6b2e31b325846280b979057b28b20bad349b13245f3",
+  "evaluation": "pending",
+  "branch_audit": "pending",
+  "crystal": "none"
+}

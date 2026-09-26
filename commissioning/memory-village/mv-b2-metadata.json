@@ -1,0 +1,13 @@
+{
+  "request_id": "mv-b2",
+  "provider": "OpenAI",
+  "model": "GPT-5.6 Sol",
+  "identification_status": "caller_reported",
+  "completion_status": "complete",
+  "provider_request_id": "unknown",
+  "usage": "unknown",
+  "content_type": "application/json",
+  "encoding": "utf-8",
+  "provenance_limit": "User pasted visible model output. Original provider/network bytes and actual external submission are not observable in Work. The manual adapter captures bytes transcribed into its response file.",
+  "response_sha256": "48181959f6a8f82313514fbd22df620e8505f8c17717d1ef7839e94512b17594"
+}
