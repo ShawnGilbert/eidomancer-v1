@@ -30,10 +30,13 @@ export function extractCandidate(response, method = 'fixture-json-v1') {
   if (response.payload.kind !== 'intelligence_response') throw new Error('Response required');
   if (response.payload.body.completion_status !== 'complete') throw new Error('Incomplete intelligence response');
   if (method !== 'fixture-json-v1') throw new Error('Unsupported extraction method');
+  if (response.payload.body.response.content_type !== 'application/json' || response.payload.body.response.encoding !== 'utf-8') throw new Error('Invalid candidate content type or encoding');
   const bytes = Buffer.from(response.payload.body.response.base64,'base64');
   const candidate = parseStrictJson(bytes);
+  if (!candidate || Array.isArray(candidate) || typeof candidate !== 'object' ||
+      Object.keys(candidate).sort().join(',') !== 'description,external_inscription_available,private_recall_after_exchanges') throw new Error('Invalid structured candidate fields');
   if (!Number.isSafeInteger(candidate.private_recall_after_exchanges) || candidate.private_recall_after_exchanges < 0 ||
-      typeof candidate.external_inscription_available !== 'boolean' || typeof candidate.description !== 'string' || !candidate.description) throw new Error('Invalid structured candidate');
+      typeof candidate.external_inscription_available !== 'boolean' || typeof candidate.description !== 'string' || !candidate.description.trim()) throw new Error('Invalid structured candidate');
   return {candidate:{description:candidate.description,private_recall_after_exchanges:candidate.private_recall_after_exchanges,
     external_inscription_available:candidate.external_inscription_available},method,source_response_ref:response.id};
 }

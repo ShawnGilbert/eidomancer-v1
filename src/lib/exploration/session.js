@@ -16,7 +16,7 @@ export async function createSession(store,{purpose,description,scope='fictional 
 }
 
 export async function fork(session,intents) {
-  if (!Array.isArray(intents) || intents.length < 2 || new Set(intents.map(x=>x.id)).size!==intents.length || intents.length>session.budgets.branches) throw new Error('Invalid fork/budget');
+  if (!Array.isArray(intents) || intents.length < 2 || intents.some(x=>typeof x?.intent!=='string' || !x.intent.trim()) || new Set(intents.map(x=>x.id)).size!==intents.length || intents.length>session.budgets.branches) throw new Error('Invalid fork/budget');
   for (const intent of intents) {
     const operation=await born(session.store,'operation',{type:'fork',input_refs:[r(session.initial)],changes:[intent.intent],invariants:[`${session.rule.payload.body.name} private recall <= ${session.constraint.payload.body.parameters.maximum}`],budget_debit:1,actor:'environment'},'declared_world_assumption');
     session.branches.set(intent.id,{id:intent.id,intent:intent.intent,operation,parent:session.initial,status:'active'});
