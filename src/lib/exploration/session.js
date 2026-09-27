@@ -1,5 +1,6 @@
 import {record,ref} from './recordSchemas.js';
 import {captureAdapter,extractCandidate,extractEvaluation} from './intelligenceAdapter.js';
+import {canonicalBytes} from './canonicalJson.js';
 
 const env = (input_refs = []) => ({actor_role:'environment',provider:'eidomancer',model_or_version:'exploration.v0.3',identification_status:'declared',input_refs});
 const born = async (store,kind,body,claim_class,provenance = env()) => {const object=record(kind,body,claim_class,provenance);await store.put(object);return object;};
@@ -35,8 +36,22 @@ export async function evolve(session,branch_id,adapter,request_id) {
   const branch=session.branches.get(branch_id);
   if (!branch || branch.status!=='active' || branch.transition) throw new Error('Branch unavailable');
   if (session.calls>=session.budgets.calls) throw new Error('Intelligence call budget exhausted');
+  const seed_ref=r(session.seed),current_state_ref=r(branch.parent),rule_set_ref=r(session.rule),
+    constraint_refs=[r(session.constraint)],declared_operation_ref=r(branch.operation);
+  const resolved=async reference=>({ref:reference,body:(await session.store.verifyRef(reference)).payload.body});
+  const [seed,current_state,rule_set,declared_operation,constraint_records]=await Promise.all([
+    resolved(seed_ref),resolved(current_state_ref),resolved(rule_set_ref),resolved(declared_operation_ref),
+    Promise.all(constraint_refs.map(resolved))]);
+  const matches=(left,right)=>left.length===right.length && left.every((item,index)=>item.id===right[index].id);
+  if (current_state.body.seed_ref.id!==seed_ref.id || current_state.body.rule_set_ref.id!==rule_set_ref.id ||
+      !matches(current_state.body.constraint_refs,constraint_refs) || !matches(seed.body.constraint_refs,constraint_refs) ||
+      !matches(rule_set.body.constraint_refs,constraint_refs) || declared_operation.body.type!=='fork' ||
+      !declared_operation.body.input_refs.some(item=>item.id===current_state_ref.id) ||
+      !declared_operation.body.changes.includes(branch.intent)) throw new Error('Generation context references inconsistent');
+  const request_bytes=canonicalBytes({schema_version:'eidomancer.generation-request.v1',seed_ref,current_state_ref,rule_set_ref,
+    constraint_refs,branch_id,declared_operation_ref,intent:branch.intent,request_id,
+    seed,current_state,rule_set,constraint_records,declared_operation});
   session.calls++;
-  const request_bytes=Buffer.from(JSON.stringify({seed_ref:r(session.seed),current_state_ref:r(branch.parent),rule_set_ref:r(session.rule),constraint_refs:[r(session.constraint)],branch_id,declared_operation_ref:r(branch.operation),intent:branch.intent,request_id}),'utf8');
   const response=await captureAdapter(session.store,adapter,{request_id,request_bytes,input_refs:[r(session.seed),r(branch.parent),r(session.rule),r(branch.operation)]});
   branch.response=response;
   const extraction=extractCandidate(response);
