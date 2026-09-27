@@ -1,0 +1,16 @@
+{
+  "all_six_reviews_preserved": true,
+  "world_1": [
+    "X",
+    "X"
+  ],
+  "world_2": [
+    "Y",
+    "Y"
+  ],
+  "world_3": [
+    "X",
+    "X"
+  ],
+  "assignment_key_hidden_until_after_this_snapshot": true
+}

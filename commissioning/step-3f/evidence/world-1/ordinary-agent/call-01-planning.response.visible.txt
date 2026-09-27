@@ -1,0 +1,1 @@
+{"arrangement_intent":"Reserve catalyst through staged allocation tied to changing settlement priorities rather than committing the full supply at once.","failure_intent":"Examine an early production commitment that becomes mismatched with later needs after irreversible catalyst consumption."}

@@ -1,0 +1,37 @@
+{
+  "checks": [
+    {
+      "statement": "Catalyst cannot fall below zero.",
+      "validator": "integer_min_v1",
+      "fact": "catalyst_units",
+      "observed": 2,
+      "limit": 0,
+      "passed": true
+    },
+    {
+      "statement": "Catalyst cannot exceed six.",
+      "validator": "integer_max_v1",
+      "fact": "catalyst_units",
+      "observed": 2,
+      "limit": 6,
+      "passed": true
+    },
+    {
+      "statement": "Panels cannot be negative.",
+      "validator": "integer_min_v1",
+      "fact": "panels",
+      "observed": 1,
+      "limit": 0,
+      "passed": true
+    },
+    {
+      "statement": "Rods cannot be negative.",
+      "validator": "integer_min_v1",
+      "fact": "rods",
+      "observed": 3,
+      "limit": 0,
+      "passed": true
+    }
+  ],
+  "scope": "Numeric fact checks only; narrative constraints require independent critique"
+}

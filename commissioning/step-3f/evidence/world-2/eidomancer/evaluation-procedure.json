@@ -1,0 +1,67 @@
+{
+  "id": "record:sha256:ea348f11221e690c688e1aa43bec4df155a9460f12d302673f1869b1ad368e4d",
+  "body": {
+    "name": "Four-level lagoon independent branch critique",
+    "version": "fictional.generic.v1",
+    "criteria": [
+      {
+        "id": "C1",
+        "mode": "mechanical",
+        "question": "Water level cannot be below zero.",
+        "constraint_ref": {
+          "kind": "constraint",
+          "id": "record:sha256:5737e38e9e5e4c6a6214d51ced7f66690a62fd3f7bcb549db8799012d5cee25b",
+          "schema_version": "eidomancer.record.schema.v0.2",
+          "required": true
+        }
+      },
+      {
+        "id": "C2",
+        "mode": "mechanical",
+        "question": "Water level cannot exceed three.",
+        "constraint_ref": {
+          "kind": "constraint",
+          "id": "record:sha256:b66a1d46b27e8c726a887fd4b9d4d8c37bec652739effece5a8fd8c11aad02e8",
+          "schema_version": "eidomancer.record.schema.v0.2",
+          "required": true
+        }
+      },
+      {
+        "id": "C3",
+        "mode": "mechanical",
+        "question": "Rooted reed patch count cannot be negative.",
+        "constraint_ref": {
+          "kind": "constraint",
+          "id": "record:sha256:6ba48f60cdd814e4aadbc2b0fab5bd354eefd6e1ed5549fde363cc7caed9c0a2",
+          "schema_version": "eidomancer.record.schema.v0.2",
+          "required": true
+        }
+      },
+      {
+        "id": "C4",
+        "mode": "intelligence_judgment",
+        "question": "Does any described change in water level match the number of dusks elapsed and the fixed 0–1–2–3–0 cycle?",
+        "constraint_ref": {
+          "kind": "constraint",
+          "id": "record:sha256:8881e19cc450b5068b1b016aa2c797d3a2a6d01b3555801e16914bb0ace7e0fd",
+          "schema_version": "eidomancer.record.schema.v0.2",
+          "required": true
+        }
+      },
+      {
+        "id": "C5",
+        "mode": "intelligence_judgment",
+        "question": "Are traversal, submersion, reed rooting, and persistence consistent with the specified water levels?",
+        "constraint_ref": {
+          "kind": "constraint",
+          "id": "record:sha256:582173f5b8951b6a13f3fd5bbda5e176840186f1e088b6390eb87fae14ccb1c2",
+          "schema_version": "eidomancer.record.schema.v0.2",
+          "required": true
+        }
+      }
+    ],
+    "comparator": "Initial fictional state",
+    "evaluator_role": "declared_external_evaluator",
+    "uncertainty_policy": "Retain unresolved limitations"
+  }
+}

@@ -1,0 +1,21 @@
+You are planning two exploration directions for a bounded fictional world. Identify directions only. Do not write candidate narratives, preview consequences, prescribe a desired discovery, or change the rules.
+
+World premise:
+A lagoon’s water level changes at each dusk in the repeating order 0, 1, 2, 3, 0. A band of porous stone can be walked across at levels 0 or 1, but is submerged at levels 2 or 3. Floating reeds can take root on that band only while it is submerged; rooted reeds remain there when the level falls. Residents may undertake projects around the lagoon using ordinary hand tools. They cannot change the water cycle or the stone band.
+
+Initial state facts and types:
+{"water_level":0,"rooted_reed_patches":0}
+Both fact keys are integers.
+
+Declared hard constraints and verification status:
+1. Water level cannot be below zero. A numeric check verifies water_level >= 0.
+2. Water level cannot exceed three. A numeric check verifies water_level <= 3.
+3. Rooted reed patch count cannot be negative. A numeric check verifies rooted_reed_patches >= 0.
+4. Water level advances one step at each dusk in the order 0, 1, 2, 3, 0. This requires judgment of the described sequence and facts; the numeric checks do not establish it.
+5. Stone is walkable only at levels 0–1; reeds root there only at levels 2–3 and remain rooted afterward. This requires judgment of the described sequence and facts; the numeric checks do not establish it.
+
+The two exploration aims are:
+1. Arrangement: “Develop a coherent consequential arrangement or adaptation within this world.”
+2. Failure: “Develop a plausible failure of an arrangement within this world and what follows from that failure.”
+
+Choose one concrete branch intent for each aim. Return only one JSON object with exactly two nonblank string fields: "arrangement_intent" and "failure_intent". Keep the entire response to approximately 120 words or fewer.

@@ -1,0 +1,16 @@
+{
+  "statuses": {
+    "arrangement": "retained",
+    "failure": "retained"
+  },
+  "checks": {
+    "arrangement": [],
+    "failure": []
+  },
+  "critiques": {
+    "arrangement": "retain",
+    "failure": "retain"
+  },
+  "model_identification": "caller_reported",
+  "calls": 5
+}

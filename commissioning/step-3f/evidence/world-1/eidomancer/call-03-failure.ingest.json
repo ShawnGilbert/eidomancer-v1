@@ -1,0 +1,73 @@
+{
+  "response_id": "record:sha256:2d7e64f496ebd194a7ecd80b4d503cd6fc3aeb19f1309966a89f59454380d40e",
+  "selection_id": "record:sha256:845417a5c1eb06c73d0f52dce41680721f0d4fdc55eeacd2b3f5b00c8d3906e8",
+  "successor_id": "record:sha256:ee9c3829abcb7a01a1f0822ac291968acc158618aaac861a50ebfaf3a2f02b2a",
+  "transition_id": "record:sha256:685902bd597fa89b567cea3d9567a6eeb85597491a09abc4fc1a71e812c435c2",
+  "transition_status": "accepted",
+  "checks": [
+    {
+      "validator_id": "integer_min_v1",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:42d39444f18221d84c4122c226f20c16c341dd23f47ce3bfecff2e4f06b07127",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "inputs": {
+        "fact": "catalyst_units",
+        "observed": 0,
+        "limit": 0
+      },
+      "passed": true
+    },
+    {
+      "validator_id": "integer_max_v1",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:50be47c5e4cc355380774740e9dcb5904fd012070d37f026e2d3a4749191c5f1",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "inputs": {
+        "fact": "catalyst_units",
+        "observed": 0,
+        "limit": 6
+      },
+      "passed": true
+    },
+    {
+      "validator_id": "integer_min_v1",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:037124eb5fb85e2ec6ec34b0076d7079f37c2e838128c19c780c11d93d9adbbf",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "inputs": {
+        "fact": "panels",
+        "observed": 2,
+        "limit": 0
+      },
+      "passed": true
+    },
+    {
+      "validator_id": "integer_min_v1",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:1686c152563a0b007380a89dbd4fd8dbc8e58cc8508faf4f037ba91031b5e580",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "inputs": {
+        "fact": "rods",
+        "observed": 4,
+        "limit": 0
+      },
+      "passed": true
+    }
+  ],
+  "limitations": [
+    "intelligence_judgment: Each firing consumes one catalyst and yields exactly one kind of part; conversion is irreversible. (not mechanically verified)",
+    "intelligence_judgment: The single kiln cannot perform two firings at once. (not mechanically verified)"
+  ]
+}

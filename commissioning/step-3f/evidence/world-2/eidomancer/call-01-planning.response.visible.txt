@@ -1,0 +1,1 @@
+{"arrangement_intent":"Coordinate stone-band access and reed management around the lagoon’s repeating water-level phases.","failure_intent":"Examine the breakdown of a time-dependent crossing arrangement when a planned task misses its usable water-level window."}

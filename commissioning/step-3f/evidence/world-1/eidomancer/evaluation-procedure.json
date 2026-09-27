@@ -1,0 +1,78 @@
+{
+  "id": "record:sha256:a9dfe1c440b3a857a22d74577b5fe45170e22d0ef9e315fb39a8face7993b1ad",
+  "body": {
+    "name": "Single kiln independent branch critique",
+    "version": "fictional.generic.v1",
+    "criteria": [
+      {
+        "id": "C1",
+        "mode": "mechanical",
+        "question": "Catalyst cannot fall below zero.",
+        "constraint_ref": {
+          "kind": "constraint",
+          "id": "record:sha256:42d39444f18221d84c4122c226f20c16c341dd23f47ce3bfecff2e4f06b07127",
+          "schema_version": "eidomancer.record.schema.v0.2",
+          "required": true
+        }
+      },
+      {
+        "id": "C2",
+        "mode": "mechanical",
+        "question": "Catalyst cannot exceed six.",
+        "constraint_ref": {
+          "kind": "constraint",
+          "id": "record:sha256:50be47c5e4cc355380774740e9dcb5904fd012070d37f026e2d3a4749191c5f1",
+          "schema_version": "eidomancer.record.schema.v0.2",
+          "required": true
+        }
+      },
+      {
+        "id": "C3",
+        "mode": "mechanical",
+        "question": "Panels cannot be negative.",
+        "constraint_ref": {
+          "kind": "constraint",
+          "id": "record:sha256:037124eb5fb85e2ec6ec34b0076d7079f37c2e838128c19c780c11d93d9adbbf",
+          "schema_version": "eidomancer.record.schema.v0.2",
+          "required": true
+        }
+      },
+      {
+        "id": "C4",
+        "mode": "mechanical",
+        "question": "Rods cannot be negative.",
+        "constraint_ref": {
+          "kind": "constraint",
+          "id": "record:sha256:1686c152563a0b007380a89dbd4fd8dbc8e58cc8508faf4f037ba91031b5e580",
+          "schema_version": "eidomancer.record.schema.v0.2",
+          "required": true
+        }
+      },
+      {
+        "id": "C5",
+        "mode": "intelligence_judgment",
+        "question": "Does the described sequence consume one catalyst for each firing, yield exactly one panel or rod per firing, and avoid converting parts back into catalyst? Compare prior and proposed facts.",
+        "constraint_ref": {
+          "kind": "constraint",
+          "id": "record:sha256:a2bf4e2c753a1df7323156aeb8ceda9306129eeec726882cdd97ef6e8d2778a6",
+          "schema_version": "eidomancer.record.schema.v0.2",
+          "required": true
+        }
+      },
+      {
+        "id": "C6",
+        "mode": "intelligence_judgment",
+        "question": "Does the sequence avoid concurrent firings in the sole kiln?",
+        "constraint_ref": {
+          "kind": "constraint",
+          "id": "record:sha256:0cd851983ce9e268acc0bf66672c857e66063a1e878114e3febca93820a67665",
+          "schema_version": "eidomancer.record.schema.v0.2",
+          "required": true
+        }
+      }
+    ],
+    "comparator": "Initial fictional state",
+    "evaluator_role": "declared_external_evaluator",
+    "uncertainty_policy": "Retain unresolved limitations"
+  }
+}

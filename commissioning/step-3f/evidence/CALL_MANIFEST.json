@@ -1,0 +1,765 @@
+{
+  "protocol_parent": "de5f2fd59560f303c5d20f7079579a3038fbe294",
+  "calls": [
+    {
+      "sequence": 1,
+      "world": 1,
+      "arm": "eidomancer",
+      "position": 1,
+      "purpose": "planning",
+      "request": {
+        "path": "world-1/eidomancer/call-01-planning.request.visible.txt",
+        "size_bytes": 1951,
+        "sha256": "1748320aebf4df34931e88be1a3d77447365d32046c0f5a37b2d2cd8f9340305"
+      },
+      "response": {
+        "path": "world-1/eidomancer/call-01-planning.response.visible.txt",
+        "size_bytes": 379,
+        "sha256": "cafe199a9bafb54c26982d0d5f798e4d3734d3e8dc206cb0936ed25fb9235b24"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 2,
+      "world": 1,
+      "arm": "eidomancer",
+      "position": 2,
+      "purpose": "arrangement",
+      "request": {
+        "path": "world-1/eidomancer/call-02-arrangement.request.visible.txt",
+        "size_bytes": 12248,
+        "sha256": "d1845d001e5bcece838e6ac62328cdda5df281d8f557580a6d34a0a91d28add5"
+      },
+      "response": {
+        "path": "world-1/eidomancer/call-02-arrangement.response.visible.txt",
+        "size_bytes": 1694,
+        "sha256": "94c1ade78ae75cec9514cba1ac790f7d78f07ee0f978c4adc384873dcb0611a1"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 3,
+      "world": 1,
+      "arm": "eidomancer",
+      "position": 3,
+      "purpose": "failure",
+      "request": {
+        "path": "world-1/eidomancer/call-03-failure.request.visible.txt",
+        "size_bytes": 12256,
+        "sha256": "3df4dab930e769cb02306ef45c62e33d6e47f04d4e889c523b935d9b56bde7b5"
+      },
+      "response": {
+        "path": "world-1/eidomancer/call-03-failure.response.visible.txt",
+        "size_bytes": 1582,
+        "sha256": "0360fc1ae1d1eca67d485d969ab5243d5b2a324aac9a29e41afef16ce5ff2ac7"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 4,
+      "world": 1,
+      "arm": "eidomancer",
+      "position": 4,
+      "purpose": "arrangement-critique",
+      "request": {
+        "path": "world-1/eidomancer/call-04-arrangement-critique.request.visible.txt",
+        "size_bytes": 5424,
+        "sha256": "c1ba9622afcdc35b112a6e5c347ce6ca97ae4e39de84fd6e46cbdb344bede5a4"
+      },
+      "response": {
+        "path": "world-1/eidomancer/call-04-arrangement-critique.response.visible.txt",
+        "size_bytes": 2354,
+        "sha256": "5dbaaeaa17498d88abcf5cb219db3cb284373ac106cf17be8edc7b7416b25218"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 5,
+      "world": 1,
+      "arm": "eidomancer",
+      "position": 5,
+      "purpose": "failure-critique",
+      "request": {
+        "path": "world-1/eidomancer/call-05-failure-critique.request.visible.txt",
+        "size_bytes": 5314,
+        "sha256": "9599288ac1582dc21d2afa909f8d23a8fe12f0db544076be3555f48e6039ed66"
+      },
+      "response": {
+        "path": "world-1/eidomancer/call-05-failure-critique.response.visible.txt",
+        "size_bytes": 2295,
+        "sha256": "939785930c9d1eace6f6b4b4a90ade5f8c281a49980090e194c05fedde64f38a"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 6,
+      "world": 1,
+      "arm": "ordinary-agent",
+      "position": 1,
+      "purpose": "planning",
+      "request": {
+        "path": "world-1/ordinary-agent/call-01-planning.request.visible.txt",
+        "size_bytes": 1945,
+        "sha256": "f448570d81e72120d3fda5849bd5d5c993085eeea4469848bc579c5d3d1cd6a9"
+      },
+      "response": {
+        "path": "world-1/ordinary-agent/call-01-planning.response.visible.txt",
+        "size_bytes": 294,
+        "sha256": "cf3a73d4dc1abfcb7bd8f036059320207bfd980b6c2709af676fa767906437f7"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 7,
+      "world": 1,
+      "arm": "ordinary-agent",
+      "position": 2,
+      "purpose": "arrangement",
+      "request": {
+        "path": "world-1/ordinary-agent/call-02-arrangement.request.visible.txt",
+        "size_bytes": 2412,
+        "sha256": "770643d09c16a8dfce9be560dbc56cf1fcff3a33896be99df00f0696778f216d"
+      },
+      "response": {
+        "path": "world-1/ordinary-agent/call-02-arrangement.response.visible.txt",
+        "size_bytes": 1945,
+        "sha256": "52ba950cf10c082a1c28e0fe90dae3db073a109c1ea84a8c738a0041f6411fe7"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 8,
+      "world": 1,
+      "arm": "ordinary-agent",
+      "position": 3,
+      "purpose": "failure",
+      "request": {
+        "path": "world-1/ordinary-agent/call-03-failure.request.visible.txt",
+        "size_bytes": 2399,
+        "sha256": "9fdea66df0dfdedfa4f1d95d4a2322140b5bc2f1ddcd5ae4dbc5de5c66c1c34c"
+      },
+      "response": {
+        "path": "world-1/ordinary-agent/call-03-failure.response.visible.txt",
+        "size_bytes": 2229,
+        "sha256": "69ed2b8a4b34399449be222170b8516602d80a3b94081ff089b92a392c1bce27"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 9,
+      "world": 1,
+      "arm": "ordinary-agent",
+      "position": 4,
+      "purpose": "arrangement-critique",
+      "request": {
+        "path": "world-1/ordinary-agent/call-04-arrangement-critique.request.visible.txt",
+        "size_bytes": 5420,
+        "sha256": "7a88a4d0c08475457ae21b50b57c349fc7cd598e1ba4c92fccc7ccfa0d74ea74"
+      },
+      "response": {
+        "path": "world-1/ordinary-agent/call-04-arrangement-critique.response.visible.txt",
+        "size_bytes": 2301,
+        "sha256": "69b8d0bff78d748dfec3b344716c7932b4bfc9b208a5d8e7267688ba61069f54"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 10,
+      "world": 1,
+      "arm": "ordinary-agent",
+      "position": 5,
+      "purpose": "failure-critique",
+      "request": {
+        "path": "world-1/ordinary-agent/call-05-failure-critique.request.visible.txt",
+        "size_bytes": 5691,
+        "sha256": "40585fda6c2acf060db0386f9c94791f146003c47e3ae4305ee4c21708cb41aa"
+      },
+      "response": {
+        "path": "world-1/ordinary-agent/call-05-failure-critique.response.visible.txt",
+        "size_bytes": 2157,
+        "sha256": "372594aaf78045e0520a0ea7147488970a04a22fbcebdd58a42765e1865bc84e"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 11,
+      "world": 2,
+      "arm": "ordinary-agent",
+      "position": 1,
+      "purpose": "planning",
+      "request": {
+        "path": "world-2/ordinary-agent/call-01-planning.request.visible.txt",
+        "size_bytes": 1925,
+        "sha256": "20b3bb6456d474fb778993c5a966eefda4047260b2ae024b7738cf2b2753c4e7"
+      },
+      "response": {
+        "path": "world-2/ordinary-agent/call-01-planning.response.visible.txt",
+        "size_bytes": 297,
+        "sha256": "839de31feffc004041726cefd88d2fc7e9171597b8ff230904142c60b23b5cd1"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 12,
+      "world": 2,
+      "arm": "ordinary-agent",
+      "position": 2,
+      "purpose": "arrangement",
+      "request": {
+        "path": "world-2/ordinary-agent/call-02-arrangement.request.visible.txt",
+        "size_bytes": 2418,
+        "sha256": "4cb03ad15b172f0fe4c44480e1e0c3f8dbb9351185b77a3c2f567447560321ce"
+      },
+      "response": {
+        "path": "world-2/ordinary-agent/call-02-arrangement.response.visible.txt",
+        "size_bytes": 1727,
+        "sha256": "95809727b3fe9f4694ec6398902872a5012f1f9699531d4aac4d6c4c669bd155"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 13,
+      "world": 2,
+      "arm": "ordinary-agent",
+      "position": 3,
+      "purpose": "failure",
+      "request": {
+        "path": "world-2/ordinary-agent/call-03-failure.request.visible.txt",
+        "size_bytes": 2426,
+        "sha256": "3b8c6eac12e53d1a722585da67fb0f55cd5bf6527f9a5e12d9d9d8e187766e16"
+      },
+      "response": {
+        "path": "world-2/ordinary-agent/call-03-failure.response.visible.txt",
+        "size_bytes": 1979,
+        "sha256": "aabff26a5aefad0eb65c62a3f8b9f4159a116ac5a3f706ee92c0e8725265db1a"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 14,
+      "world": 2,
+      "arm": "ordinary-agent",
+      "position": 4,
+      "purpose": "arrangement-critique",
+      "request": {
+        "path": "world-2/ordinary-agent/call-04-arrangement-critique.request.visible.txt",
+        "size_bytes": 5167,
+        "sha256": "d9bf09439d2d9968e15126c1453182a551632fd2d36b19cc23e40c3d8de7159e"
+      },
+      "response": {
+        "path": "world-2/ordinary-agent/call-04-arrangement-critique.response.visible.txt",
+        "size_bytes": 2135,
+        "sha256": "46d6aa1f25e10d933055562849823ef515cfc3815d8f772d4ec59628de499fba"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 15,
+      "world": 2,
+      "arm": "ordinary-agent",
+      "position": 5,
+      "purpose": "failure-critique",
+      "request": {
+        "path": "world-2/ordinary-agent/call-05-failure-critique.request.visible.txt",
+        "size_bytes": 5427,
+        "sha256": "8a090aecd341841c3ddc793b0522d5f16610fcab478e7e1fb1ee1664e77bc306"
+      },
+      "response": {
+        "path": "world-2/ordinary-agent/call-05-failure-critique.response.visible.txt",
+        "size_bytes": 2167,
+        "sha256": "4c0b8c6c27471239ab516ffe2306154a9edb753c5470ba8e9cc3e70ea0842aa4"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 16,
+      "world": 2,
+      "arm": "eidomancer",
+      "position": 1,
+      "purpose": "planning",
+      "request": {
+        "path": "world-2/eidomancer/call-01-planning.request.visible.txt",
+        "size_bytes": 1894,
+        "sha256": "b05bafd7aa9254b350d51bf714770e4849d290d2bce941c3bdffd6fe84233dd6"
+      },
+      "response": {
+        "path": "world-2/eidomancer/call-01-planning.response.visible.txt",
+        "size_bytes": 265,
+        "sha256": "c7076882c997c790bd05909ede8ddcf450e336340f4abfd7ff76c216c08d487e"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 17,
+      "world": 2,
+      "arm": "eidomancer",
+      "position": 2,
+      "purpose": "arrangement",
+      "request": {
+        "path": "world-2/eidomancer/call-02-arrangement.request.visible.txt",
+        "size_bytes": 11182,
+        "sha256": "8c514ff5368e3d8d133e76a8e4507f48457a0decdae3d9b73a3d731698ca126f"
+      },
+      "response": {
+        "path": "world-2/eidomancer/call-02-arrangement.response.visible.txt",
+        "size_bytes": 1510,
+        "sha256": "4c48fe5aa5881f391442076af8b32e6e29799f493b0e1698abb39b6b71fce8d1"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 18,
+      "world": 2,
+      "arm": "eidomancer",
+      "position": 3,
+      "purpose": "failure",
+      "request": {
+        "path": "world-2/eidomancer/call-03-failure.request.visible.txt",
+        "size_bytes": 11218,
+        "sha256": "ef7845cd44830f68b7d902f258081d1262c5b3c1bebf012463053e9f15652d05"
+      },
+      "response": {
+        "path": "world-2/eidomancer/call-03-failure.response.visible.txt",
+        "size_bytes": 1646,
+        "sha256": "1ecdb3388dc4731c6eed1b0a983fae4000a9a848b236accf998ab1ef961dd222"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 19,
+      "world": 2,
+      "arm": "eidomancer",
+      "position": 4,
+      "purpose": "arrangement-critique",
+      "request": {
+        "path": "world-2/eidomancer/call-04-arrangement-critique.request.visible.txt",
+        "size_bytes": 5020,
+        "sha256": "72403598842c475f1d194ed18959834fb96ae177f5f5a040271bc61ab6d4363f"
+      },
+      "response": {
+        "path": "world-2/eidomancer/call-04-arrangement-critique.response.visible.txt",
+        "size_bytes": 2271,
+        "sha256": "561631129156ef58cef4a9e0854dbd7fe422e1a916ce5ac0093b3465d1bb0c0d"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 20,
+      "world": 2,
+      "arm": "eidomancer",
+      "position": 5,
+      "purpose": "failure-critique",
+      "request": {
+        "path": "world-2/eidomancer/call-05-failure-critique.request.visible.txt",
+        "size_bytes": 5172,
+        "sha256": "8ee9432aa0d00c812f514a3ae043d081c3ced8007de7ea9ec0ce70395f2c5a4a"
+      },
+      "response": {
+        "path": "world-2/eidomancer/call-05-failure-critique.response.visible.txt",
+        "size_bytes": 2277,
+        "sha256": "669a6f2b87c4427068dc042bbcabe54e203efd68915d78794e26672510ec4b8e"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 21,
+      "world": 3,
+      "arm": "eidomancer",
+      "position": 1,
+      "purpose": "planning",
+      "request": {
+        "path": "world-3/eidomancer/call-01-planning.request.visible.txt",
+        "size_bytes": 1973,
+        "sha256": "a0ff8f8cec9e7a3c17ac009fc9db127bf3f1093332f161add01444be8f6702e0"
+      },
+      "response": {
+        "path": "world-3/eidomancer/call-01-planning.response.visible.txt",
+        "size_bytes": 361,
+        "sha256": "d9fa0e1a775743191499cbe202e4269b08c35e5f4063912e318b3c903452b3fd"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 22,
+      "world": 3,
+      "arm": "eidomancer",
+      "position": 2,
+      "purpose": "arrangement",
+      "request": {
+        "path": "world-3/eidomancer/call-02-arrangement.request.visible.txt",
+        "size_bytes": 9375,
+        "sha256": "49280001338a8d42f945bbbff6bd74d707f035f2b54559ed5a88fe1c32af349c"
+      },
+      "response": {
+        "path": "world-3/eidomancer/call-02-arrangement.response.visible.txt",
+        "size_bytes": 1204,
+        "sha256": "83e5d46bb8d6704c9e9d72d487e634b9514dbea96743d9d518cd9ea5d86a59d1"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 23,
+      "world": 3,
+      "arm": "eidomancer",
+      "position": 3,
+      "purpose": "failure",
+      "request": {
+        "path": "world-3/eidomancer/call-03-failure.request.visible.txt",
+        "size_bytes": 9435,
+        "sha256": "51dd984f307a9672e723abac2c20a5f4834f528bda1073ca2987b7ba72803c8c"
+      },
+      "response": {
+        "path": "world-3/eidomancer/call-03-failure.response.visible.txt",
+        "size_bytes": 1512,
+        "sha256": "39bf71f222a18888f6fc911e5e9d72e0fd18efc05fe94269d02551b359701cc1"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 24,
+      "world": 3,
+      "arm": "eidomancer",
+      "position": 4,
+      "purpose": "arrangement-critique",
+      "request": {
+        "path": "world-3/eidomancer/call-04-arrangement-critique.request.visible.txt",
+        "size_bytes": 4380,
+        "sha256": "b5dd78f13f45b057fcf3ce49d9725df371e3c6a8d96674ed6eeb3de9c1861df5"
+      },
+      "response": {
+        "path": "world-3/eidomancer/call-04-arrangement-critique.response.visible.txt",
+        "size_bytes": 2312,
+        "sha256": "2a1a742febea08a4cf8f62dce11780012aa4737b9b168d12909356cd25c4816c"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 25,
+      "world": 3,
+      "arm": "eidomancer",
+      "position": 5,
+      "purpose": "failure-critique",
+      "request": {
+        "path": "world-3/eidomancer/call-05-failure-critique.request.visible.txt",
+        "size_bytes": 4716,
+        "sha256": "0b617bf09ab2cd07cbdfe17c451b65202264071d717fb708bb8c939db1c1f885"
+      },
+      "response": {
+        "path": "world-3/eidomancer/call-05-failure-critique.response.visible.txt",
+        "size_bytes": 2088,
+        "sha256": "2a04b3159cee530cf3c5760dc0d86f8d255e93e1c78edc973ff423daaf323879"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 26,
+      "world": 3,
+      "arm": "ordinary-agent",
+      "position": 1,
+      "purpose": "planning",
+      "request": {
+        "path": "world-3/ordinary-agent/call-01-planning.request.visible.txt",
+        "size_bytes": 1977,
+        "sha256": "52081da271c28787c0e3d33945799973b9cf43daf833f999ba62081c521ef2eb"
+      },
+      "response": {
+        "path": "world-3/ordinary-agent/call-01-planning.response.visible.txt",
+        "size_bytes": 359,
+        "sha256": "c8ab2175eb7c9d0965d2cf59952b163738960c9288b9064c68e006669336e6ac"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 27,
+      "world": 3,
+      "arm": "ordinary-agent",
+      "position": 2,
+      "purpose": "arrangement",
+      "request": {
+        "path": "world-3/ordinary-agent/call-02-arrangement.request.visible.txt",
+        "size_bytes": 2612,
+        "sha256": "40fffb419bd4e7d8c0b4037af2aad7e4625e656e76f829e27878019e642859c9"
+      },
+      "response": {
+        "path": "world-3/ordinary-agent/call-02-arrangement.response.visible.txt",
+        "size_bytes": 1531,
+        "sha256": "af7876c9a600c07cabb8b7694b1884983cc52c1550733748db2df1a8c2c72d76"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 28,
+      "world": 3,
+      "arm": "ordinary-agent",
+      "position": 3,
+      "purpose": "failure",
+      "request": {
+        "path": "world-3/ordinary-agent/call-03-failure.request.visible.txt",
+        "size_bytes": 2586,
+        "sha256": "3d1db4b80368a77e3c10d3bc3f65c212825dc1908c2854680afd213ce356b605"
+      },
+      "response": {
+        "path": "world-3/ordinary-agent/call-03-failure.response.visible.txt",
+        "size_bytes": 1483,
+        "sha256": "a21e47aea6943020e14074dfbbe2d66499b7f1bfeff8f8190946d12cd02bf277"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 29,
+      "world": 3,
+      "arm": "ordinary-agent",
+      "position": 4,
+      "purpose": "arrangement-critique",
+      "request": {
+        "path": "world-3/ordinary-agent/call-04-arrangement-critique.request.visible.txt",
+        "size_bytes": 4865,
+        "sha256": "93e8a34e99d51c9e0f7b765fe822e4a7a690afabdd93a8d50d4099f994d79873"
+      },
+      "response": {
+        "path": "world-3/ordinary-agent/call-04-arrangement-critique.response.visible.txt",
+        "size_bytes": 2131,
+        "sha256": "d569c6e563d02b3c564d43c1c64fd9e4664a7fea3a4b17b4dd0df294105a0227"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    },
+    {
+      "sequence": 30,
+      "world": 3,
+      "arm": "ordinary-agent",
+      "position": 5,
+      "purpose": "failure-critique",
+      "request": {
+        "path": "world-3/ordinary-agent/call-05-failure-critique.request.visible.txt",
+        "size_bytes": 4791,
+        "sha256": "91e5d40f05a77610bab88cd2d7277bd323d5c23a9c356f1ec38dccfe891f3ced"
+      },
+      "response": {
+        "path": "world-3/ordinary-agent/call-05-failure-critique.response.visible.txt",
+        "size_bytes": 2015,
+        "sha256": "f9729c39771c462fb8e0197d4ae8468e646930bb6e9b7f2ca0389354d5005af6"
+      },
+      "model": "GPT-5.6 Sol",
+      "model_identification": "caller_reported",
+      "transport": "user-mediated fresh ChatGPT chat",
+      "inference_tokens": null,
+      "monetary_cost": null,
+      "provider_side_transformations": "not observable",
+      "timestamp": "not captured at the model boundary"
+    }
+  ],
+  "blind_reviews": [
+    {
+      "world": 1,
+      "reviewer": 1,
+      "request_sha256": "38789ff81a4574b8cfa1b86a33586d9b76fea8a6ea7277b2a61b38123496922d",
+      "response_sha256": "4ef7024834fc8081942f6593cd1d8d25d9a19557a313b0bf9904a2cc14dde8ec"
+    },
+    {
+      "world": 1,
+      "reviewer": 2,
+      "request_sha256": "476360ce38cd125aee94f7185c2631a4ed0984cd9e6a9895b2b877fcccf91621",
+      "response_sha256": "aa9732f53214e0321d12ca5d7c49a2eefc468f403180a047c4b1859557072850"
+    },
+    {
+      "world": 2,
+      "reviewer": 1,
+      "request_sha256": "06c7c1ee24e2f8c6a2e66733530e62eb4222a7847e8fcdfd1e320abc104b7c7b",
+      "response_sha256": "f9bf3618b7584ca2e48c5509825071b564888646d97f1693791d3ea4c0953dbc"
+    },
+    {
+      "world": 2,
+      "reviewer": 2,
+      "request_sha256": "a36ad9f3110cff3475d1f95e069c5558db0f69c16b6cadd4d111ae9a964f19ac",
+      "response_sha256": "a72993f968552b7d823278ec1fe3b9d1230f43c7640c7caf9b1eb71d1aeab1ee"
+    },
+    {
+      "world": 3,
+      "reviewer": 1,
+      "request_sha256": "054a4771381921cdf1baa5a4f153293fd0da4456f6a9a0c15c189b47518fe1cb",
+      "response_sha256": "bfad75f4b781e0e94ba5d8f97cbe2ffc15104b1c7bff226d238086268dd47868"
+    },
+    {
+      "world": 3,
+      "reviewer": 2,
+      "request_sha256": "47b21eb4720c085707bfe78e5ce622d68792c78cebd58fafd806c99ca1fea841",
+      "response_sha256": "d56ccb35b3b0b6671879ad52f4ca0837d8a8181fe5e6e9583a00a055457d1206"
+    }
+  ],
+  "call_count": 30,
+  "blind_review_count": 6
+}

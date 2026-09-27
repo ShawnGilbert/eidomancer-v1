@@ -1,0 +1,13 @@
+{
+  "response_id": "record:sha256:59d6bfbe84b68d812dcfce5f0f754ba1a7f92465875fca84e8cc3c37f97548c6",
+  "selection_id": "record:sha256:212adc18fbf6d904d20fdcdb25267d0bde938a23acf29915498b8b908eac21c7",
+  "successor_id": "record:sha256:5df64ac8ebbb5215bf8f0b4f1e7cd81cb63733de10860c13a6cd59b3cde1909d",
+  "transition_id": "record:sha256:8a32083eaaace0b17e79a163dffd912664b1b7b94f45a1d3ef8b49c4842e04ef",
+  "transition_status": "accepted",
+  "checks": [],
+  "limitations": [
+    "intelligence_judgment: Each kind crosses only in its stated direction while the shutter is open. (not mechanically verified)",
+    "intelligence_judgment: Closing the shutter is irreversible and prevents all subsequent crossing. (not mechanically verified)",
+    "intelligence_judgment: The four inhabitants are neither created nor removed. (not mechanically verified)"
+  ]
+}

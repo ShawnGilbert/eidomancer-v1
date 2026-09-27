@@ -1,0 +1,25 @@
+Explore a bounded fictional world as an ordinary agent. Work on only the specified aim and the branch intent chosen in this arm's earlier independent planning call. Consider possible alternatives internally, then return your best coherent candidate. Do not silently change the constraints.
+
+World premise:
+A small settlement has one kiln and a sealed supply of six units of firing catalyst. One firing permanently consumes one unit and produces either one insulating panel or one conductive rod. The kiln cannot produce both in a single firing. Finished parts cannot be converted back into catalyst. Other ordinary construction materials are available; no new catalyst can be obtained. The settlement may arrange work and use finished parts as it chooses.
+
+Initial state facts and types:
+{"catalyst_units":6,"panels":0,"rods":0}
+All three fact keys are integers.
+
+Declared hard constraints and verification status:
+1. Catalyst cannot fall below zero. A numeric check verifies catalyst_units >= 0.
+2. Catalyst cannot exceed six. A numeric check verifies catalyst_units <= 6.
+3. Panels cannot be negative. A numeric check verifies panels >= 0.
+4. Rods cannot be negative. A numeric check verifies rods >= 0.
+5. Each firing consumes one catalyst and yields exactly one kind of part; conversion is irreversible. This requires judgment of the described sequence and facts; the numeric checks do not establish it.
+6. The single kiln cannot perform two firings at once. This requires judgment of the described sequence; the numeric checks do not establish it.
+
+The two exploration aims are:
+1. Arrangement: “Develop a coherent consequential arrangement or adaptation within this world.”
+2. Failure: “Develop a plausible failure of an arrangement within this world and what follows from that failure.”
+
+Applicable aim: Arrangement.
+Chosen branch intent: Reserve catalyst through staged allocation tied to changing settlement priorities rather than committing the full supply at once.
+
+Return only one strict JSON object with exactly two fields: "description" (a nonblank substantive narrative of approximately 400 words or fewer) and "facts" (a complete replacement map with exactly the integer keys catalyst_units, panels, and rods). Describe the candidate's causal consequences and make its facts consistent with the prior state and described firings. Do not include markdown, commentary, or additional fields.

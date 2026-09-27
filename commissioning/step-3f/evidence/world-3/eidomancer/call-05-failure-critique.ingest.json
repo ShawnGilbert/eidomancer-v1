@@ -1,0 +1,41 @@
+{
+  "evaluation_id": "record:sha256:b77f2f7e4eb014febed9b014b5a12a3fdebb6dafa24aa8fdf4292f6773047655",
+  "evaluation_response_id": "record:sha256:728701c31f5b18d8a07d6d03907f8266850b335e7af57c6b0001a879a94f4d8b",
+  "verdict": "retain",
+  "audit_id": "record:sha256:9db55d89d36b30b698fbf5440adbd168add9bf20ce44e043a99b02dc1a516d83",
+  "results": [
+    {
+      "criterion": "C1",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:5cd8e98fce09ce65555018c1603e0ca13338f827ae649e45d99fbf4c1f0a664e",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "kind": "intelligence_judgment",
+      "finding": "Retain as a coherent failure branch: the event sequence, replacement facts, conservation accounting, and irreversible causal consequence align, while leaving meaningful unresolved consequences for descendants."
+    },
+    {
+      "criterion": "C2",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:f86741b38d0e7389442cfe21a02e550c47cf13d6a2de30641f91c47ee3522e29",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "kind": "intelligence_judgment",
+      "finding": "Retain as a coherent failure branch: the event sequence, replacement facts, conservation accounting, and irreversible causal consequence align, while leaving meaningful unresolved consequences for descendants."
+    },
+    {
+      "criterion": "C3",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:c86e7aa7975793289b0e8307b22a48856332fad7a8b8aa7e8d4190dfa120d612",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "kind": "intelligence_judgment",
+      "finding": "Retain as a coherent failure branch: the event sequence, replacement facts, conservation accounting, and irreversible causal consequence align, while leaving meaningful unresolved consequences for descendants."
+    }
+  ]
+}

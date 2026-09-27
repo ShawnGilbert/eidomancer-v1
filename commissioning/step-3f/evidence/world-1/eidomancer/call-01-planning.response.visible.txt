@@ -1,0 +1,1 @@
+{"arrangement_intent":"Reserve catalyst through a staged allocation protocol that coordinates kiln access and balances production of insulating panels and conductive rods as needs emerge.","failure_intent":"Examine a committed production allocation that becomes mismatched with later settlement needs after irreversible firings have consumed part of the finite catalyst supply."}

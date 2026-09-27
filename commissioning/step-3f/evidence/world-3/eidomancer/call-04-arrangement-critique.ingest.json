@@ -1,0 +1,12 @@
+{
+  "evaluation_id": "record:sha256:6b9c74d4691daf49040edd8750452c558876b743e8b9083f3b109e75e60ac5b8",
+  "evaluator_response_ref": {
+    "kind": "intelligence_response",
+    "id": "record:sha256:d7edf747755eac1b1beb69c686460a3ff8343a1904260e01d95082f53d93dd4f",
+    "schema_version": "eidomancer.record.schema.v0.2",
+    "required": true
+  },
+  "verdict": "retain",
+  "audit_id": "record:sha256:21a799ca2efec9ca9aa7eb7f435bc7aeaddcf77e0a27433813dd14149484da57",
+  "audit_status": "retained"
+}

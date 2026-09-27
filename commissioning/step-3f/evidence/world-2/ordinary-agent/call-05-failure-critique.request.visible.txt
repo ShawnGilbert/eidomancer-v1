@@ -1,0 +1,35 @@
+Independently critique exactly one proposed branch in a bounded fictional world. You have no other branch candidate. Do not revise or replace this candidate. Apply the declared hard constraints separately; numeric checks are facts about submitted integers only, not proof of narrative consistency. Assess causal depth, non-obvious consequences not supplied by the premise, internal consistency, usefulness for descendant exploration, weaknesses and counterexamples. Branch diversity cannot be established from this candidate alone. Do not assign an aggregate creativity score.
+
+World premise:
+A lagoon’s water level changes at each dusk in the repeating order 0, 1, 2, 3, 0. A band of porous stone can be walked across at levels 0 or 1, but is submerged at levels 2 or 3. Floating reeds can take root on that band only while it is submerged; rooted reeds remain there when the level falls. Residents may undertake projects around the lagoon using ordinary hand tools. They cannot change the water cycle or the stone band.
+
+Initial facts and types:
+{"water_level":0,"rooted_reed_patches":0}
+Both fact keys are integers. A candidate supplies a complete replacement state.
+
+Declared hard constraints and verification status:
+1. Water level cannot be below zero. A numeric check verifies water_level >= 0.
+2. Water level cannot exceed three. A numeric check verifies water_level <= 3.
+3. Rooted reed patch count cannot be negative. A numeric check verifies rooted_reed_patches >= 0.
+4. Water level advances one step at each dusk in the order 0, 1, 2, 3, 0. This requires judgment of the described sequence and facts; the numeric checks do not establish it.
+5. Stone is walkable only at levels 0–1; reeds root there only at levels 2–3 and remain rooted afterward. This requires judgment of the described sequence and facts; the numeric checks do not establish it.
+
+The two exploration aims are:
+1. Arrangement: “Develop a coherent consequential arrangement or adaptation within this world.”
+2. Failure: “Develop a plausible failure of an arrangement within this world and what follows from that failure.”
+
+Applicable aim: Failure.
+Chosen branch intent: Examine a timing-dependent arrangement that fails when work or access assumptions become misaligned with the lagoon’s level cycle.
+
+Candidate to critique (exact returned JSON):
+{"description":"Residents use the stone band as a low-water shortcut for carrying baskets between two storehouses. Because it is walkable through levels 0 and 1, they adopt a routine in which workers begin moving goods after a level-0 dawn and assume unfinished loads can still cross after the next dusk. To improve footing, they also gather floating reeds during level 1 and leave bundles tethered beside selected sections, intending to spread them over the stone for rooting once level 2 submerges it. One cycle, repairs at the first storehouse delay the transport. Workers begin their final crossings late during level 1, while another crew prepares the tethered reeds on the opposite shore. Dusk advances the lagoon to level 2 before several loads and workers have crossed. The stone becomes submerged, eliminating the planned route. No one can finish the crossing on foot, so the stranded loads must remain on their original shore until the cycle returns through levels 3 and 0. Meanwhile, the reed crew follows its own schedule and releases the prepared reeds over the now-submerged band. One patch takes root during the level-2 interval. When the water advances to level 3, the transport remains interrupted, forcing residents to consume supplies from whichever storehouse is accessible from each shore and exposing the weakness of treating the two low-water phases as a single continuous work window. After the following dusk returns the lagoon to level 0, residents can cross again, and the rooted patch remains on the exposed stone. The delayed loads are finally moved, but traffic must now detour around the new patch. The failure therefore leaves both an organizational consequence—a stricter distinction between work that must finish before the level-1 dusk and work that can wait—and a persistent physical consequence from a separate project that continued successfully while the transport arrangement failed.","facts":{"water_level":0,"rooted_reed_patches":1}}
+
+Numeric check results for this candidate:
+1. Water level cannot be below zero. Observed water_level=0; passed.
+2. Water level cannot exceed three. Observed water_level=0; passed.
+3. Rooted reed patch count cannot be negative. Observed rooted_reed_patches=1; passed.
+These checks do not verify dusk progression or whether traversal and reed rooting occur at permitted water levels. Address the two narrative constraints explicitly:
+- Does every described water-level change match the number of dusks and fixed 0–1–2–3–0 cycle, including the proposed final water level?
+- Are walking, submersion, reed rooting, and persistence consistent with the specified levels?
+
+Return only one complete JSON object with exactly: "verdict" (one of "retain", "limited", "reject", "retain_negative_finding"), "rationale" (nonblank string), "uncertainty" (nonblank string), "limitations" (array of nonblank strings), and "judgment" (nonblank string). Ground the verdict in evidence and counterexamples. Keep the substantive response to approximately 250 words or fewer. Do not include markdown or additional fields.

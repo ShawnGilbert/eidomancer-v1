@@ -1,0 +1,27 @@
+{
+  "profile": "fictional.generic.v1",
+  "seed_id": "record:sha256:d760920717ec860b430e08ea8b793072d1bdbb427556e32f1fec8fb5eaed984c",
+  "rule_id": "record:sha256:143393f98376b5cea7eee0cfb146a7428c2ad78e27d793c4d74b092d7ecc5d66",
+  "initial_id": "record:sha256:22e1a698351d8d84f47bc3be0c49cfc7fceca4e52c8e524efffb4ef0f692b9d7",
+  "constraint_ids": [
+    "record:sha256:42d39444f18221d84c4122c226f20c16c341dd23f47ce3bfecff2e4f06b07127",
+    "record:sha256:50be47c5e4cc355380774740e9dcb5904fd012070d37f026e2d3a4749191c5f1",
+    "record:sha256:037124eb5fb85e2ec6ec34b0076d7079f37c2e838128c19c780c11d93d9adbbf",
+    "record:sha256:1686c152563a0b007380a89dbd4fd8dbc8e58cc8508faf4f037ba91031b5e580",
+    "record:sha256:a2bf4e2c753a1df7323156aeb8ceda9306129eeec726882cdd97ef6e8d2778a6",
+    "record:sha256:0cd851983ce9e268acc0bf66672c857e66063a1e878114e3febca93820a67665"
+  ],
+  "branches": [
+    {
+      "id": "B1",
+      "intent": "Reserve catalyst through a staged allocation protocol that coordinates kiln access and balances production of insulating panels and conductive rods as needs emerge.",
+      "operation_id": "record:sha256:428007c73a926b562c8c751d8061c8a15a2df5c157453a5ddb5edb4ba9b48200"
+    },
+    {
+      "id": "B2",
+      "intent": "Examine a committed production allocation that becomes mismatched with later settlement needs after irreversible firings have consumed part of the finite catalyst supply.",
+      "operation_id": "record:sha256:9d70c5987eb7eebd6ff915ef6f0282ed6856de1a719261141dc7659bda62d0a8"
+    }
+  ],
+  "request_id": "step3f-w1-e-b1-gen-v1"
+}

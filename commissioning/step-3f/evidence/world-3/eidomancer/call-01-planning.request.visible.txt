@@ -1,0 +1,20 @@
+You are planning two exploration directions for a bounded fictional world. Identify directions only. Do not write candidate narratives, preview consequences, prescribe a desired discovery, or change the rules.
+
+World premise:
+A burrow has an amber chamber and a blue chamber connected by one passage. Two kinds of inhabitant live there. Amber crawlers can traverse the open passage only from amber to blue; blue crawlers can traverse it only from blue to amber. A shutter can be closed across the passage once. Once closed, it cannot be reopened or traversed by either kind. Initially the shutter is open, with two amber crawlers in the amber chamber and two blue crawlers in the blue chamber. Other movement within a chamber is unrestricted.
+
+Initial state facts and types:
+{"shutter_closed":false,"amber_in_amber":2,"amber_in_blue":0,"blue_in_amber":0,"blue_in_blue":2}
+shutter_closed is a boolean; amber_in_amber, amber_in_blue, blue_in_amber, and blue_in_blue are integers.
+
+Declared hard constraints and verification status:
+1. Each kind crosses only in its stated direction while the shutter is open. Evaluator-judged, not mechanically checked.
+2. Closing the shutter is irreversible and prevents all subsequent crossing. Evaluator-judged, not mechanically checked.
+3. The four inhabitants are neither created nor removed. Evaluator-judged, not mechanically checked.
+No mechanical validators apply in this world. A structurally accepted proposed state does not certify any of these constraints.
+
+The two exploration aims are:
+1. Arrangement: “Develop a coherent consequential arrangement or adaptation within this world.”
+2. Failure: “Develop a plausible failure of an arrangement within this world and what follows from that failure.”
+
+Choose one concrete branch intent for each aim. Return only one JSON object with exactly two nonblank string fields: "arrangement_intent" and "failure_intent". Keep the entire response to approximately 120 words or fewer.

@@ -1,0 +1,30 @@
+Independently critique exactly one proposed branch in a bounded fictional world. You have no other branch candidate. Do not revise or replace this candidate. Apply the declared hard constraints separately; no mechanical validator checks these constraints, and a structurally accepted state is not evidence of their satisfaction. Assess causal depth, non-obvious consequences not supplied by the premise, internal consistency, usefulness for descendant exploration, weaknesses and counterexamples. Branch diversity cannot be established from this candidate alone. Do not assign an aggregate creativity score.
+
+World premise:
+A burrow has an amber chamber and a blue chamber connected by one passage. Two kinds of inhabitant live there. Amber crawlers can traverse the open passage only from amber to blue; blue crawlers can traverse it only from blue to amber. A shutter can be closed across the passage once. Once closed, it cannot be reopened or traversed by either kind. Initially the shutter is open, with two amber crawlers in the amber chamber and two blue crawlers in the blue chamber. Other movement within a chamber is unrestricted.
+
+Initial facts and types:
+{"shutter_closed":false,"amber_in_amber":2,"amber_in_blue":0,"blue_in_amber":0,"blue_in_blue":2}
+shutter_closed is a boolean; the four population counts are integers. A candidate supplies a complete replacement state.
+
+Declared hard constraints and verification status:
+1. Each kind crosses only in its stated direction while the shutter is open. Requires judgment of the described sequence and facts; no mechanical check verifies it.
+2. Closing the shutter is irreversible and prevents all subsequent crossing. Requires judgment of the described sequence and facts; no mechanical check verifies it.
+3. The four inhabitants are neither created nor removed. Requires judgment of the described sequence and facts; no mechanical check verifies it.
+
+The two exploration aims are:
+1. Arrangement: “Develop a coherent consequential arrangement or adaptation within this world.”
+2. Failure: “Develop a plausible failure of an arrangement within this world and what follows from that failure.”
+
+Applicable aim: Arrangement.
+Chosen branch intent: Examine a coordinated full exchange in which both amber crawlers and both blue crawlers traverse in their permitted directions before the shutter is permanently closed.
+
+Candidate to critique (exact returned JSON):
+{"description":"The inhabitants coordinate a complete exchange while the shutter remains open. Both amber crawlers leave the amber chamber by traversing the passage in their permitted amber-to-blue direction, and both blue crawlers leave the blue chamber by traversing it in their permitted blue-to-amber direction. They keep the shutter open until all four crossings have been completed, so no inhabitant needs to cross against its directional restriction or after closure. Once the exchange is complete, the shutter is closed permanently. The resulting arrangement reverses the kinds occupying the two chambers: the amber chamber now contains both blue crawlers and no amber crawlers, while the blue chamber contains both amber crawlers and no blue crawlers. All four original inhabitants remain present, but none can return to its starting chamber because the irreversible closure eliminates further passage between the chambers. The coordinated timing therefore converts a temporary opportunity for movement into a permanent exchanged distribution. Each pair remains together with another crawler of its own kind, but each kind must now operate entirely within the chamber that was initially occupied by the other kind. Any subsequent adaptation must occur independently on the two sides of the closed shutter, with the exchanged chamber assignment fixed unless changes can be accomplished without traversing the passage.","facts":{"shutter_closed":true,"amber_in_amber":0,"amber_in_blue":2,"blue_in_amber":2,"blue_in_blue":0}}
+
+Mechanical check results for this candidate: zero checks ran. No mechanical pass is claimed. Address all three evaluator-judged constraints explicitly:
+- Do described crossings respect each kind’s direction and require the shutter to be open? Compare prior and proposed populations.
+- Is the shutter closure irreversible and does crossing cease once it is closed?
+- Do the prior and proposed chamber counts and described events preserve exactly the four inhabitants?
+
+Return only one complete JSON object with exactly: "verdict" (one of "retain", "limited", "reject", "retain_negative_finding"), "rationale" (nonblank string), "uncertainty" (nonblank string), "limitations" (array of nonblank strings), and "judgment" (nonblank string). Ground the verdict in evidence and counterexamples. Keep the substantive response to approximately 250 words or fewer. Do not include markdown or additional fields.

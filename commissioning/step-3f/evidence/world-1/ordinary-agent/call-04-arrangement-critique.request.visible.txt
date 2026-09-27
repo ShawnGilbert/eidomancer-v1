@@ -1,0 +1,37 @@
+Independently critique exactly one proposed branch in a bounded fictional world. You have no other branch candidate. Do not revise or replace this candidate. Apply the declared hard constraints separately; numeric checks are facts about submitted integers only, not proof of narrative consistency. Assess causal depth, non-obvious consequences not supplied by the premise, internal consistency, usefulness for descendant exploration, weaknesses and counterexamples. Branch diversity cannot be established from this candidate alone. Do not assign an aggregate creativity score.
+
+World premise:
+A small settlement has one kiln and a sealed supply of six units of firing catalyst. One firing permanently consumes one unit and produces either one insulating panel or one conductive rod. The kiln cannot produce both in a single firing. Finished parts cannot be converted back into catalyst. Other ordinary construction materials are available; no new catalyst can be obtained. The settlement may arrange work and use finished parts as it chooses.
+
+Initial facts and types:
+{"catalyst_units":6,"panels":0,"rods":0}
+All three fact keys are integers. A candidate supplies a complete replacement state.
+
+Declared hard constraints and verification status:
+1. Catalyst cannot fall below zero. A numeric check verifies catalyst_units >= 0.
+2. Catalyst cannot exceed six. A numeric check verifies catalyst_units <= 6.
+3. Panels cannot be negative. A numeric check verifies panels >= 0.
+4. Rods cannot be negative. A numeric check verifies rods >= 0.
+5. Each firing consumes one catalyst and yields exactly one kind of part; conversion is irreversible. This requires judgment of the described sequence and facts; the numeric checks do not establish it.
+6. The single kiln cannot perform two firings at once. This requires judgment of the described sequence; the numeric checks do not establish it.
+
+The two exploration aims are:
+1. Arrangement: “Develop a coherent consequential arrangement or adaptation within this world.”
+2. Failure: “Develop a plausible failure of an arrangement within this world and what follows from it.”
+
+Applicable aim: Arrangement.
+Chosen branch intent: Reserve catalyst through staged allocation tied to changing settlement priorities rather than committing the full supply at once.
+
+Candidate to critique (exact returned JSON):
+{"description":"The settlement adopts a staged allocation rule for the six catalyst units rather than deciding the entire production mix at the outset. It authorizes two initial firings, performed sequentially in the single kiln, to make one insulating panel and one conductive rod, reducing the sealed reserve from six catalyst units to four. The remaining four units are deliberately left unfired while residents use the first parts and reassess which projects are becoming most important. Because ordinary construction materials remain available, work that does not require kiln-made components can continue during this pause.\n\nAfter observing that the conductive rod is immediately useful for extending a shared electrical line while the panel is sufficient for the most urgent insulation repair, the settlement authorizes a second stage of two sequential rod firings. This produces two additional rods and leaves two catalyst units in reserve. The electrical project can now proceed with three rods, but the settlement still retains the ability to produce either panels or rods if later priorities change.\n\nThe arrangement makes delayed commitment itself a managed resource. Residents accept slower completion of projects requiring kiln products in exchange for preserving flexibility: information learned after the first four firings can still influence the final two. The reserve also changes how projects are proposed. A project requiring more than the currently released quantity cannot assume access to the remaining catalyst; its supporters must either wait for the next allocation decision or redesign around ordinary materials and already-produced parts. This does not eliminate the risk of making the wrong parts—the four completed firings remain irreversible—but it limits how much of the finite catalyst supply can be committed before changing conditions are considered.","facts":{"catalyst_units":2,"panels":1,"rods":3}}
+
+Numeric check results for this candidate:
+1. Catalyst cannot fall below zero. Observed catalyst_units=2; passed.
+2. Catalyst cannot exceed six. Observed catalyst_units=2; passed.
+3. Panels cannot be negative. Observed panels=1; passed.
+4. Rods cannot be negative. Observed rods=3; passed.
+These checks do not verify the number and outputs of firings or whether they were sequential. Address the two narrative constraints explicitly:
+- Does the described sequence consume one catalyst per firing, yield exactly one panel or rod per firing, and avoid conversion back to catalyst? Compare initial and proposed facts.
+- Does the described sequence avoid concurrent firings in the sole kiln?
+
+Return only one complete JSON object with exactly: "verdict" (one of "retain", "limited", "reject", "retain_negative_finding"), "rationale" (nonblank string), "uncertainty" (nonblank string), "limitations" (array of nonblank strings), and "judgment" (nonblank string). Ground the verdict in evidence and counterexamples. Keep the substantive response to approximately 250 words or fewer. Do not include markdown or additional fields.

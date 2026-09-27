@@ -1,0 +1,35 @@
+Independently critique exactly one proposed branch in a bounded fictional world. You have no other branch candidate. Do not revise or replace this candidate. Apply the declared hard constraints separately; numeric checks are facts about submitted integers only, not proof of narrative consistency. Assess causal depth, non-obvious consequences not supplied by the premise, internal consistency, usefulness for descendant exploration, weaknesses and counterexamples. Branch diversity cannot be established from this candidate alone. Do not assign an aggregate creativity score.
+
+World premise:
+A lagoon’s water level changes at each dusk in the repeating order 0, 1, 2, 3, 0. A band of porous stone can be walked across at levels 0 or 1, but is submerged at levels 2 or 3. Floating reeds can take root on that band only while it is submerged; rooted reeds remain there when the level falls. Residents may undertake projects around the lagoon using ordinary hand tools. They cannot change the water cycle or the stone band.
+
+Initial facts and types:
+{"water_level":0,"rooted_reed_patches":0}
+Both fact keys are integers. A candidate supplies a complete replacement state.
+
+Declared hard constraints and verification status:
+1. Water level cannot be below zero. Mechanically checked by integer_min_v1 with parameters {"fact":"water_level","minimum":0}.
+2. Water level cannot exceed three. Mechanically checked by integer_max_v1 with parameters {"fact":"water_level","maximum":3}.
+3. Rooted reed patch count cannot be negative. Mechanically checked by integer_min_v1 with parameters {"fact":"rooted_reed_patches","minimum":0}.
+4. Water level advances one step at each dusk in the order 0, 1, 2, 3, 0. Evaluator-judged, not mechanically checked.
+5. Stone is walkable only at levels 0–1; reeds root there only at levels 2–3 and remain rooted afterward. Evaluator-judged, not mechanically checked.
+
+The two fixed exploration aims are:
+1. Arrangement: “Develop a coherent consequential arrangement or adaptation within this world.”
+2. Failure: “Develop a plausible failure of an arrangement within this world and what follows from that failure.”
+
+Applicable aim: Arrangement.
+Declared intent: Coordinate stone-band access and reed management around the lagoon’s repeating water-level phases.
+
+Candidate to critique (exact returned JSON):
+{"description":"Residents organize work around the lagoon as a repeating four-phase schedule. At level 0 they mark a narrow walking lane across the exposed stone band and use it for moving tools and supplies. After dusk raises the water to level 1, the lane remains usable, so crossings continue while residents gather floating reeds near one end of the band without placing them on the stone. At the next dusk the level advances to 2 and the band becomes submerged. Crossing stops. Residents then release a bundled portion of the gathered reeds over a selected section beside, rather than directly within, the marked walking lane. While the stone remains submerged through levels 2 and 3, some of those reeds take root, establishing one patch. Residents use ordinary hand tools from the shore to keep additional floating reeds away from the rest of the band. After the following dusk returns the level from 3 to 0, the stone is exposed and walkable again. The rooted patch remains on its selected section, while the previously marked lane is kept clear enough for residents to resume crossing. The arrangement therefore divides use of the same band by both phase and location: exposed phases are reserved for access and transport, submerged phases for controlled reed establishment and maintenance. The persistent rooted patch gives residents a fixed feature to manage on later cycles without requiring any alteration of the water cycle or the stone itself.","facts":{"water_level":0,"rooted_reed_patches":1}}
+
+Mechanical check results for this candidate:
+1. Water level cannot be below zero. Validator integer_min_v1; observed water_level=0; passed.
+2. Water level cannot exceed three. Validator integer_max_v1; observed water_level=0; passed.
+3. Rooted reed patch count cannot be negative. Validator integer_min_v1; observed rooted_reed_patches=1; passed.
+No check above mechanically verifies dusk progression, traversal, submersion, rooting, or persistence. Address these two evaluator-judged constraints explicitly:
+- Does any described change in water level match the number of dusks elapsed and the fixed 0–1–2–3–0 cycle?
+- Are traversal, submersion, reed rooting, and persistence consistent with the specified water levels?
+
+Return only one complete JSON object with exactly: "verdict" (one of "retain", "limited", "reject", "retain_negative_finding"), "rationale" (nonblank string), "uncertainty" (nonblank string), "limitations" (array of nonblank strings), and "judgment" (nonblank string). Ground the verdict in evidence and counterexamples. Keep the substantive response to approximately 250 words or fewer. Do not include markdown or additional fields.

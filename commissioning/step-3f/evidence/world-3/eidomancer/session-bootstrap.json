@@ -1,0 +1,24 @@
+{
+  "profile": "fictional.generic.v1",
+  "seed_id": "record:sha256:a601479013f993d6bec16194f2c79fa257fdd59d14e70f9a910d50196745781d",
+  "rule_id": "record:sha256:33b4243020f95b36a1ab0d29a4081d31032ae66f77116f5adca7fefee17ddee3",
+  "initial_id": "record:sha256:7d2bf285bd82fbde0201fc58d3d768722936e176d21f95718c22be93d6575aac",
+  "constraint_ids": [
+    "record:sha256:5cd8e98fce09ce65555018c1603e0ca13338f827ae649e45d99fbf4c1f0a664e",
+    "record:sha256:f86741b38d0e7389442cfe21a02e550c47cf13d6a2de30641f91c47ee3522e29",
+    "record:sha256:c86e7aa7975793289b0e8307b22a48856332fad7a8b8aa7e8d4190dfa120d612"
+  ],
+  "branches": [
+    {
+      "id": "B1",
+      "intent": "Coordinate directional passage use and shutter timing to establish a deliberate final distribution of both crawler kinds between the chambers.",
+      "operation_id": "record:sha256:64ba7fe49582fcf99ba7f003a1fc4f660c45e6585d1545104c6903d6727e9a24"
+    },
+    {
+      "id": "B2",
+      "intent": "Examine a mistimed shutter closure during an attempted coordinated redistribution, focusing on the resulting stranded distribution and adaptation to the irreversible barrier.",
+      "operation_id": "record:sha256:99c15b515ed74a6613cc6839f48fdf7bca5199fc49c3151e4a0870bde5344c89"
+    }
+  ],
+  "request_id": "step3f-w3-e-b1-gen-v1"
+}

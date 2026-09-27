@@ -1,0 +1,37 @@
+Independently critique exactly one proposed branch in a bounded fictional world. You have no other branch candidate. Do not revise or replace this candidate. Apply the declared hard constraints separately; numeric checks are facts about submitted integers only, not proof of narrative consistency. Assess causal depth, non-obvious consequences not supplied by the premise, internal consistency, usefulness for descendant exploration, weaknesses and counterexamples. Branch diversity cannot be established from this candidate alone. Do not assign an aggregate creativity score.
+
+World premise:
+A small settlement has one kiln and a sealed supply of six units of firing catalyst. One firing permanently consumes one unit and produces either one insulating panel or one conductive rod. The kiln cannot produce both in a single firing. Finished parts cannot be converted back into catalyst. Other ordinary construction materials are available; no new catalyst can be obtained. The settlement may arrange work and use finished parts as it chooses.
+
+Initial facts and types:
+{"catalyst_units":6,"panels":0,"rods":0}
+All three fact keys are integers. A candidate supplies a complete replacement state.
+
+Declared hard constraints and verification status:
+1. Catalyst cannot fall below zero. A numeric check verifies catalyst_units >= 0.
+2. Catalyst cannot exceed six. A numeric check verifies catalyst_units <= 6.
+3. Panels cannot be negative. A numeric check verifies panels >= 0.
+4. Rods cannot be negative. A numeric check verifies rods >= 0.
+5. Each firing consumes one catalyst and yields exactly one kind of part; conversion is irreversible. This requires judgment of the described sequence and facts; the numeric checks do not establish it.
+6. The single kiln cannot perform two firings at once. This requires judgment of the described sequence; the numeric checks do not establish it.
+
+The two exploration aims are:
+1. Arrangement: “Develop a coherent consequential arrangement or adaptation within this world.”
+2. Failure: “Develop a plausible failure of an arrangement within this world and what follows from it.”
+
+Applicable aim: Failure.
+Chosen branch intent: Examine an early production commitment that becomes mismatched with later needs after irreversible catalyst consumption.
+
+Candidate to critique (exact returned JSON):
+{"description":"The settlement commits early to insulating a communal storehouse before the cold season. Because the walls are large and the catalyst supply seems adequate, residents schedule four sequential kiln firings and produce four insulating panels, consuming four catalyst units. The panels are installed immediately and cannot be converted back into catalyst or rods. Two catalyst units remain sealed.\n\nSoon afterward, repeated failures in the settlement's improvised electrical distribution reveal a need that had not been considered urgent when the firing plan was adopted. A workshop and water pump can be connected reliably only by extending a shared electrical line, and the extension requires three conductive rods. Ordinary construction materials can provide supports and enclosures, but cannot substitute for the kiln-made rods.\n\nThe settlement can now produce at most two rods. Residents use the kiln sequentially for the remaining two catalyst units, producing two conductive rods and exhausting the catalyst supply. The electrical extension remains incomplete because the missing third rod cannot be produced or obtained. Removing one of the installed insulating panels would not help: finished parts cannot be converted back into catalyst or transformed into rods.\n\nThe failure therefore lies not in violating the production rules but in committing too much of an irreversible resource before later requirements were known. The storehouse remains well insulated, so the first four firings retain value, but that benefit now competes with an unfinished electrical project whose required production mix has become physically impossible. Residents must adapt around the shortage using the resources still available: they restrict electrically dependent work to existing connections, move some workshop activity nearer the powered area, and operate the water pump without the planned extension. Future proposals involving scarce irreversible inputs are consequently treated differently; residents distinguish between work that can safely consume resources immediately and work whose allocation should remain undecided until competing needs become clearer.","facts":{"catalyst_units":0,"panels":4,"rods":2}}
+
+Numeric check results for this candidate:
+1. Catalyst cannot fall below zero. Observed catalyst_units=0; passed.
+2. Catalyst cannot exceed six. Observed catalyst_units=0; passed.
+3. Panels cannot be negative. Observed panels=4; passed.
+4. Rods cannot be negative. Observed rods=2; passed.
+These checks do not verify the number and outputs of firings or whether they were sequential. Address the two narrative constraints explicitly:
+- Does the described sequence consume one catalyst per firing, yield exactly one panel or rod per firing, and avoid conversion back to catalyst? Compare initial and proposed facts.
+- Does the described sequence avoid concurrent firings in the sole kiln?
+
+Return only one complete JSON object with exactly: "verdict" (one of "retain", "limited", "reject", "retain_negative_finding"), "rationale" (nonblank string), "uncertainty" (nonblank string), "limitations" (array of nonblank strings), and "judgment" (nonblank string). Ground the verdict in evidence and counterexamples. Keep the substantive response to approximately 250 words or fewer. Do not include markdown or additional fields.

@@ -1,0 +1,14 @@
+{
+  "audits": {
+    "B1": "record:sha256:21a799ca2efec9ca9aa7eb7f435bc7aeaddcf77e0a27433813dd14149484da57",
+    "B2": "record:sha256:9db55d89d36b30b698fbf5440adbd168add9bf20ce44e043a99b02dc1a516d83"
+  },
+  "statuses": {
+    "B1": "retained",
+    "B2": "retained"
+  },
+  "crystal_id": "crystal:sha256:158afa1bb061f332bda7e4bfb61eaf547f844e2e48b30f7582717415aef52dad",
+  "closure_status": "complete",
+  "model_identification": "caller_reported",
+  "calls": 5
+}

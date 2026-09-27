@@ -1,0 +1,8 @@
+[
+  {
+    "stage": "World 1 Eidomancer Crystal construction",
+    "issue": "An initial provisional B2 pruning audit with limited verdict failed Crystal semantic closure: Pruned branch evaluation mismatch. No Crystal was stored in that attempt.",
+    "disposition": "Preserved the limited evaluator output unchanged. Retained B2 as a limited but usable failure mechanism under the frozen selection rule, with weaknesses in its audit and Crystal limitations. An unused pruned audit record remains immutable in the object store.",
+    "extra_intelligence_calls": 0
+  }
+]

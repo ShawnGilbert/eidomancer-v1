@@ -1,0 +1,1 @@
+{"arrangement_intent":"Coordinate directional passage use and shutter timing to establish a deliberate final distribution of both crawler kinds between the chambers.","failure_intent":"Examine a mistimed shutter closure during an attempted coordinated redistribution, focusing on the resulting stranded distribution and adaptation to the irreversible barrier."}

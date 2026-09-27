@@ -1,0 +1,12 @@
+{
+  "reviewers_completed": 2,
+  "blind_judgments": [
+    "Y",
+    "Y"
+  ],
+  "assignment_key_revealed": false,
+  "response_deviations": [
+    "Reviewer 1 paste includes markdown document wrapper and escaped line endings; response not strict JSON.",
+    "Reviewer 2 paste includes markdown document wrapper and escaped line endings; response not strict JSON. Both raw responses preserved."
+  ]
+}

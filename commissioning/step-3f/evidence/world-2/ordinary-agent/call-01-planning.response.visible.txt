@@ -1,0 +1,1 @@
+{"arrangement_intent":"Coordinate alternating access and maintenance work around the stone band according to its walkable and submerged phases.","failure_intent":"Examine a timing-dependent arrangement that fails when work or access assumptions become misaligned with the lagoon’s level cycle."}

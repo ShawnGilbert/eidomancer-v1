@@ -1,0 +1,22 @@
+You are planning two exploration directions for a bounded fictional world. Identify directions only. Do not write candidate narratives, preview consequences, prescribe a desired discovery, or change the rules.
+
+World premise:
+A small settlement has one kiln and a sealed supply of six units of firing catalyst. One firing permanently consumes one unit and produces either one insulating panel or one conductive rod. The kiln cannot produce both in a single firing. Finished parts cannot be converted back into catalyst. Other ordinary construction materials are available; no new catalyst can be obtained. The settlement may arrange work and use finished parts as it chooses.
+
+Initial state facts and types:
+{"catalyst_units":6,"panels":0,"rods":0}
+All three fact keys are integers.
+
+Declared hard constraints and verification status:
+1. Catalyst cannot fall below zero. Mechanically checked by integer_min_v1 on catalyst_units with minimum 0.
+2. Catalyst cannot exceed six. Mechanically checked by integer_max_v1 on catalyst_units with maximum 6.
+3. Panels cannot be negative. Mechanically checked by integer_min_v1 on panels with minimum 0.
+4. Rods cannot be negative. Mechanically checked by integer_min_v1 on rods with minimum 0.
+5. Each firing consumes one catalyst and yields exactly one kind of part; conversion is irreversible. Evaluator-judged, not mechanically checked.
+6. The single kiln cannot perform two firings at once. Evaluator-judged, not mechanically checked.
+
+The two exploration aims are:
+1. Arrangement: “Develop a coherent consequential arrangement or adaptation within this world.”
+2. Failure: “Develop a plausible failure of an arrangement within this world and what follows from that failure.”
+
+Choose one concrete branch intent for each aim. Return only one JSON object with exactly two nonblank string fields: "arrangement_intent" and "failure_intent". Keep the entire response to approximately 120 words or fewer.

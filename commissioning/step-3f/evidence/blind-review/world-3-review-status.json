@@ -1,0 +1,11 @@
+{
+  "reviewers_completed": 2,
+  "blind_judgments": [
+    "X",
+    "X"
+  ],
+  "assignment_key_revealed": false,
+  "response_deviations": [
+    "Both reviewer rationales contain trailing Pasted markdown text; preserved verbatim."
+  ]
+}

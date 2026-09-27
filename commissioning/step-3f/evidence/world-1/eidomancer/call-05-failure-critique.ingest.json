@@ -1,0 +1,77 @@
+{
+  "evaluation_id": "record:sha256:695b80ee15fb14881c05adf4ee131898f4ca931c0212629ee86962068d6a2198",
+  "evaluation_response_id": "record:sha256:b0386416721e8a644d69d7b732dc6d13400c62a7f664375d77cd52e6f840e3c7",
+  "verdict": "limited",
+  "results": [
+    {
+      "criterion": "C1",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:42d39444f18221d84c4122c226f20c16c341dd23f47ce3bfecff2e4f06b07127",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "kind": "mechanical",
+      "passed": true,
+      "validator_id": "integer_min_v1"
+    },
+    {
+      "criterion": "C2",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:50be47c5e4cc355380774740e9dcb5904fd012070d37f026e2d3a4749191c5f1",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "kind": "mechanical",
+      "passed": true,
+      "validator_id": "integer_max_v1"
+    },
+    {
+      "criterion": "C3",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:037124eb5fb85e2ec6ec34b0076d7079f37c2e838128c19c780c11d93d9adbbf",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "kind": "mechanical",
+      "passed": true,
+      "validator_id": "integer_min_v1"
+    },
+    {
+      "criterion": "C4",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:1686c152563a0b007380a89dbd4fd8dbc8e58cc8508faf4f037ba91031b5e580",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "kind": "mechanical",
+      "passed": true,
+      "validator_id": "integer_min_v1"
+    },
+    {
+      "criterion": "C5",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:a2bf4e2c753a1df7323156aeb8ceda9306129eeec726882cdd97ef6e8d2778a6",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "kind": "intelligence_judgment",
+      "finding": "The branch is coherent and constraint-compliant and provides a usable failure mechanism, but its exploration remains limited because it develops relatively little beyond the immediate consequences of irreversible early allocation."
+    },
+    {
+      "criterion": "C6",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:0cd851983ce9e268acc0bf66672c857e66063a1e878114e3febca93820a67665",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "kind": "intelligence_judgment",
+      "finding": "The branch is coherent and constraint-compliant and provides a usable failure mechanism, but its exploration remains limited because it develops relatively little beyond the immediate consequences of irreversible early allocation."
+    }
+  ]
+}

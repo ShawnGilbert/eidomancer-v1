@@ -1,0 +1,11 @@
+{
+  "reviewers_completed": 2,
+  "blind_judgments": [
+    "X",
+    "X"
+  ],
+  "assignment_key_revealed": false,
+  "response_deviations": [
+    "Reviewer 2 rationale contains trailing Pasted markdown text in the returned JSON; preserved verbatim."
+  ]
+}

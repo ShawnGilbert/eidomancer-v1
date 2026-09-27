@@ -1,0 +1,26 @@
+{
+  "profile": "fictional.generic.v1",
+  "seed_id": "record:sha256:61922c6cc811cec3855bc5a044dd679699c5842aedb77cbdc273b40ea6ea2da1",
+  "rule_id": "record:sha256:160332dbc409d7a8b8f670efc168a9ded69008366468b821af61a09308f85b90",
+  "initial_id": "record:sha256:8da955719e2d099c56b88ebfcad08712bcc596c2f4ee30a81e8f8fdbd3e6e64f",
+  "constraint_ids": [
+    "record:sha256:5737e38e9e5e4c6a6214d51ced7f66690a62fd3f7bcb549db8799012d5cee25b",
+    "record:sha256:b66a1d46b27e8c726a887fd4b9d4d8c37bec652739effece5a8fd8c11aad02e8",
+    "record:sha256:6ba48f60cdd814e4aadbc2b0fab5bd354eefd6e1ed5549fde363cc7caed9c0a2",
+    "record:sha256:8881e19cc450b5068b1b016aa2c797d3a2a6d01b3555801e16914bb0ace7e0fd",
+    "record:sha256:582173f5b8951b6a13f3fd5bbda5e176840186f1e088b6390eb87fae14ccb1c2"
+  ],
+  "branches": [
+    {
+      "id": "B1",
+      "intent": "Coordinate stone-band access and reed management around the lagoon’s repeating water-level phases.",
+      "operation_id": "record:sha256:4ea17cc638e7500f2cf23fff49d89c8ee86947b7125875b6f69ed823c4726688"
+    },
+    {
+      "id": "B2",
+      "intent": "Examine the breakdown of a time-dependent crossing arrangement when a planned task misses its usable water-level window.",
+      "operation_id": "record:sha256:a0c4a74214a26fcc2b199d4da9ab6b7ea77d839d2d7d4704c32a5e83c73e9f7a"
+    }
+  ],
+  "request_id": "step3f-w2-e-b1-gen-v1"
+}

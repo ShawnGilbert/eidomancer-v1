@@ -1,0 +1,58 @@
+{
+  "response_id": "record:sha256:1fdd0c2396cf3d9e1db0694aaab86ae8d33d1c9bf2d777e9cad4b262c7298a8e",
+  "selection_id": "record:sha256:73a74731008b6d65d9aeb7dcf99ff5ee1f5d28fe2262682cbf162ecc1eef201a",
+  "successor_id": "record:sha256:daeb4e22e6bad13625a8d1769fc49d14d9eec43d32b80f70911c3a144f1d8766",
+  "transition_id": "record:sha256:4e06fb14a652e9d74ef4f321de53fa96af1f42b604f01ccb028ed5a250c986d5",
+  "transition_status": "accepted",
+  "checks": [
+    {
+      "validator_id": "integer_min_v1",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:5737e38e9e5e4c6a6214d51ced7f66690a62fd3f7bcb549db8799012d5cee25b",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "inputs": {
+        "fact": "water_level",
+        "observed": 0,
+        "limit": 0
+      },
+      "passed": true
+    },
+    {
+      "validator_id": "integer_max_v1",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:b66a1d46b27e8c726a887fd4b9d4d8c37bec652739effece5a8fd8c11aad02e8",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "inputs": {
+        "fact": "water_level",
+        "observed": 0,
+        "limit": 3
+      },
+      "passed": true
+    },
+    {
+      "validator_id": "integer_min_v1",
+      "constraint_ref": {
+        "kind": "constraint",
+        "id": "record:sha256:6ba48f60cdd814e4aadbc2b0fab5bd354eefd6e1ed5549fde363cc7caed9c0a2",
+        "schema_version": "eidomancer.record.schema.v0.2",
+        "required": true
+      },
+      "inputs": {
+        "fact": "rooted_reed_patches",
+        "observed": 1,
+        "limit": 0
+      },
+      "passed": true
+    }
+  ],
+  "limitations": [
+    "intelligence_judgment: Water level advances one step at each dusk in the order 0, 1, 2, 3, 0. (not mechanically verified)",
+    "intelligence_judgment: Stone is walkable only at levels 0–1; reeds root there only at levels 2–3 and remain rooted afterward. (not mechanically verified)"
+  ]
+}

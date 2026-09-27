@@ -1,0 +1,29 @@
+{
+  "checks": [
+    {
+      "statement": "Water level cannot be below zero.",
+      "validator": "integer_min_v1",
+      "fact": "water_level",
+      "observed": 0,
+      "limit": 0,
+      "passed": true
+    },
+    {
+      "statement": "Water level cannot exceed three.",
+      "validator": "integer_max_v1",
+      "fact": "water_level",
+      "observed": 0,
+      "limit": 3,
+      "passed": true
+    },
+    {
+      "statement": "Rooted reed patch count cannot be negative.",
+      "validator": "integer_min_v1",
+      "fact": "rooted_reed_patches",
+      "observed": 1,
+      "limit": 0,
+      "passed": true
+    }
+  ],
+  "scope": "Numeric fact checks only; narrative constraints require independent critique"
+}

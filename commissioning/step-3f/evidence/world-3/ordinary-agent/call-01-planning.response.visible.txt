@@ -1,0 +1,1 @@
+{"arrangement_intent":"Examine a coordinated full exchange in which both amber crawlers and both blue crawlers traverse in their permitted directions before the shutter is permanently closed.","failure_intent":"Examine a premature shutter closure during an attempted full exchange, focusing on an incomplete redistribution stranded at the moment of closure."}

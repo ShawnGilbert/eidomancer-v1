@@ -1,0 +1,17 @@
+{
+  "method": "Independent cryptographic random bit for each world, assigned before any blind-review call; bit 0 means X ordinary-agent, bit 1 means X Eidomancer.",
+  "worlds": {
+    "1": {
+      "X": "ordinary-agent",
+      "Y": "eidomancer"
+    },
+    "2": {
+      "X": "eidomancer",
+      "Y": "ordinary-agent"
+    },
+    "3": {
+      "X": "eidomancer",
+      "Y": "ordinary-agent"
+    }
+  }
+}
