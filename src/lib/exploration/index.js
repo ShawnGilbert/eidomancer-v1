@@ -7,6 +7,26 @@ import {storeCrystal} from './crystalValidator.js';
 
 const r=o=>ref(o.payload.kind,o.id);
 const actor=(role,provider,model_or_version,identification_status)=>({role,provider,model_or_version,identification_status});
+const sourceKind=(status)=>{
+  if(status==='test_double')return 'fixture/test double';
+  if(status==='caller_reported'||status==='known')return `captured external intelligence at adapter boundary (${status} provider/model identification)`;
+  throw new Error('Unsupported intelligence identification status for Crystal source scope');
+};
+const sourceScope=(branches)=>{
+  const generation=new Set(branches.map(b=>{
+    if(b.response.payload.kind!=='intelligence_response' || b.response.payload.provenance.actor_role!=='external_intelligence')throw new Error('Unsupported generation source provenance');
+    return sourceKind(b.response.payload.body.identification_status);
+  }));
+  const evaluation=new Set(branches.map(b=>{
+    const record=b.evaluation;
+    if(record.payload.body.evaluator==='caller_declared_evaluator' && record.payload.provenance.actor_role==='caller_declared_evaluator' && !record.payload.body.intelligence_response_ref)return 'caller-declared evaluation';
+    if(record.payload.provenance.actor_role==='external_intelligence' &&
+       record.payload.body.intelligence_response_ref && record.payload.provenance.input_refs.some(x=>x.id===record.payload.body.intelligence_response_ref.id))
+      return `captured evaluation: ${sourceKind(record.payload.provenance.identification_status)}`;
+    throw new Error('Unsupported evaluation provenance for Crystal source scope');
+  }));
+  return `Declared fictional world; generation: ${[...generation].sort().join(' + ')}; evaluation: ${[...evaluation].sort().join(' + ')}. Captures describe adapter-boundary bytes only; provider-side transformations are unverified`;
+};
 
 // Summaries are deliberate human/agent-authored decisions; no hidden semantic generator.
 export function makeManifest(session,procedure,{question,intended_reuse,consequence,why_retained,limitations=[],parent_relation='extension'}={}) {
@@ -27,7 +47,7 @@ export function makeManifest(session,procedure,{question,intended_reuse,conseque
     unresolved_cracks:cracks.map((b,i)=>({id:`CR${i+1}`,kind:'fictional_inconsistency',statement:b.crack.payload.body.statement,conflicting_claim_ids:[],conflicting_refs:[r(b.transition),r(session.rule)],status:'open',candidate_explanations:[],effect_on_evaluation:b.crack.payload.body.effect_on_evaluation,detail_ref:r(b.crack)})),
     evaluation_summary:{procedure_ref:r(procedure),evaluator:actor(retained.evaluation.payload.provenance.actor_role,retained.evaluation.payload.provenance.provider,retained.evaluation.payload.provenance.model_or_version,retained.evaluation.payload.provenance.identification_status),comparator_refs:[r(session.initial)],verdict:retained.evaluation.payload.body.verdict,findings:[retained.evaluation.payload.body.rationale],uncertainty:retained.evaluation.payload.body.uncertainty,limitations:retained.evaluation.payload.body.limitations,why_retained,detail_ref:r(retained.evaluation)},
     lineage:{parents:session.parentCrystal?[{crystal_ref:ref('crystal',session.parentCrystal.id),relation:parent_relation,inherited:session.seed.payload.body.inherited,changed:session.seed.payload.body.changed}]:[],origin:r(session.seed)},
-    provenance:{environment:actor('environment','eidomancer','exploration.v0.3','declared'),intelligence:branches.map(b=>actor('external_intelligence',b.response.payload.body.provider,b.response.payload.body.model,b.response.payload.body.identification_status)),operations:[...(session.displacement?[r(session.displacement)]:[]),...branches.flatMap(b=>[r(b.operation),r(b.selection)])],source_scope:'Declared fictional world and fixture adapter',evidence_handling:'Generated candidates stay fictional; mechanical checks separate from evaluator judgments'},
+    provenance:{environment:actor('environment','eidomancer','exploration.v0.3','declared'),intelligence:branches.map(b=>actor('external_intelligence',b.response.payload.body.provider,b.response.payload.body.model,b.response.payload.body.identification_status)),operations:[...(session.displacement?[r(session.displacement)]:[]),...branches.flatMap(b=>[r(b.operation),r(b.selection)])],source_scope:sourceScope(branches),evidence_handling:'Generated candidates stay fictional; mechanical checks separate from evaluator judgments'},
     required_references:[]};
   payload.required_references=sortedRefs(embeddedRefs(payload).filter(x=>x.required));
   return payload;
