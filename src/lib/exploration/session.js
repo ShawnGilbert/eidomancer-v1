@@ -1,5 +1,5 @@
 import {record,ref} from './recordSchemas.js';
-import {captureAdapter,extractCandidate} from './intelligenceAdapter.js';
+import {captureAdapter,extractCandidate,extractEvaluation} from './intelligenceAdapter.js';
 
 const env = (input_refs = []) => ({actor_role:'environment',provider:'eidomancer',model_or_version:'exploration.v0.3',identification_status:'declared',input_refs});
 const born = async (store,kind,body,claim_class,provenance = env()) => {const object=record(kind,body,claim_class,provenance);await store.put(object);return object;};
@@ -59,12 +59,28 @@ export async function declareProcedure(store) {
   return born(store,'evaluation_procedure',{name:'memory-village-coherence',version:'1',criteria:[{id:'R0',mode:'mechanical',question:'Does private recall remain <= 3?'},{id:'meaning',mode:'intelligence_judgment',question:'Does the proposed institution make obligations intelligible?'}],comparator:'Initial village state under R0',evaluator_role:'declared_external_evaluator',uncertainty_policy:'Retain unresolved cracks as limitations'},'declared_world_assumption');
 }
 
-export async function evaluate(session,branch_id,procedure,{verdict,rationale,uncertainty,limitations=[],judgment='Declared human evaluator judgment'}) {
+export async function evaluate(session,branch_id,procedure,options) {
   const branch=session.branches.get(branch_id);
   if (!branch?.transition || branch.evaluation) throw new Error('Unevolved or evaluated branch');
+  const captured=Object.hasOwn(options,'adapter') || Object.hasOwn(options,'request_bytes') || Object.hasOwn(options,'request_id');
+  let values, response, extraction;
+  if (captured) {
+    if (Object.keys(options).sort().join(',') !== 'adapter,request_bytes,request_id' || !Buffer.isBuffer(options.request_bytes) || !options.request_bytes.length ||
+        typeof options.request_id !== 'string' || !options.request_id.trim()) throw new Error('Exact evaluator request and adapter required');
+    response=await captureAdapter(session.store,options.adapter,{request_id:options.request_id,request_bytes:options.request_bytes,
+      input_refs:[r(branch.transition),r(procedure)]});
+    values=extractEvaluation(response);
+  } else values=options;
+  const {verdict,rationale,uncertainty,limitations=[],judgment='Declared human evaluator judgment'}=values;
   if (!branch.check.passed && verdict!=='reject' && verdict!=='retain_negative_finding') throw new Error('Failed mechanical check cannot be retained as a valid successor');
-  branch.evaluation=await born(session.store,'evaluation_record',{target_ref:r(branch.transition),procedure_ref:r(procedure),results:[{criterion:'R0',kind:'mechanical',passed:branch.check.passed},{criterion:'meaning',kind:'intelligence_judgment',finding:judgment}],verdict,rationale,uncertainty,limitations,evaluator:'declared_external_evaluator',intelligence_response_ref:r(branch.response)},'evaluation_judgment',{
-    actor_role:'declared_external_evaluator',provider:'human_or_agent',model_or_version:'unknown',identification_status:'declared',input_refs:[r(branch.transition),r(procedure),r(branch.response)]});
+  if (response) extraction=await born(session.store,'operation',{type:'evaluation_extraction',input_refs:[r(response),r(procedure)],changes:['Extracted exact evaluation fields from captured JSON response'],invariants:['Mechanical checks remain authoritative'],budget_debit:0,actor:'environment'},'generated_candidate',env([r(response),r(procedure)]));
+  const body={target_ref:r(branch.transition),procedure_ref:r(procedure),results:[{criterion:'R0',kind:'mechanical',passed:branch.check.passed},{criterion:'meaning',kind:'intelligence_judgment',finding:judgment}],verdict,rationale,uncertainty,limitations,
+    evaluator:response?'captured_external_intelligence':'caller_declared_evaluator'};
+  if (response) body.intelligence_response_ref=r(response);
+  const provenance=response?{actor_role:'external_intelligence',provider:response.payload.body.provider,model_or_version:response.payload.body.model,
+    identification_status:response.payload.body.identification_status,input_refs:[r(branch.transition),r(procedure),r(response)],operation_ref:r(extraction)}:
+    {actor_role:'caller_declared_evaluator',provider:'caller',model_or_version:'unspecified',identification_status:'declared',input_refs:[r(branch.transition),r(procedure)]};
+  branch.evaluation=await born(session.store,'evaluation_record',body,'evaluation_judgment',provenance);
   return branch.evaluation;
 }
 

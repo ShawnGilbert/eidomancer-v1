@@ -69,7 +69,7 @@ function validateBody(kind, b) {
       break;
     case 'operation':
       keys(b, ['type','input_refs','changes','invariants','budget_debit','actor']);
-      check(['displacement','fork','candidate_selection','crystallization','extension'].includes(b.type), 'Invalid operation');
+      check(['displacement','fork','candidate_selection','evaluation_extraction','crystallization','extension'].includes(b.type), 'Invalid operation');
       check(Array.isArray(b.input_refs) && b.input_refs.every(isRef) && Array.isArray(b.changes) && Array.isArray(b.invariants), 'Invalid operation data');
       check(Number.isSafeInteger(b.budget_debit) && b.budget_debit >= 0 && str(b.actor), 'Invalid operation actor/budget');
       break;
@@ -95,7 +95,7 @@ function validateBody(kind, b) {
       check(str(b.name) && str(b.version) && Array.isArray(b.criteria), 'Invalid evaluation procedure');
       break;
     case 'evaluation_record':
-      keys(b, ['target_ref','procedure_ref','results','verdict','rationale','uncertainty','limitations','evaluator','intelligence_response_ref'], ['revises_ref']);
+      keys(b, ['target_ref','procedure_ref','results','verdict','rationale','uncertainty','limitations','evaluator'], ['intelligence_response_ref','revises_ref']);
       check(isRef(b.target_ref) && ['world_state','transition','branch_audit'].includes(b.target_ref.kind), 'Invalid evaluation target');
       refOf(b.procedure_ref, 'evaluation_procedure');
       check(['retain','limited','reject','retain_negative_finding'].includes(b.verdict) && str(b.rationale) && str(b.evaluator), 'Invalid evaluation');
@@ -121,7 +121,7 @@ export function validateRecord(payload) {
   check(CLASSES.has(payload.claim_class), 'Invalid claim class');
   const expectedClass=payload.kind==='world_state'?(payload.body.intelligence_response_ref?'generated_candidate':'declared_world_assumption'):
     ['evaluation_record','branch_audit','crack_record'].includes(payload.kind)?'evaluation_judgment':
-    ['transition','intelligence_response'].includes(payload.kind)||payload.kind==='operation'&&payload.body.type==='candidate_selection'?'generated_candidate':'declared_world_assumption';
+    ['transition','intelligence_response'].includes(payload.kind)||payload.kind==='operation'&&['candidate_selection','evaluation_extraction'].includes(payload.body.type)?'generated_candidate':'declared_world_assumption';
   check(payload.claim_class===expectedClass,'One-way evidence: record claim class inconsistent with source and role');
   keys(payload.provenance, ['actor_role','provider','model_or_version','identification_status','input_refs'], ['operation_ref']);
   check(str(payload.provenance.actor_role) && str(payload.provenance.provider) && str(payload.provenance.model_or_version) && str(payload.provenance.identification_status), 'Invalid provenance');

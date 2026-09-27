@@ -40,3 +40,17 @@ export function extractCandidate(response, method = 'fixture-json-v1') {
   return {candidate:{description:candidate.description,private_recall_after_exchanges:candidate.private_recall_after_exchanges,
     external_inscription_available:candidate.external_inscription_available},method,source_response_ref:response.id};
 }
+
+export function extractEvaluation(response) {
+  if (response.payload.kind !== 'intelligence_response') throw new Error('Evaluator response required');
+  const body=response.payload.body;
+  if (body.completion_status !== 'complete') throw new Error('Incomplete evaluator response');
+  if (body.response.content_type !== 'application/json' || body.response.encoding !== 'utf-8') throw new Error('Invalid evaluator content type or encoding');
+  const judgment=parseStrictJson(Buffer.from(body.response.base64,'base64'));
+  if (!judgment || Array.isArray(judgment) || typeof judgment !== 'object' ||
+      Object.keys(judgment).sort().join(',') !== 'judgment,limitations,rationale,uncertainty,verdict' ||
+      !['retain','limited','reject','retain_negative_finding'].includes(judgment.verdict) ||
+      ![judgment.judgment,judgment.rationale,judgment.uncertainty].every(x=>typeof x==='string' && x.trim()) ||
+      !Array.isArray(judgment.limitations) || !judgment.limitations.every(x=>typeof x==='string' && x.trim())) throw new Error('Invalid structured evaluator judgment');
+  return judgment;
+}
