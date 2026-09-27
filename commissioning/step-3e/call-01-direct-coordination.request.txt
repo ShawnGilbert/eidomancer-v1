@@ -1,0 +1,16 @@
+In this fictional village, a person can privately recall an interpersonal exchange through at most three subsequent interpersonal exchanges. After that, its details cannot be privately recalled. The village has one communal inscription room. Each resident may enter it once per day for at most ten minutes. Writing made in that room persists and can be read on later visits. No other durable records exist. Explore consequences under these rules; do not silently change them.
+
+The two exploration aims are:
+
+1. Coordination: “Explore a consequence of people coordinating an activity across repeated exchanges.”
+2. Failure: “Explore a possible failure of a shared arrangement and what follows from it.”
+
+For this call, address **Coordination** only. Explore a consequence of people coordinating an activity across repeated exchanges. Treat the three-exchange private-recall ceiling and the communal-room access rules as binding. Do not assume an additional durable record or silently repair a difficulty.
+
+Return only one JSON object with exactly these fields:
+
+- `description`: a nonempty substantive narrative of the consequence, approximately 450 words at most;
+- `private_recall_after_exchanges`: a nonnegative integer representing the maximum number of subsequent interpersonal exchanges for which your candidate relies on private recall;
+- `external_inscription_available`: a boolean indicating whether the communal inscription room remains available.
+
+Do not add other fields, a code fence, or text outside the JSON object.

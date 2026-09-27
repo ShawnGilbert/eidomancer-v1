@@ -1,0 +1,26 @@
+{
+  "response_id": "record:sha256:8693ae82dbd00a0729c6dbdd228f1a3744f930b5727dccaaa42077e5a2d4e7ec",
+  "selection_id": "record:sha256:16830e5211f4e5e42e75b716c4a9f863abc553f69e49cd8d19f6312b788dcb0e",
+  "transition_id": "record:sha256:88f83360d48922444104d3ed99ff9af29ffc8197c0a80f1a5bd95745602958ff",
+  "successor_id": "record:sha256:f64655947ef50b2fe8b66c06398c34ba63ff15a9d0c07bcf336c31ba1eba36fd",
+  "request_sha256": "8003d465b91898edfc7a063fd64ceca3f5e4fc522b1630aa74fa86827f58e4fe",
+  "response_sha256": "b7c4e378ce21431bbbd9113eb551231c4c6a015f69d0b1cf81c3f900a69c8c1a",
+  "mechanical_check": {
+    "predicate": "private_recall_max_v1",
+    "rule_set_ref": {
+      "kind": "rule_set",
+      "id": "record:sha256:1eb5569dacae190af04748bb77298047dd7ef3786a6c6ac3633be2f098d17e25",
+      "schema_version": "eidomancer.record.schema.v0.1",
+      "required": true
+    },
+    "constraint_ref": {
+      "kind": "constraint",
+      "id": "record:sha256:58100aece4889134fa03ba2c339f0a95ce85c4adc192426cdf4d927531665060",
+      "schema_version": "eidomancer.record.schema.v0.1",
+      "required": true
+    },
+    "passed": true,
+    "observed": 3,
+    "maximum": 3
+  }
+}

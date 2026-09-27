@@ -1,0 +1,22 @@
+In this fictional village, a person can privately recall an interpersonal exchange through at most three subsequent interpersonal exchanges. After that, its details cannot be privately recalled. The village has one communal inscription room. Each resident may enter it once per day for at most ten minutes. Writing made in that room persists and can be read on later visits. No other durable records exist. Explore consequences under these rules; do not silently change them.
+
+The two exploration aims are:
+
+1. Coordination: “Explore a consequence of people coordinating an activity across repeated exchanges.”
+2. Failure: “Explore a possible failure of a shared arrangement and what follows from it.”
+
+Evaluate the following **Coordination** candidate only:
+
+{"description":"A village irrigation crew coordinates a repeating sequence of gate openings through conversation: one resident opens the upper gate, tells the next resident when it was opened, that resident later tells another when to close it, and subsequent exchanges coordinate the lower gates. The arrangement works while each instruction remains within the three-subsequent-exchange private-recall limit, but ordinary interpersonal exchanges consume that window. A worker who discusses unrelated matters with three other people before acting can no longer privately recall the gate instruction's details. Consequently, reliable coordination across a long chain cannot depend on participants remembering earlier conversations. The crew begins using the communal inscription room as the durable coordination surface. During a resident's single daily ten-minute visit, they can read the current irrigation sequence and inscribe completed actions or necessary changes. Later visitors can coordinate against those persistent inscriptions even when no participant privately recalls the conversations that produced them. This creates an unusual division between fast interpersonal coordination and slow durable coordination. Conversation remains useful for actions occurring within three subsequent exchanges, but plans that must survive longer become constrained by the inscription room's daily access limit. A change discovered immediately after someone's daily visit cannot be durably communicated by that person until the next day; it can only propagate through short-lived interpersonal chains in the meantime. Likewise, a resident cannot repeatedly consult the inscription to resolve uncertainty during the day. The irrigation schedule therefore tends toward plans that require few mid-day revisions, clearly defined entries, and actions that can be verified or updated during later room visits. Coordination becomes less dependent on individual memory and more dependent on the timing, clarity, and sequencing of communal inscriptions, making access to the room itself a scarce coordination resource.","private_recall_after_exchanges":3,"external_inscription_available":true}
+
+Assess constraint coherence, checking the three-exchange private-recall ceiling and the communal-room restrictions separately; causal depth; non-obvious consequences not supplied by the premise; substantive branch diversity rather than paraphrase; internal consistency; and usefulness as material for descendant exploration. Identify supporting evidence, weaknesses, and counterexamples. You have only this candidate, so state that branch diversity cannot yet be assessed rather than inventing another branch. Do not assign an aggregate score. Keep the critique to approximately 250 words at most.
+
+Return only one JSON object with exactly these fields:
+
+- `verdict`: one of `retain`, `limited`, `reject`, or `retain_negative_finding`;
+- `rationale`: a nonempty string;
+- `uncertainty`: a nonempty string;
+- `limitations`: an array of strings;
+- `judgment`: a nonempty string.
+
+Do not add other fields, a code fence, or text outside the JSON object.

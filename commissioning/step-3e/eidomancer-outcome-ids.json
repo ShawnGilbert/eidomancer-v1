@@ -1,0 +1,9 @@
+{
+  "procedure_id": "record:sha256:265d08e2cd1c66429dcdb92fcd4ba7ca5ce71f85d396c768bea939c803e72d23",
+  "audits": {
+    "B1": "record:sha256:f39ea301d37a660bcc69d5bf619d3f7840a888497cbbbe94b71d828cfefda740",
+    "B2": "record:sha256:f5ec2f8e6e67f5955e48f65a1c5f7f0edeb5a94bfa6c99843679905d3f61873e"
+  },
+  "crystal_id": "crystal:sha256:750f023c03a3445938b6f92b3c73ee02f8199f840c1643d570b3559b623fd397",
+  "crystal_integrity": "complete"
+}

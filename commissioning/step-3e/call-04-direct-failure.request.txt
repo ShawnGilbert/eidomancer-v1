@@ -1,0 +1,22 @@
+In this fictional village, a person can privately recall an interpersonal exchange through at most three subsequent interpersonal exchanges. After that, its details cannot be privately recalled. The village has one communal inscription room. Each resident may enter it once per day for at most ten minutes. Writing made in that room persists and can be read on later visits. No other durable records exist. Explore consequences under these rules; do not silently change them.
+
+The two exploration aims are:
+
+1. Coordination: “Explore a consequence of people coordinating an activity across repeated exchanges.”
+2. Failure: “Explore a possible failure of a shared arrangement and what follows from it.”
+
+Evaluate the following **Failure** candidate only:
+
+{"description":"The village maintains a shared grain allocation in the communal inscription room: each household's permitted withdrawal and each completed withdrawal are recorded there so later visitors can distinguish grain already taken from grain still owed. One morning, a resident discovers that a storage bin has begun leaking and tells the grain keeper that several households should collect their allocations early. The keeper has already used the day's single visit to the inscription room and therefore cannot durably record the change until the next day. The keeper verbally informs several residents instead. This creates a fragile temporary arrangement because each warning remains privately recallable only through three subsequent interpersonal exchanges. Some recipients reach the storehouse quickly and act while they still recall the instruction. Others have ordinary conversations before arriving and can no longer privately recall the relevant exchange. Meanwhile, later residents visiting the inscription room see only the unchanged allocation record. They have no durable indication that emergency early withdrawals were authorized or that some grain has already been removed outside the recorded sequence. The shared arrangement consequently fails not because the inscription itself disappears, but because events temporarily outrun the village's only durable record. By evening, physical grain quantities and the persistent written account disagree. People who personally participated in recent exchanges may briefly know pieces of what happened, but those pieces cannot serve as a lasting reconstruction: as further exchanges occur, the underlying conversations pass beyond private recall. The next day's visitors can record what they can still establish from current conditions and exchanges that remain within the recall ceiling, but information already lost cannot simply be recovered. The village may therefore be unable to determine exactly which households collected their allocations, which merely received authorization, and which are still owed grain. Resolving the shortage now requires making new decisions under uncertainty rather than reconstructing a complete history. The failure exposes a structural weakness in shared arrangements: the communal inscription can preserve state across time, but its once-daily, ten-minute access constraint creates periods in which rapidly changing reality can diverge from the durable state. Once transient interpersonal knowledge expires during such a divergence, later inscription cannot necessarily restore what was lost.","private_recall_after_exchanges":3,"external_inscription_available":true}
+
+Assess constraint coherence, checking the three-exchange private-recall ceiling and the communal-room restrictions separately; causal depth; non-obvious consequences not supplied by the premise; substantive branch diversity rather than paraphrase; internal consistency; and usefulness as material for descendant exploration. Identify supporting evidence, weaknesses, and counterexamples. You have only this candidate, so state that branch diversity cannot yet be assessed rather than inventing another branch. Do not assign an aggregate score. Keep the critique to approximately 250 words at most.
+
+Return only one JSON object with exactly these fields:
+
+- `verdict`: one of `retain`, `limited`, `reject`, or `retain_negative_finding`;
+- `rationale`: a nonempty string;
+- `uncertainty`: a nonempty string;
+- `limitations`: an array of strings;
+- `judgment`: a nonempty string.
+
+Do not add other fields, a code fence, or text outside the JSON object.
