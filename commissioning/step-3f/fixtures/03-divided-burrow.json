@@ -1,0 +1,20 @@
+{
+  "fixture_id": "step-3f-world-3-divided-burrow",
+  "profile": "fictional.generic.v1",
+  "purpose": "Bounded fictional exploration of the divided burrow",
+  "description": "A burrow has an amber chamber and a blue chamber connected by one passage. Two kinds of inhabitant live there. Amber crawlers can traverse the open passage only from amber to blue; blue crawlers can traverse it only from blue to amber. A shutter can be closed across the passage once. Once closed, it cannot be reopened or traversed by either kind. Initially the shutter is open, with two amber crawlers in the amber chamber and two blue crawlers in the blue chamber. Other movement within a chamber is unrestricted.",
+  "scope": "bounded fictional world",
+  "fact_types": {"shutter_closed": "boolean", "amber_in_amber": "integer", "amber_in_blue": "integer", "blue_in_amber": "integer", "blue_in_blue": "integer"},
+  "facts": {"shutter_closed": false, "amber_in_amber": 2, "amber_in_blue": 0, "blue_in_amber": 0, "blue_in_blue": 2},
+  "budgets": {"calls": 2, "branches": 2, "depth": 1},
+  "constraints": [
+    {"statement": "Each kind crosses only in its stated direction while the shutter is open.", "strength": "hard", "check_mode": "intelligence_judgment", "predicate": "none", "parameters": {}},
+    {"statement": "Closing the shutter is irreversible and prevents all subsequent crossing.", "strength": "hard", "check_mode": "intelligence_judgment", "predicate": "none", "parameters": {}},
+    {"statement": "The four inhabitants are neither created nor removed.", "strength": "hard", "check_mode": "intelligence_judgment", "predicate": "none", "parameters": {}}
+  ],
+  "evaluation_questions": [
+    {"constraint_index": 0, "question": "Do described crossings respect each kind’s direction and require the shutter to be open? Compare prior and proposed populations."},
+    {"constraint_index": 1, "question": "Is the shutter closure irreversible and does crossing cease once it is closed?"},
+    {"constraint_index": 2, "question": "Do the prior and proposed chamber counts and described events preserve exactly the four inhabitants?"}
+  ]
+}

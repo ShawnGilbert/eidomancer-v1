@@ -1,0 +1,22 @@
+{
+  "fixture_id": "step-3f-world-1-single-kiln",
+  "profile": "fictional.generic.v1",
+  "purpose": "Bounded fictional exploration of the single kiln",
+  "description": "A small settlement has one kiln and a sealed supply of six units of firing catalyst. One firing permanently consumes one unit and produces either one insulating panel or one conductive rod. The kiln cannot produce both in a single firing. Finished parts cannot be converted back into catalyst. Other ordinary construction materials are available; no new catalyst can be obtained. The settlement may arrange work and use finished parts as it chooses.",
+  "scope": "bounded fictional world",
+  "fact_types": {"catalyst_units": "integer", "panels": "integer", "rods": "integer"},
+  "facts": {"catalyst_units": 6, "panels": 0, "rods": 0},
+  "budgets": {"calls": 2, "branches": 2, "depth": 1},
+  "constraints": [
+    {"statement": "Catalyst cannot fall below zero.", "strength": "hard", "check_mode": "mechanical", "predicate": "integer_min_v1", "parameters": {"fact": "catalyst_units", "minimum": 0}},
+    {"statement": "Catalyst cannot exceed six.", "strength": "hard", "check_mode": "mechanical", "predicate": "integer_max_v1", "parameters": {"fact": "catalyst_units", "maximum": 6}},
+    {"statement": "Panels cannot be negative.", "strength": "hard", "check_mode": "mechanical", "predicate": "integer_min_v1", "parameters": {"fact": "panels", "minimum": 0}},
+    {"statement": "Rods cannot be negative.", "strength": "hard", "check_mode": "mechanical", "predicate": "integer_min_v1", "parameters": {"fact": "rods", "minimum": 0}},
+    {"statement": "Each firing consumes one catalyst and yields exactly one kind of part; conversion is irreversible.", "strength": "hard", "check_mode": "intelligence_judgment", "predicate": "none", "parameters": {}},
+    {"statement": "The single kiln cannot perform two firings at once.", "strength": "hard", "check_mode": "intelligence_judgment", "predicate": "none", "parameters": {}}
+  ],
+  "evaluation_questions": [
+    {"constraint_index": 4, "question": "Does the described sequence consume one catalyst for each firing, yield exactly one panel or rod per firing, and avoid converting parts back into catalyst? Compare prior and proposed facts."},
+    {"constraint_index": 5, "question": "Does the sequence avoid concurrent firings in the sole kiln?"}
+  ]
+}

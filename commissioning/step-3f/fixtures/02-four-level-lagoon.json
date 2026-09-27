@@ -1,0 +1,21 @@
+{
+  "fixture_id": "step-3f-world-2-four-level-lagoon",
+  "profile": "fictional.generic.v1",
+  "purpose": "Bounded fictional exploration of the four-level lagoon",
+  "description": "A lagoon’s water level changes at each dusk in the repeating order 0, 1, 2, 3, 0. A band of porous stone can be walked across at levels 0 or 1, but is submerged at levels 2 or 3. Floating reeds can take root on that band only while it is submerged; rooted reeds remain there when the level falls. Residents may undertake projects around the lagoon using ordinary hand tools. They cannot change the water cycle or the stone band.",
+  "scope": "bounded fictional world",
+  "fact_types": {"water_level": "integer", "rooted_reed_patches": "integer"},
+  "facts": {"water_level": 0, "rooted_reed_patches": 0},
+  "budgets": {"calls": 2, "branches": 2, "depth": 1},
+  "constraints": [
+    {"statement": "Water level cannot be below zero.", "strength": "hard", "check_mode": "mechanical", "predicate": "integer_min_v1", "parameters": {"fact": "water_level", "minimum": 0}},
+    {"statement": "Water level cannot exceed three.", "strength": "hard", "check_mode": "mechanical", "predicate": "integer_max_v1", "parameters": {"fact": "water_level", "maximum": 3}},
+    {"statement": "Rooted reed patch count cannot be negative.", "strength": "hard", "check_mode": "mechanical", "predicate": "integer_min_v1", "parameters": {"fact": "rooted_reed_patches", "minimum": 0}},
+    {"statement": "Water level advances one step at each dusk in the order 0, 1, 2, 3, 0.", "strength": "hard", "check_mode": "intelligence_judgment", "predicate": "none", "parameters": {}},
+    {"statement": "Stone is walkable only at levels 0–1; reeds root there only at levels 2–3 and remain rooted afterward.", "strength": "hard", "check_mode": "intelligence_judgment", "predicate": "none", "parameters": {}}
+  ],
+  "evaluation_questions": [
+    {"constraint_index": 3, "question": "Does any described change in water level match the number of dusks elapsed and the fixed 0–1–2–3–0 cycle?"},
+    {"constraint_index": 4, "question": "Are traversal, submersion, reed rooting, and persistence consistent with the specified water levels?"}
+  ]
+}
