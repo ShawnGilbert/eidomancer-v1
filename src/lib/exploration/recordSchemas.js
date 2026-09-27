@@ -1,6 +1,8 @@
 import { canonicalBytes, identity, sha256, CANONICALIZATION_VERSION } from './canonicalJson.js';
+import {validateFactTypes,validateValidator} from './fictionalValidators.js';
 
 export const RECORD_SCHEMA = 'eidomancer.record.schema.v0.1';
+export const GENERIC_RECORD_SCHEMA = 'eidomancer.record.schema.v0.2';
 export const CRYSTAL_SCHEMA = 'eidomancer.crystal.schema.v0.1';
 export const KINDS = new Set(['seed', 'constraint', 'rule_set', 'world_state', 'operation', 'transition', 'intelligence_response', 'evaluation_procedure', 'evaluation_record', 'branch_audit', 'crack_record']);
 export const CLASSES = new Set(['observed_or_supplied', 'inferred', 'symbolized', 'declared_world_assumption', 'generated_candidate', 'evaluation_judgment']);
@@ -14,8 +16,8 @@ export function isRef(value) {
     str(value.kind) && str(value.schema_version) && typeof value.required === 'boolean' &&
     addr.test(value.id) && value.id.startsWith(value.kind === 'crystal' ? 'crystal:' : 'record:');
 }
-export function ref(kind, id, required = true) {
-  const value = { kind, id, schema_version: kind === 'crystal' ? CRYSTAL_SCHEMA : RECORD_SCHEMA, required };
+export function ref(kind, id, required = true, schema_version = kind === 'crystal' ? CRYSTAL_SCHEMA : RECORD_SCHEMA) {
+  const value = { kind, id, schema_version, required };
   check(isRef(value), 'Invalid typed reference');
   return value;
 }
@@ -115,9 +117,36 @@ function validateBody(kind, b) {
   }
 }
 
+function validateGenericBody(kind,b){
+  if(kind==='seed'){
+    keys(b,['purpose','mode','initial_description','constraint_refs','scope','budgets','stop_conditions','profile','fact_types']);
+    check(b.profile==='fictional.generic.v1' && b.mode==='fictional' && str(b.purpose) && str(b.initial_description) && str(b.scope),'Invalid generic fictional seed');
+    refsOf(b.constraint_refs,'constraint');check(b.constraint_refs.length>0 && b.constraint_refs.length<=16 && b.constraint_refs.every(x=>x.schema_version===GENERIC_RECORD_SCHEMA),'Generic constraints required');
+    check(b.budgets && ['calls','branches','depth'].every(k=>Number.isSafeInteger(b.budgets[k]) && b.budgets[k]>=0) && Array.isArray(b.stop_conditions),'Invalid generic budgets');
+    validateFactTypes(b.fact_types,Object.fromEntries(Object.entries(b.fact_types).map(([k,v])=>[k,v==='integer'?0:false])));
+  } else if(kind==='constraint'){
+    keys(b,['statement','scope','strength','check_mode','predicate','parameters']);
+    check(str(b.statement)&&str(b.scope)&&['hard','soft'].includes(b.strength)&&['mechanical','intelligence_judgment','unverified'].includes(b.check_mode),'Invalid generic constraint');
+    if(b.check_mode==='mechanical'){
+      check(b.strength==='hard' && typeof b.predicate==='string' && b.predicate!=='none' && b.parameters &&
+        typeof b.parameters.fact==='string','Hard named validator required');
+      validateValidator(b.predicate,b.parameters,{[b.parameters.fact]:'integer'});
+    }
+    else check(b.predicate==='none' && b.parameters && !Array.isArray(b.parameters) && Object.getPrototypeOf(b.parameters)===Object.prototype &&
+      Object.keys(b.parameters).length===0,'Judged/unverified constraint cannot claim a validator');
+  } else if(kind==='world_state'){
+    keys(b,['seed_ref','rule_set_ref','constraint_refs','branch_id','description','facts'],['creator_operation_ref','intelligence_response_ref']);
+    refOf(b.seed_ref,'seed');refOf(b.rule_set_ref,'rule_set');refsOf(b.constraint_refs,'constraint');
+    check(str(b.branch_id)&&str(b.description)&&b.seed_ref.schema_version===GENERIC_RECORD_SCHEMA&&b.rule_set_ref.schema_version===GENERIC_RECORD_SCHEMA&&b.constraint_refs.every(x=>x.schema_version===GENERIC_RECORD_SCHEMA),'Invalid generic World state');
+    check(b.facts && !Array.isArray(b.facts) && Object.getPrototypeOf(b.facts)===Object.prototype,'Invalid generic facts');
+    if(b.creator_operation_ref)refOf(b.creator_operation_ref,'operation');
+    if(b.intelligence_response_ref)refOf(b.intelligence_response_ref,'intelligence_response');
+  } else validateBody(kind,b);
+}
+
 export function validateRecord(payload) {
   keys(payload, ['schema_version','canonicalization_version','kind','body','provenance','claim_class','refs']);
-  check(payload.schema_version === RECORD_SCHEMA && payload.canonicalization_version === CANONICALIZATION_VERSION && KINDS.has(payload.kind), 'Unsupported record version/kind');
+  check([RECORD_SCHEMA,GENERIC_RECORD_SCHEMA].includes(payload.schema_version) && payload.canonicalization_version === CANONICALIZATION_VERSION && KINDS.has(payload.kind), 'Unsupported record version/kind');
   check(CLASSES.has(payload.claim_class), 'Invalid claim class');
   const expectedClass=payload.kind==='world_state'?(payload.body.intelligence_response_ref?'generated_candidate':'declared_world_assumption'):
     ['evaluation_record','branch_audit','crack_record'].includes(payload.kind)?'evaluation_judgment':
@@ -126,14 +155,15 @@ export function validateRecord(payload) {
   keys(payload.provenance, ['actor_role','provider','model_or_version','identification_status','input_refs'], ['operation_ref']);
   check(str(payload.provenance.actor_role) && str(payload.provenance.provider) && str(payload.provenance.model_or_version) && str(payload.provenance.identification_status), 'Invalid provenance');
   check(Array.isArray(payload.provenance.input_refs) && payload.provenance.input_refs.every(isRef), 'Invalid provenance refs');
-  validateBody(payload.kind, payload.body);
+  if(payload.schema_version===GENERIC_RECORD_SCHEMA)validateGenericBody(payload.kind,payload.body);
+  else validateBody(payload.kind,payload.body);
   check(same(payload.refs, sortedRefs(payload.refs)), 'Record refs must be sorted and unique');
   check(same(payload.refs, embeddedRefs({body:payload.body,provenance:payload.provenance})), 'Record refs must equal embedded refs');
   return payload;
 }
 
-export function record(kind, body, claim_class, provenance) {
-  const payload = {schema_version:RECORD_SCHEMA, canonicalization_version:CANONICALIZATION_VERSION, kind, body, provenance, claim_class,
+export function record(kind, body, claim_class, provenance, schema_version = RECORD_SCHEMA) {
+  const payload = {schema_version, canonicalization_version:CANONICALIZATION_VERSION, kind, body, provenance, claim_class,
     refs:embeddedRefs({body,provenance})};
   validateRecord(payload);
   return {id:identity('record',payload),payload};

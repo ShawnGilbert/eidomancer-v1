@@ -1,4 +1,4 @@
-import {record} from './recordSchemas.js';
+import {record,RECORD_SCHEMA} from './recordSchemas.js';
 import {sha256,parseStrictJson} from './canonicalJson.js';
 
 const bytesPart = (value) => {
@@ -8,7 +8,7 @@ const bytesPart = (value) => {
 
 // The caller owns the exact bytes passed into and returned from the adapter.
 // Provider transport bytes are outside this boundary.
-export async function captureAdapter(store, adapter, {request_id, request_bytes, content_type = 'application/json', request_encoding='utf-8', input_refs = []}) {
+export async function captureAdapter(store, adapter, {request_id, request_bytes, content_type = 'application/json', request_encoding='utf-8', input_refs = [],schema_version=RECORD_SCHEMA}) {
   if (!Buffer.isBuffer(request_bytes) || typeof adapter?.invoke !== 'function') throw new Error('Replaceable intelligence adapter and request bytes required');
   let result;
   try { result=await adapter.invoke({request_id, bytes:Buffer.from(request_bytes), content_type}); }
@@ -21,7 +21,7 @@ export async function captureAdapter(store, adapter, {request_id, request_bytes,
   const output = record('intelligence_response',body,'generated_candidate',{
     actor_role:'external_intelligence',provider:result.provider,model_or_version:result.model,
     identification_status:result.identification_status,input_refs
-  });
+  },schema_version);
   await store.put(output);
   return output;
 }

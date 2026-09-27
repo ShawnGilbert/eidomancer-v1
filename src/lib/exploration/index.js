@@ -2,6 +2,8 @@ export {ObjectStore} from './objectStore.js';
 export {record,ref} from './recordSchemas.js';
 export {createSession,fork,evolve,evaluate,declareProcedure,openCrack,audit,activeBranches,extendSession} from './session.js';
 export {validateCrystal,crystal,retrieveCrystal,storeCrystal} from './crystalValidator.js';
+export {createGenericSession,forkGeneric,evolveGeneric,declareGenericProcedure,evaluateGeneric,auditGeneric,openGenericCrack} from './genericSession.js';
+export {makeGenericManifest,crystallizeGeneric} from './genericCrystal.js';
 import {ref,embeddedRefs,sortedRefs} from './recordSchemas.js';
 import {storeCrystal} from './crystalValidator.js';
 
