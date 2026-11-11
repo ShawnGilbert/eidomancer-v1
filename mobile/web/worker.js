@@ -24,7 +24,9 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
   const url = new URL(request.url);
-  const navigation = request.mode === "navigate" && (url.href === root || url.href === shell);
+  const page = new URL(url);
+  page.hash = "";
+  const navigation = request.mode === "navigate" && (page.href === root || page.href === shell);
   if (!navigation && !assets.has(url.href)) return;
   // Serve one consistent shell version until its tabs close and the next worker activates.
   event.respondWith((async () => {

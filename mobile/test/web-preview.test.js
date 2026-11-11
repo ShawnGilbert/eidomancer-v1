@@ -66,6 +66,7 @@ test("worker serves the shell offline and never intercepts customer traffic", as
     return response;
   }
   assert.equal((await dispatch("./")).url, origin + "index.html");
+  assert.equal((await dispatch("./#journal")).url, origin + "index.html");
   assert.equal((await dispatch("assets/a.js", "GET", "cors")).url, origin + "assets/a.js");
   assert.equal(dispatch("api/mobile/readings", "POST"), undefined);
   assert.equal(dispatch("api/credits"), undefined);
