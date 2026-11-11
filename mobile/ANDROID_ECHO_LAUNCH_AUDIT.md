@@ -2,6 +2,8 @@
 
 November 11, 2026 · `mobile/store-mvp` · Draft PR #1
 
+> This audit captures the prior options. See [Android reading packs](./ANDROID_READING_PACK_PLAN.md) for the chosen free-install direction, current spending guard and launch materials.
+
 ## Product slice
 
 Echo Journal uses a familiar save-and-revisit interaction from products such as Labyrinthos. Eidomancer pairs an original interpretation with later observations and asks what held up, what contradicted it, and what would change the reader's mind. The submitted account and all seven layers remain available in the saved original. Journal actions are local, including the act of revisiting. Daily Signal still uses curated local content. [Labyrinthos journal](https://app.labyrinthos.co/)

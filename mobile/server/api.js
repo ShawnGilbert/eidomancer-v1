@@ -4,6 +4,7 @@ import { createCipheriv, createDecipheriv, randomBytes, randomUUID } from "node:
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { experiences } from "../src/content.js";
+import { MonthlySpendLimitError } from "./spend-budget.js";
 import { generateReading } from "./reading.js";
 
 const reportReasons = new Set(["unsafe", "offensive", "misleading", "other"]);
@@ -119,6 +120,9 @@ export function createMobileApi({ client, reportKey, reportDir, model, perIp, pe
       delivered = true;
       return res.json({ reading, reportToken });
     } catch (error) {
+      if (error instanceof MonthlySpendLimitError) {
+        return res.status(503).json({ error: "This month’s AI reading budget is used up. Daily Signal and Echo Journal are available offline." });
+      }
       console.warn("Mobile reading failed", { name: error?.name, status: error?.status });
       return res.status(503).json({ error: unavailable });
     } finally {

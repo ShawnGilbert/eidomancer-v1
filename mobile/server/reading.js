@@ -1,3 +1,4 @@
+import { candidateModel, completionLimit } from "./model-rates.js";
 import { experiences } from "../src/content.js";
 import { lensInstructions, moderationText, parseReading, schema } from "./lens.js";
 
@@ -8,7 +9,8 @@ export async function generateReading({ client, input, mode, model }) {
 
   const completion = await client.chat.completions.create({
     model,
-    max_completion_tokens: 1050,
+    max_completion_tokens: completionLimit,
+    ...(model === candidateModel && { reasoning_effort: "none" }),
     messages: [
       { role: "system", content: lensInstructions },
       { role: "user", content: JSON.stringify({ experience: experiences[mode].name, account: input }) },

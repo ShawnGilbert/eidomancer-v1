@@ -5,13 +5,15 @@ import { access, mkdir } from "node:fs/promises";
 import { constants, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createSpendBudget } from "./spend-budget.js";
+import { candidateModel } from "./model-rates.js";
 import { createMobileApi } from "./api.js";
 import { createEntitlements } from "./entitlements.js";
 import { appleVerifier, playVerifier } from "./store-proof.js";
 
 const {
   OPENAI_API_KEY, MOBILE_REPORT_KEY, MOBILE_REPORT_DIR, MOBILE_SUPPORT_EMAIL,
-  MOBILE_MODEL = "gpt-4.1-mini", PORT = 3002, MOBILE_TRUST_PROXY_HOPS = 0,
+  MOBILE_MODEL = candidateModel, MOBILE_SPEND_DB, MOBILE_MONTHLY_API_BUDGET_USD = "5", PORT = 3002, MOBILE_TRUST_PROXY_HOPS = 0,
   MOBILE_READINGS_PER_IP_HOUR = 60, MOBILE_READINGS_PER_DAY = 400, MOBILE_REPORTS_PER_DAY = 400,
   MOBILE_ACCESS_MODE = "production", MOBILE_ENTITLEMENT_KEY, MOBILE_ENTITLEMENT_DB,
   MOBILE_PLAY_LICENSE_KEY, MOBILE_PLAY_VERSIONS = "1", MOBILE_APPLE_TEAM_ID,
@@ -82,8 +84,19 @@ app.get("/privacy", (_req, res) => {
   <p>For support or privacy inquiries, email <a href="mailto:${MOBILE_SUPPORT_EMAIL}">${MOBILE_SUPPORT_EMAIL}</a>.</p>
   </main></html>`);
 });
+if (!MOBILE_SPEND_DB || !path.isAbsolute(MOBILE_SPEND_DB)) {
+  throw new Error("Set MOBILE_SPEND_DB to an absolute path on persistent storage.");
+}
+const spendBudget = createSpendBudget({ database: MOBILE_SPEND_DB, monthlyUsd: MOBILE_MONTHLY_API_BUDGET_USD, model: MOBILE_MODEL });
+const provider = new OpenAI({ apiKey: OPENAI_API_KEY, baseURL: "https://api.openai.com/v1", maxRetries: 0 });
+const client = {
+  moderations: provider.moderations,
+  chat: { completions: { create: (request, options) =>
+    spendBudget.complete(request, (metered) => provider.chat.completions.create(metered, options)),
+  } },
+};
 app.use("/api/mobile", createMobileApi({
-  client: new OpenAI({ apiKey: OPENAI_API_KEY, maxRetries: 0 }),
+  client,
   reportKey, reportDir: MOBILE_REPORT_DIR, model: MOBILE_MODEL, perIp, perDay, reportDailyLimit, entitlements,
 }));
 app.use(express.static(fileURLToPath(new URL("../dist/", import.meta.url))));
