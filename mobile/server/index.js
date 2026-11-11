@@ -73,8 +73,9 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 app.get("/privacy", (_req, res) => {
   res.type("html").send(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Eidomancer privacy and support</title>
   <main><h1>Eidomancer privacy and support</h1>
-  <p>Daily Signal runs on your device. Eidomancer does not require an account or save reading history in the app.</p>
+  <p>Daily Signal runs on your device. Eidomancer does not require an account.</p>
   <p>When you give permission, Eidomancer sends the text you enter to its server and to OpenAI for moderation and to generate your reading. Leave out identifying details. OpenAI processes the request according to its <a href="https://platform.openai.com/docs/guides/your-data">API data controls</a>.</p>
+  <p>Echo Journal saves your question, reading, and observations in local app storage only when you choose to save. Saving and revisiting do not send journal contents to Eidomancer or OpenAI. Delete individual entries or clear the journal in the app. The journal has no separate encryption. People with device or backup access may be able to read saved entries, and your device may remove local app data.</p>
   <p>Store verification uses signed store proof and a random installation identifier. We retain a protected purchase identifier, installation access records, and reading counts to enforce the shared allowance, restore access, and limit abuse. We do not receive your store password or payment information. You can withdraw AI reading permission in the app.</p>
   <p>The reading service processes IP addresses temporarily to limit abuse. Network and infrastructure providers may process connection information as part of delivering the service.</p>
   <p>If you report a reading, Eidomancer stores the generated text, your selected reason, and technical details of the reading for investigation. Contact support for privacy inquiries or to request removal of reported material.</p>

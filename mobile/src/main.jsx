@@ -6,7 +6,7 @@ import "@fontsource/instrument-serif/400.css";
 import { dailySignal, experiences, layers, readingPreviewLayer } from "./content.js";
 import { readConsent, writeConsent } from "./consent.js";
 import { clearStoreToken, storeToken } from "./store-access.js";
-import { loadJournal, saveJournal, newJournalEntry } from "./journal.js";
+import { loadJournal, saveJournal, newJournalEntry, journalLimit, journalNoteLimit } from "./journal.js";
 import "./style.css";
 
 const api = (import.meta.env.VITE_MOBILE_API_ORIGIN || "").replace(/\/$/, "");
@@ -33,13 +33,26 @@ async function post(path, body, token) {
   return data;
 }
 
+function ReadingLayer({ reading, name }) {
+  return <section><h3>{layers[name]}</h3><p>{reading[name]}</p></section>;
+}
+
+function ReadingLayers({ reading }) {
+  return <>
+    {Object.keys(layers).map((name) => <ReadingLayer key={name} name={name} reading={reading} />)}
+    {reading.alternative && <section><h3>What could change this reading?</h3><p>{reading.alternative}</p></section>}
+    {reading.evidence?.length > 0 && <section><h3>From your account</h3>
+      {reading.evidence.map(({ quote, kind }) => <p key={quote}><strong>{kind === "conduct" ? "Reported action" : kind === "declaration" ? "Stated intent" : kind === "priority" ? "Your priorities" : "Exception"}</strong> · “{quote}”</p>)}
+    </section>}
+  </>;
+}
+
 function Reading({ result, onSave, saved }) {
   const [reporting, setReporting] = useState(false);
   const [report, setReport] = useState("");
   const [status, setStatus] = useState("");
   const [pending, setPending] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const section = (key) => <section key={key}><h3>{layers[key]}</h3><p>{result.reading[key]}</p></section>;
 
   async function sendReport(event) {
     event.preventDefault();
@@ -59,16 +72,18 @@ function Reading({ result, onSave, saved }) {
     <span className="eyebrow">AI reading</span>
     <h2>{result.reading.title}</h2>
     {result.reading.metaphor && <p className="reading-image">{result.reading.metaphor}</p>}
-    {!expanded && section(readingPreviewLayer)}
+    {!expanded && <ReadingLayer reading={result.reading} name={readingPreviewLayer} />}
     <details onToggle={(event) => setExpanded(event.currentTarget.open)}>
       <summary>Explore all seven layers</summary>
-      {Object.keys(layers).map(section)}
-      {result.reading.alternative && <section><h3>What could change this reading?</h3><p>{result.reading.alternative}</p></section>}
-      {result.reading.evidence?.length > 0 && <section><h3>From your account</h3>
-        {result.reading.evidence.map(({ quote, kind }) => <p key={quote}><strong>{kind === "conduct" ? "Reported action" : kind === "declaration" ? "Stated intent" : kind === "priority" ? "Your priorities" : "Exception"}</strong> · “{quote}”</p>)}
-      </section>}
+      <ReadingLayers reading={result.reading} />
     </details>
-    {onSave && <button className="link" disabled={saved} onClick={() => onSave(result.reading)}>{saved ? "Saved to Echo Journal" : "Save to Echo Journal"}</button>}
+    {onSave && <div className="journal-save">
+      <button className="link" aria-describedby="journal-save-disclosure" disabled={saved} onClick={() => onSave(result.reading)}>
+        {saved ? "Saved to Echo Journal" : "Save to Echo Journal"}
+      </button>
+      <p id="journal-save-disclosure">Saving keeps your question and reading on this device.</p>
+      {saved && <p role="status">Saved on this device.</p>}
+    </div>}
     {!reporting && status !== "Report received." && <button className="link" onClick={() => setReporting(true)}>Report this reading</button>}
     {reporting && <form onSubmit={sendReport}>
       <p>Reporting sends the generated reading to Eidomancer for review.</p>
@@ -85,7 +100,7 @@ function Reading({ result, onSave, saved }) {
   </article>;
 }
 
-function Form({ mode, consent, setConsent, onSave }) {
+function Form({ mode, consent, setConsent, onSave, onOpenJournal }) {
   const config = experiences[mode];
   const [input, setInput] = useState("");
   const [asking, setAsking] = useState(false);
@@ -150,6 +165,7 @@ function Form({ mode, consent, setConsent, onSave }) {
     </form>}
     {result && <div ref={resultRef} tabIndex={-1}>
       <Reading result={result} saved={saved} onSave={(reading) => { if (onSave(reading, input.trim(), mode)) setSaved(true); }} />
+      {saved && <button className="link" onClick={onOpenJournal}>Open Echo Journal</button>}
       <button className="link" onClick={() => { setResult(null); setInput(""); }}>
         Start a new reading
       </button>
@@ -162,28 +178,57 @@ function currentView() {
   return requested === "privacy" || requested === "journal" || Object.hasOwn(experiences, requested) ? requested : "daily";
 }
 
+function JournalEntry({ entry, update, remove }) {
+  const [note, setNote] = useState(entry.note);
+  const [status, setStatus] = useState("");
+
+  function saveNote(event) {
+    event.preventDefault();
+    if (update(entry.id, note)) setStatus("Observations saved on this device.");
+  }
+
+  return <article className="reading journal-entry panel">
+    <time className="eyebrow" dateTime={entry.savedAt}>{new Date(entry.savedAt).toLocaleDateString()}</time>
+    <h2>{entry.reading.title}</h2>
+    {entry.reading.metaphor && <p className="reading-image">{entry.reading.metaphor}</p>}
+    <details>
+      <summary>Revisit the Pattern</summary>
+      <section className="journal-original">
+        <h3>Original interpretation</h3>
+        <p><strong>Your question</strong> · {entry.question}</p>
+        <p><strong>Pattern</strong> · {entry.reading.pattern}</p>
+        <p><strong>Insight</strong> · {entry.reading.insight}</p>
+        {entry.reading.alternative && <p><strong>What could change it?</strong> · {entry.reading.alternative}</p>}
+        <p><strong>Guidance</strong> · {entry.reading.guidance}</p>
+      </section>
+      <form onSubmit={saveNote}>
+        <label htmlFor={`note-${entry.id}`}>Your new observations</label>
+        <p id={`note-help-${entry.id}`}>What happened? What held up? What contradicted the reading? What would change your mind?</p>
+        <textarea id={`note-${entry.id}`} aria-describedby={`note-help-${entry.id}`} maxLength={journalNoteLimit} value={note}
+          onChange={(event) => { setNote(event.target.value); setStatus(""); }} />
+        <button type="submit" className="link" disabled={note === entry.note}>Save observations</button>
+        {status && <p role="status">{status}</p>}
+      </form>
+    </details>
+    <details>
+      <summary>Open original reading</summary>
+      <ReadingLayers reading={entry.reading} />
+    </details>
+    <button className="link" onClick={() => {
+      if (window.confirm("Delete this saved reading and its observations from this device?")) remove(entry.id);
+    }}>Delete entry</button>
+  </article>;
+}
+
 function EchoJournal({ entries, update, remove, clear }) {
   return <section>
     <h1>Echo Journal</h1>
-    <p className="intro">A reading is a hypothesis, not a verdict. Return when reality has something to add.</p>
+    <p className="intro">Return to a reading when you have something new to compare. Your observations stay on this device.</p>
     {!entries.length && <div className="panel legal"><p>No saved readings yet. Save a reading to revisit its pattern and exceptions.</p></div>}
-    {entries.map((entry) => <article className="panel legal" key={entry.id}>
-      <time>{new Date(entry.savedAt).toLocaleDateString()}</time>
-      <h2>{entry.reading.title}</h2>
-      <p>{entry.reading.insight}</p>
-      <details>
-        <summary>Revisit this pattern</summary>
-        <p><strong>Your question:</strong> {entry.question}</p>
-        <p><strong>What could change the reading?</strong> {entry.reading.alternative}</p>
-        <p><strong>Original guidance:</strong> {entry.reading.guidance}</p>
-        <label htmlFor={`note-${entry.id}`}>What happened? What held up, and what contradicted it?</label>
-        <textarea id={`note-${entry.id}`} maxLength={1500} value={entry.note || ""}
-          placeholder="New observations are information, not proof."
-          onChange={(event) => update(entry.id, event.target.value)} />
-      </details>
-      <button className="link" onClick={() => remove(entry.id)}>Delete entry</button>
-    </article>)}
-    {entries.length > 0 && <button className="link" onClick={() => { if (window.confirm("Delete all saved readings and notes from this device?")) clear(); }}>Clear journal</button>}
+    {entries.map((entry) => <JournalEntry key={entry.id} entry={entry} update={update} remove={remove} />)}
+    {entries.length > 0 && <button className="link" onClick={() => {
+      if (window.confirm("Delete all saved readings and observations from this device?")) clear();
+    }}>Clear journal</button>}
   </section>;
 }
 
@@ -201,10 +246,14 @@ function App() {
     return true;
   }
   function addReading(reading, question, mode) {
+    if (journal.length >= journalLimit) {
+      setJournalError(`Echo Journal is full. Delete an entry before saving another reading (${journalLimit} maximum).`);
+      return false;
+    }
     const entry = newJournalEntry({
       id: crypto.randomUUID(), savedAt: new Date().toISOString(), reading, question, mode,
     });
-    return persistJournal([entry, ...journal].slice(0, 30));
+    return persistJournal([entry, ...journal]);
   }
   const [consent, rememberConsent] = useState(() => readConsent(window.localStorage));
   function setConsent(allowed) {
@@ -225,6 +274,7 @@ function App() {
   useEffect(() => {
     function handleNavigation() {
       setView(currentView());
+      setJournalError("");
       top.current.focus();
       window.scrollTo(0, 0);
     }
@@ -248,28 +298,29 @@ function App() {
             <details><summary>Try this today</summary><p>{signal.guidance}</p></details>
           </div>
         </article>
-        <nav aria-label="Readings">
+        <nav aria-label="Eidomancer paths">
           {Object.entries(experiences).map(([key, item]) =>
             <button key={key} className="destination panel" onClick={() => navigate(key)}>
               <span><strong>{item.name}</strong><small>{item.summary}</small></span><span aria-hidden="true">↗</span>
             </button>)}
+          <button className="destination panel journal-destination" onClick={() => navigate("journal")}>
+            <span><strong>Echo Journal</strong><small>Revisit a reading with what happened next.</small></span><span aria-hidden="true">↗</span>
+          </button>
         </nav>
-        <button className="destination panel" onClick={() => navigate("journal")}>
-          <span><strong>Echo Journal</strong><small>What held up? What changed? What surprised you?</small></span><span aria-hidden="true">↗</span>
-        </button>
       </> : view === "journal" ? <EchoJournal entries={journal}
         update={(id, note) => persistJournal(journal.map((entry) => entry.id === id ? { ...entry, note } : entry))}
         remove={(id) => persistJournal(journal.filter((entry) => entry.id !== id))}
         clear={() => persistJournal([])} /> : view === "privacy" ? <>
         <h1>Privacy & support</h1>
         <div className="panel legal">
-          <p>Daily Signal is available on your device. Ask Eidomancer and Reveal the Pattern send the text you submit to the Eidomancer service and OpenAI with your permission. The app doesn’t require an account. If you explicitly save a reading, its question, generated text, and your notes are stored on this device (up to 30 entries), not in an Eidomancer account. You can delete entries or clear the journal. Device backups and anyone with access to this device may also access saved entries.</p>
+          <p>Daily Signal is available on your device. Ask Eidomancer and Reveal the Pattern send the text you submit to the Eidomancer service and OpenAI with your permission. The app doesn’t require an account.</p>
+          <p>Echo Journal saves only when you choose to save. It keeps your submitted question, generated reading, and observations in local app storage (up to {journalLimit} entries). Saving and revisiting work offline and do not send journal contents to Eidomancer or OpenAI. You can delete an entry or clear the journal on this device. The journal has no separate encryption. People with device or backup access may be able to read saved entries. The device may remove local app data.</p>
           <p>Eidomancer processes network information to operate and limit abuse. If you report a reading, the generated text and report reason are retained for review.</p>
           <p>AI reading permission is {consent ? "on" : "off"}.</p>
           {consent && <button type="button" className="link" onClick={() => setConsent(false)}>Withdraw AI reading permission</button>}
           {api && <p><a href={`${api}/privacy`} target="_blank" rel="noreferrer">Full privacy policy and support ↗</a></p>}
         </div>
-      </> : <Form key={view} mode={view} consent={consent} setConsent={setConsent} onSave={addReading} />}
+      </> : <Form key={view} mode={view} consent={consent} setConsent={setConsent} onSave={addReading} onOpenJournal={() => navigate("journal")} />}
       {journalError && <p className="error" role="alert">{journalError}</p>}
     </main>
     <footer><button className="link" onClick={() => navigate("privacy")}>Privacy & support</button></footer>

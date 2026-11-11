@@ -321,3 +321,25 @@ textarea::placeholder {
   color: var(--gold);
   font: 400 1.45rem/1.15 "Instrument Serif", Georgia, serif;
 }
+
+.journal-destination {
+  border-color: #80694e;
+}
+
+.journal-save p {
+  font-size: 0.88rem;
+}
+
+.journal-entry time {
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.journal-original {
+  padding-left: 0.85rem;
+  border-left: 2px solid var(--gold);
+}
+
+.journal-original p + p {
+  margin-top: 0.45rem;
+}
