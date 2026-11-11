@@ -7,7 +7,7 @@ import { webPreview } from "./web/preview-plugin.js";
 export default defineConfig(({ mode }) => ({
   root: fileURLToPath(new URL("./", import.meta.url)),
   base: "./",
-  plugins: mode === "web-preview" ? [react(), webPreview()] : [react()],
-  build: { outDir: mode === "web-preview" ? "dist-web" : "dist" },
+  plugins: ["web-preview", "web-pilot"].includes(mode) ? [react(), webPreview()] : [react()],
+  build: { outDir: ({ "web-preview": "dist-web", "web-pilot": "dist-pilot" })[mode] ?? "dist" },
   server: { proxy: { "/api/mobile": "http://localhost:3002" } },
 }));

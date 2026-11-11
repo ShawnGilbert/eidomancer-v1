@@ -15,7 +15,10 @@
     "mobile:serve": "node mobile/server/index.js",
     "mobile:test": "node --test mobile/test/*.test.js",
     "web:preview:build": "vite build --config mobile/vite.config.mjs --mode web-preview",
-    "web:preview": "vite preview --config mobile/vite.config.mjs --mode web-preview"
+    "web:preview": "vite preview --config mobile/vite.config.mjs --mode web-preview",
+    "web:pilot:build": "vite build --config mobile/vite.config.mjs --mode web-pilot",
+    "web:pilot:serve": "node mobile/web/server/index.js",
+    "web:pilot:owner": "node mobile/web/server/owner.js"
   },
   "dependencies": {
     "@apple/app-store-server-library": "3.1.0",

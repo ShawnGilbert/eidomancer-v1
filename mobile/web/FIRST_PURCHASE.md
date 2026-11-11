@@ -1,5 +1,7 @@
 # Eidomancer's first web purchase
 
+This document records the initial comparison. See [pilot operations and release gates](./PILOT_OPERATIONS.md) for the implemented manual fulfillment, recovery, and web reading service.
+
 ## What exists today
 
 Read-only checks on November 11, 2026 returned HTTPS 200 for both [Eidomancer.com](https://eidomancer.com/) and [its linked app](https://eidomancer-v1.onrender.com/). The apex serves a static marketing page and both responses had Render request headers. The linked app serves a separate client bundle. The root repository's Vite build and Express `server.js` implement the older cast, generate, and image API. Neither public homepage establishes which Git branch, Render plan, disks, DNS records, or secrets are configured. Confirm these in the owner's dashboards before touching production. This audit used GET and HEAD on the homepages.

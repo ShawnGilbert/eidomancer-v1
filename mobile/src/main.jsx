@@ -9,8 +9,11 @@ import { clearStoreToken, storeToken } from "./store-access.js";
 import { loadJournal, saveJournal, newJournalEntry, journalLimit, journalNoteLimit } from "./journal.js";
 import "./style.css";
 import { exampleQuestion, exampleReading } from "../web/example.js";
+import { PilotAccess, PilotPrivacy } from "../web/Pilot.jsx";
+import { clearRetry, pilotPost, retryId } from "../web/client.js";
 
 const webPreview = import.meta.env.MODE === "web-preview";
+const webPilot = import.meta.env.MODE === "web-pilot";
 
 const api = (import.meta.env.VITE_MOBILE_API_ORIGIN || "").replace(/\/$/, "");
 const limit = 1800;
@@ -20,7 +23,7 @@ function Sigil({ className = "" }) {
 }
 
 async function post(path, body, token) {
-  if (webPreview) throw new Error("The preview has no network services.");
+  if (webPreview || webPilot) throw new Error("Native endpoints are unavailable in this build.");
   if (Capacitor.isNativePlatform() && !api.startsWith("https://")) throw new Error("The reading service isn’t configured in this build.");
   const response = await fetch(`${api}/api/mobile/${path}`, {
     method: "POST",
@@ -88,7 +91,7 @@ function Reading({ result, example = false, onSave, saved }) {
       <p id="journal-save-disclosure">Saving keeps your question and reading on this device.</p>
       {saved && <p role="status">Saved on this device.</p>}
     </div>}
-    {!example && !reporting && status !== "Report received." && <button className="link" onClick={() => setReporting(true)}>Report this reading</button>}
+    {!webPilot && !example && !reporting && status !== "Report received." && <button className="link" onClick={() => setReporting(true)}>Report this reading</button>}
     {reporting && <form onSubmit={sendReport}>
       <p>Reporting sends the generated reading to Eidomancer for review.</p>
       <label htmlFor="reason">Reason</label>
@@ -104,14 +107,16 @@ function Reading({ result, example = false, onSave, saved }) {
   </article>;
 }
 
-function Form({ mode, consent, setConsent, onSave, onOpenJournal }) {
+function Form({ mode, consent, setConsent, onSave, onOpenJournal, onAccess, onBalance }) {
   const config = experiences[mode];
   const [input, setInput] = useState("");
   const [asking, setAsking] = useState(false);
   const [result, setResult] = useState(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [expired, setExpired] = useState(false);
   const resultRef = useRef(null);
+  const currentRetry = useRef(null);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -120,7 +125,7 @@ function Form({ mode, consent, setConsent, onSave, onOpenJournal }) {
 
   function submit(event) {
     event.preventDefault();
-    if (input.trim().length < 10 || pending) return;
+    if (input.trim().length < 10 || pending || (webPilot && expired)) return;
     if (!consent) setAsking(true);
     else requestReading();
   }
@@ -133,6 +138,17 @@ function Form({ mode, consent, setConsent, onSave, onOpenJournal }) {
     setError("");
     try {
       const request = { mode, input: input.trim(), consent: true };
+      if (webPilot) {
+        const access = await pilotPost("balance");
+        if (access.remaining === null) throw new Error("Enter your access code before requesting a reading.");
+        if (currentRetry.current?.input !== request.input) {
+          currentRetry.current = { input: request.input, id: await retryId(mode, request.input) };
+        }
+        const response = await pilotPost("readings", { ...request, id: currentRetry.current.id });
+        onBalance(response.remaining);
+        setResult(response);
+        return;
+      }
       const token = await storeToken(post);
       try {
         setResult(await post("readings", request, token));
@@ -142,6 +158,8 @@ function Form({ mode, consent, setConsent, onSave, onOpenJournal }) {
         setResult(await post("readings", request, await storeToken(post)));
       }
     } catch (failure) {
+      if (webPilot && failure.code === "ACCESS") onBalance(null);
+      if (webPilot && failure.code === "EXPIRED") setExpired(true);
       setError(failure instanceof SyntaxError || failure.name === "TypeError" || failure.name === "TimeoutError"
         ? "The reading service didn’t respond. Check your connection and try again."
         : failure.message);
@@ -155,7 +173,10 @@ function Form({ mode, consent, setConsent, onSave, onOpenJournal }) {
     {!result && <form className="panel" onSubmit={submit} aria-busy={pending}>
       <label htmlFor="reading-input">{config.label}</label>
       <textarea id="reading-input" placeholder={config.placeholder} value={input}
-        required minLength={10} maxLength={limit} disabled={pending} onChange={(event) => setInput(event.target.value)} />
+        required minLength={10} maxLength={limit} disabled={pending} onChange={(event) => {
+          setInput(event.target.value);
+          if (webPilot) setExpired(false);
+        }} />
       <p className="consent">Leave out identifying details. Readings use OpenAI.</p>
       {asking ? <section aria-label="AI reading permission">
         <p>Eidomancer sends the text you submit to its server and OpenAI for moderation and to create your reading. You can withdraw this permission in Privacy &amp; support.</p>
@@ -163,14 +184,22 @@ function Form({ mode, consent, setConsent, onSave, onOpenJournal }) {
           <button type="button" onClick={() => { setConsent(true); requestReading(); }}>Allow &amp; get reading</button>
           <button type="button" className="link" onClick={() => setAsking(false)}>Cancel</button>
         </div>
-      </section> : <button className="primary" disabled={pending} type="submit">{pending ? "Reading your question…" : config.action}</button>}
+      </section> : <button className="primary" disabled={pending || (webPilot && expired)} type="submit">{pending ? "Reading your question…" : config.action}</button>}
       {pending && <p className="sr-only" role="status">Generating your reading.</p>}
       {error && <p className="error" role="alert">{error}</p>}
+      {webPilot && expired && <button type="button" className="link" onClick={() => {
+        clearRetry();
+        currentRetry.current = null;
+        setExpired(false);
+        setError("");
+      }}>Prepare a new reading request</button>}
+      {webPilot && <button type="button" className="link" onClick={onAccess}>Reading access &amp; purchase terms</button>}
     </form>}
     {result && <div ref={resultRef} tabIndex={-1}>
+      {webPilot && <p>{result.remaining} of 5 readings remaining</p>}
       <Reading result={result} saved={saved} onSave={(reading) => { if (onSave(reading, input.trim(), mode)) setSaved(true); }} />
       {saved && <button className="link" onClick={onOpenJournal}>Open Echo Journal</button>}
-      <button className="link" onClick={() => { setResult(null); setInput(""); }}>
+      <button className="link" onClick={() => { setResult(null); setInput(""); if (webPilot) { clearRetry(); currentRetry.current = null; } }}>
         Start a new reading
       </button>
     </div>}
@@ -191,6 +220,7 @@ function Example({ onSave, onOpenJournal }) {
 function currentView() {
   const requested = window.location.hash.slice(1);
   if (webPreview && (Object.hasOwn(experiences, requested) || requested === "sample")) return "sample";
+  if (webPilot && (requested === "sample" || requested === "access")) return requested;
   return requested === "privacy" || requested === "journal" || Object.hasOwn(experiences, requested) ? requested : "daily";
 }
 
@@ -250,6 +280,13 @@ function EchoJournal({ entries, update, remove, clear }) {
 
 function App() {
   const [view, setView] = useState(currentView);
+  const [remaining, setRemaining] = useState(null);
+  const [support, setSupport] = useState(null);
+  useEffect(() => {
+    if (webPilot) fetch("/api/pilot/info", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((info) => setSupport(info?.support ?? null)).catch(() => {});
+  }, []);
   const [journal, setJournal] = useState(() => loadJournal(window.localStorage));
   const [journalError, setJournalError] = useState("");
   function persistJournal(next) {
@@ -315,12 +352,16 @@ function App() {
           </div>
         </article>
         <nav aria-label="Eidomancer paths">
-          {webPreview ? <button className="destination panel" onClick={() => navigate("sample")}>
+          {(webPreview || webPilot) && <button className="destination panel" onClick={() => navigate("sample")}>
             <span><strong>Explore a sample reading</strong><small>Follow one question through all seven layers.</small></span><span aria-hidden="true">↗</span>
-          </button> : Object.entries(experiences).map(([key, item]) =>
+          </button>}
+          {!webPreview && Object.entries(experiences).map(([key, item]) =>
             <button key={key} className="destination panel" onClick={() => navigate(key)}>
               <span><strong>{item.name}</strong><small>{item.summary}</small></span><span aria-hidden="true">↗</span>
             </button>)}
+          {webPilot && <button className="destination panel" onClick={() => navigate("access")}>
+            <span><strong>Reading access</strong><small>Restore a purchase or review the pilot terms.</small></span><span aria-hidden="true">↗</span>
+          </button>}
           <button className="destination panel journal-destination" onClick={() => navigate("journal")}>
             <span><strong>Echo Journal</strong><small>Revisit a reading with what happened next.</small></span><span aria-hidden="true">↗</span>
           </button>
@@ -331,14 +372,21 @@ function App() {
         clear={() => persistJournal([])} /> : view === "privacy" ? <>
         <h1>Privacy & support</h1>
         <div className="panel legal">
+          {webPilot ? <PilotPrivacy support={support} /> : <>
           {webPreview ? <p>This preview includes a fictional reading. It has no live AI, account, or payment connection.</p> : <p>Daily Signal is available on your device. Ask Eidomancer and Reveal the Pattern send the text you submit to the Eidomancer service and OpenAI with your permission. The app doesn’t require an account.</p>}
           <p>Echo Journal saves only when you choose to save. It keeps your submitted question, generated reading, and observations in local app storage (up to {journalLimit} entries). Saving and revisiting work offline and do not send journal contents to Eidomancer or OpenAI. You can delete an entry or clear the journal on this device. The journal has no separate encryption. People with device or backup access may be able to read saved entries. The device may remove local app data.</p>
-          {!webPreview && <><p>Eidomancer processes network information to operate and limit abuse. If you report a reading, the generated text and report reason are retained for review.</p>
+          </>}
+          {!webPreview && <>{!webPilot && <p>Eidomancer processes network information to operate and limit abuse. If you report a reading, the generated text and report reason are retained for review.</p>}
           <p>AI reading permission is {consent ? "on" : "off"}.</p>
           {consent && <button type="button" className="link" onClick={() => setConsent(false)}>Withdraw AI reading permission</button>}
-          {api && <p><a href={`${api}/privacy`} target="_blank" rel="noreferrer">Full privacy policy and support ↗</a></p>}</>}
+          {!webPilot && api && <p><a href={`${api}/privacy`} target="_blank" rel="noreferrer">Full privacy policy and support ↗</a></p>}</>}
         </div>
-      </> : webPreview ? <Example onSave={addReading} onOpenJournal={() => navigate("journal")} /> : <Form key={view} mode={view} consent={consent} setConsent={setConsent} onSave={addReading} onOpenJournal={() => navigate("journal")} />}
+      </> : (webPreview || (webPilot && view === "sample")) ?
+        <Example onSave={addReading} onOpenJournal={() => navigate("journal")} /> :
+        webPilot && view === "access" ? <PilotAccess remaining={remaining} setRemaining={setRemaining}
+          support={support} onContinue={() => navigate("ask")} /> :
+        <Form key={view} mode={view} consent={consent} setConsent={setConsent} onSave={addReading}
+          onOpenJournal={() => navigate("journal")} onAccess={() => navigate("access")} onBalance={setRemaining} />}
       {journalError && <p className="error" role="alert">{journalError}</p>}
     </main>
     <footer><button className="link" onClick={() => navigate("privacy")}>Privacy & support</button></footer>
@@ -347,6 +395,6 @@ function App() {
 
 createRoot(document.getElementById("root")).render(<App />);
 
-if (webPreview && "serviceWorker" in navigator) {
+if ((webPreview || webPilot) && "serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }

@@ -11,8 +11,8 @@ const configFile = fileURLToPath(new URL("../vite.config.mjs", import.meta.url))
 const origin = "https://pilot.example/";
 const readWorker = () => readFile(new URL("../web/worker.js", import.meta.url), "utf8");
 
-test("only the web preview build emits an installable shell with all precache files present", async () => {
-  for (const mode of ["web-preview", "production"]) {
+test("web builds emit installable shells and the native build excludes the pilot", async () => {
+  for (const mode of ["web-preview", "web-pilot", "production"]) {
     const { output } = await build({ configFile, mode, logLevel: "silent", build: { write: false } });
     const files = new Map(output.map((file) => [file.fileName, file.source ?? file.code]));
     const client = output.find((file) => file.type === "chunk" && file.isEntry).code;
@@ -20,10 +20,12 @@ test("only the web preview build emits an installable shell with all precache fi
       assert.equal(files.has("sw.js"), false);
       assert.equal(files.has("manifest.webmanifest"), false);
       assert.equal(client.includes(exampleQuestion), false);
+      assert.equal(client.includes("/api/pilot/"), false);
       continue;
     }
     assert.match(files.get("index.html"), /rel="manifest"/);
     assert.equal(client.includes("/api/mobile/"), false);
+    assert.equal(client.includes("/api/pilot/"), mode === "web-pilot");
     const manifest = JSON.parse(files.get("manifest.webmanifest"));
     assert.equal(manifest.display, "standalone");
     assert.equal(manifest.start_url, "./");
@@ -70,6 +72,8 @@ test("worker serves the shell offline and never intercepts customer traffic", as
   assert.equal((await dispatch("assets/a.js", "GET", "cors")).url, origin + "assets/a.js");
   assert.equal(dispatch("api/mobile/readings", "POST"), undefined);
   assert.equal(dispatch("api/credits"), undefined);
+  assert.equal(dispatch("api/pilot/readings", "POST"), undefined);
+  assert.equal(dispatch("api/pilot/info"), undefined);
   assert.equal(dispatch("checkout"), undefined);
   assert.equal(dispatch("?payment=123"), undefined);
   assert.equal(dispatch("https://other.example/"), undefined);

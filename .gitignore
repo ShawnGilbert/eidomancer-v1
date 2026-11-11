@@ -29,3 +29,4 @@ eidomancer-site/
 /mobile/dist/
 /mobile/.env.local
 /mobile/dist-web/
+/mobile/dist-pilot/
