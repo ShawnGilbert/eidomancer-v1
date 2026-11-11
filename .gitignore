@@ -28,3 +28,4 @@ eidomancer-site/
 # Mobile build output
 /mobile/dist/
 /mobile/.env.local
+/mobile/dist-web/

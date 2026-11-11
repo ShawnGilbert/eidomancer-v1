@@ -8,6 +8,9 @@ import { readConsent, writeConsent } from "./consent.js";
 import { clearStoreToken, storeToken } from "./store-access.js";
 import { loadJournal, saveJournal, newJournalEntry, journalLimit, journalNoteLimit } from "./journal.js";
 import "./style.css";
+import { exampleQuestion, exampleReading } from "../web/example.js";
+
+const webPreview = import.meta.env.MODE === "web-preview";
 
 const api = (import.meta.env.VITE_MOBILE_API_ORIGIN || "").replace(/\/$/, "");
 const limit = 1800;
@@ -17,6 +20,7 @@ function Sigil({ className = "" }) {
 }
 
 async function post(path, body, token) {
+  if (webPreview) throw new Error("The preview has no network services.");
   if (Capacitor.isNativePlatform() && !api.startsWith("https://")) throw new Error("The reading service isn’t configured in this build.");
   const response = await fetch(`${api}/api/mobile/${path}`, {
     method: "POST",
@@ -47,7 +51,7 @@ function ReadingLayers({ reading }) {
   </>;
 }
 
-function Reading({ result, onSave, saved }) {
+function Reading({ result, example = false, onSave, saved }) {
   const [reporting, setReporting] = useState(false);
   const [report, setReport] = useState("");
   const [status, setStatus] = useState("");
@@ -69,7 +73,7 @@ function Reading({ result, onSave, saved }) {
   }
 
   return <article className="reading panel" aria-label="Your reading">
-    <span className="eyebrow">AI reading</span>
+    <span className="eyebrow">{example ? "Fictional example" : "AI reading"}</span>
     <h2>{result.reading.title}</h2>
     {result.reading.metaphor && <p className="reading-image">{result.reading.metaphor}</p>}
     {!expanded && <ReadingLayer reading={result.reading} name={readingPreviewLayer} />}
@@ -84,7 +88,7 @@ function Reading({ result, onSave, saved }) {
       <p id="journal-save-disclosure">Saving keeps your question and reading on this device.</p>
       {saved && <p role="status">Saved on this device.</p>}
     </div>}
-    {!reporting && status !== "Report received." && <button className="link" onClick={() => setReporting(true)}>Report this reading</button>}
+    {!example && !reporting && status !== "Report received." && <button className="link" onClick={() => setReporting(true)}>Report this reading</button>}
     {reporting && <form onSubmit={sendReport}>
       <p>Reporting sends the generated reading to Eidomancer for review.</p>
       <label htmlFor="reason">Reason</label>
@@ -173,8 +177,20 @@ function Form({ mode, consent, setConsent, onSave, onOpenJournal }) {
   </>;
 }
 
+function Example({ onSave, onOpenJournal }) {
+  const [saved, setSaved] = useState(false);
+  return <>
+    <h1>A sample reading</h1>
+    <p className="intro">{exampleQuestion}</p>
+    <Reading result={{ reading: exampleReading }} example saved={saved}
+      onSave={(reading) => { if (onSave(reading, exampleQuestion, "pattern")) setSaved(true); }} />
+    {saved && <button className="link" onClick={onOpenJournal}>Open Echo Journal</button>}
+  </>;
+}
+
 function currentView() {
   const requested = window.location.hash.slice(1);
+  if (webPreview && (Object.hasOwn(experiences, requested) || requested === "sample")) return "sample";
   return requested === "privacy" || requested === "journal" || Object.hasOwn(experiences, requested) ? requested : "daily";
 }
 
@@ -299,7 +315,9 @@ function App() {
           </div>
         </article>
         <nav aria-label="Eidomancer paths">
-          {Object.entries(experiences).map(([key, item]) =>
+          {webPreview ? <button className="destination panel" onClick={() => navigate("sample")}>
+            <span><strong>Explore a sample reading</strong><small>Follow one question through all seven layers.</small></span><span aria-hidden="true">↗</span>
+          </button> : Object.entries(experiences).map(([key, item]) =>
             <button key={key} className="destination panel" onClick={() => navigate(key)}>
               <span><strong>{item.name}</strong><small>{item.summary}</small></span><span aria-hidden="true">↗</span>
             </button>)}
@@ -313,14 +331,14 @@ function App() {
         clear={() => persistJournal([])} /> : view === "privacy" ? <>
         <h1>Privacy & support</h1>
         <div className="panel legal">
-          <p>Daily Signal is available on your device. Ask Eidomancer and Reveal the Pattern send the text you submit to the Eidomancer service and OpenAI with your permission. The app doesn’t require an account.</p>
+          {webPreview ? <p>This preview includes a fictional reading. It has no live AI, account, or payment connection.</p> : <p>Daily Signal is available on your device. Ask Eidomancer and Reveal the Pattern send the text you submit to the Eidomancer service and OpenAI with your permission. The app doesn’t require an account.</p>}
           <p>Echo Journal saves only when you choose to save. It keeps your submitted question, generated reading, and observations in local app storage (up to {journalLimit} entries). Saving and revisiting work offline and do not send journal contents to Eidomancer or OpenAI. You can delete an entry or clear the journal on this device. The journal has no separate encryption. People with device or backup access may be able to read saved entries. The device may remove local app data.</p>
-          <p>Eidomancer processes network information to operate and limit abuse. If you report a reading, the generated text and report reason are retained for review.</p>
+          {!webPreview && <><p>Eidomancer processes network information to operate and limit abuse. If you report a reading, the generated text and report reason are retained for review.</p>
           <p>AI reading permission is {consent ? "on" : "off"}.</p>
           {consent && <button type="button" className="link" onClick={() => setConsent(false)}>Withdraw AI reading permission</button>}
-          {api && <p><a href={`${api}/privacy`} target="_blank" rel="noreferrer">Full privacy policy and support ↗</a></p>}
+          {api && <p><a href={`${api}/privacy`} target="_blank" rel="noreferrer">Full privacy policy and support ↗</a></p>}</>}
         </div>
-      </> : <Form key={view} mode={view} consent={consent} setConsent={setConsent} onSave={addReading} onOpenJournal={() => navigate("journal")} />}
+      </> : webPreview ? <Example onSave={addReading} onOpenJournal={() => navigate("journal")} /> : <Form key={view} mode={view} consent={consent} setConsent={setConsent} onSave={addReading} onOpenJournal={() => navigate("journal")} />}
       {journalError && <p className="error" role="alert">{journalError}</p>}
     </main>
     <footer><button className="link" onClick={() => navigate("privacy")}>Privacy & support</button></footer>
@@ -328,3 +346,7 @@ function App() {
 }
 
 createRoot(document.getElementById("root")).render(<App />);
+
+if (webPreview && "serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch(() => {});
+}

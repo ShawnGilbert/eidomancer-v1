@@ -13,7 +13,9 @@
     "mobile:build": "vite build --config mobile/vite.config.mjs",
     "mobile:sync": "npm run mobile:build && cap sync",
     "mobile:serve": "node mobile/server/index.js",
-    "mobile:test": "node --test mobile/test/*.test.js"
+    "mobile:test": "node --test mobile/test/*.test.js",
+    "web:preview:build": "vite build --config mobile/vite.config.mjs --mode web-preview",
+    "web:preview": "vite preview --config mobile/vite.config.mjs --mode web-preview"
   },
   "dependencies": {
     "@apple/app-store-server-library": "3.1.0",
