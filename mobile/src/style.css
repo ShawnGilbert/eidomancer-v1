@@ -313,3 +313,11 @@ textarea::placeholder {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+.reading .reading-image {
+  border-left: 2px solid var(--gold);
+  padding-left: 0.85rem;
+  margin: 0.5rem 0 1.4rem;
+  color: var(--gold);
+  font: 400 1.45rem/1.15 "Instrument Serif", Georgia, serif;
+}

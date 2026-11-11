@@ -4,14 +4,14 @@ import { createCipheriv, createDecipheriv, randomBytes, randomUUID } from "node:
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { experiences } from "../src/content.js";
-import { fields, lensInstructions, parseReading, schema } from "./lens.js";
+import { generateReading } from "./reading.js";
 
 const reportReasons = new Set(["unsafe", "offensive", "misleading", "other"]);
 const unavailable = "The reading service is temporarily unavailable. Try again shortly.";
 const hour = 3600000;
 const day = 24 * hour;
 
-export function createMobileApi({ client, reportKey, reportDir, model, perIp, perDay, reportDailyLimit }) {
+export function createMobileApi({ client, reportKey, reportDir, model, perIp, perDay, reportDailyLimit, entitlements }) {
   const router = express.Router();
   const requestCounts = new Map();
   let readDay = 0;
@@ -40,7 +40,8 @@ export function createMobileApi({ client, reportKey, reportDir, model, perIp, pe
   function seal(reading, mode) {
     const nonce = randomBytes(12);
     const cipher = createCipheriv("aes-256-gcm", reportKey, nonce);
-    const payload = { id: randomUUID(), expires: Date.now() + 7 * day, reading, mode, model };
+    const { evidence: _evidence, ...reportReading } = reading;
+    const payload = { id: randomUUID(), expires: Date.now() + 7 * day, reading: reportReading, mode, model };
     const encrypted = Buffer.concat([cipher.update(JSON.stringify(payload)), cipher.final()]);
     return Buffer.concat([nonce, cipher.getAuthTag(), encrypted]).toString("base64url");
   }
@@ -61,6 +62,25 @@ export function createMobileApi({ client, reportKey, reportDir, model, perIp, pe
   router.use((_req, res, next) => { res.set("Cache-Control", "no-store"); next(); });
   router.use(express.json({ limit: "32kb" }));
 
+  if (entitlements) {
+    router.post("/entitlements/challenge", (req, res) => {
+      if (!allow(req.ip, "challenge")) return res.status(429).json({ error: "Try again later." });
+      const challenge = entitlements.challenge(req.body ?? {});
+      return challenge ? res.json(challenge) : res.status(400).json({ error: "Couldn’t start store verification." });
+    });
+
+    router.post("/entitlements/verify", async (req, res) => {
+      if (!allow(req.ip, "verify")) return res.status(429).json({ error: "Try again later." });
+      try {
+        const session = await entitlements.redeem(req.body ?? {});
+        if (session) return res.json(session);
+      } catch (error) {
+        console.warn("Store verification failed", { name: error?.name, status: error?.status });
+      }
+      return res.status(403).json({ error: "Couldn’t verify store access. Open the app with the account you used to get it." });
+    });
+  }
+
   router.post("/readings", async (req, res) => {
     const { input, mode, consent } = req.body ?? {};
     if (consent !== true || typeof mode !== "string" || !Object.hasOwn(experiences, mode) ||
@@ -72,42 +92,41 @@ export function createMobileApi({ client, reportKey, reportDir, model, perIp, pe
     }
     const currentDay = Math.floor(Date.now() / day);
     if (readDay !== currentDay) { readDay = currentDay; readCount = 0; }
-    if (readCount >= perDay || active >= 8) {
+    if ((!entitlements && readCount >= perDay) || active >= 8) {
       return res.status(429).json({ error: "Readings are at capacity. Try again later." });
     }
 
-    readCount++;
+    let reservation;
+    let delivered = false;
+    if (entitlements) {
+      let access;
+      try { access = entitlements.reserve(req.get("authorization")); }
+      catch { return res.status(503).json({ error: unavailable }); }
+      if (access === "unlicensed") return res.status(401).json({ error: "Verify store access to continue." });
+      if (access === "limited") return res.status(429).json({ error: "This reading allowance has been reached." });
+      reservation = access;
+    } else {
+      readCount++;
+    }
     active++;
     try {
-      const options = { signal: AbortSignal.timeout(19500) };
-      const inputCheck = await client.moderations.create({ model: "omni-moderation-latest", input }, options);
-      if (inputCheck.results[0].flagged) {
-        return res.status(422).json({ error: "This question is outside the app’s reflection scope. If anyone is in immediate danger, contact local emergency services." });
-      }
-      const response = await client.chat.completions.create({
-        model,
-        max_completion_tokens: 850,
-        messages: [
-          { role: "system", content: lensInstructions },
-          { role: "user", content: JSON.stringify({ experience: experiences[mode].name, account: input.trim() }) },
-        ],
-        response_format: { type: "json_schema", json_schema: { name: "eidomancer_reading", strict: true, schema } },
-      }, options);
-      const reading = parseReading(response.choices?.[0]?.message?.content);
-      if (!reading) return res.status(502).json({ error: unavailable });
-
-      const outputCheck = await client.moderations.create({
-        model: "omni-moderation-latest", input: fields.map((field) => reading[field]).join("\n"),
-      }, options);
-      if (outputCheck.results[0].flagged) {
-        return res.status(422).json({ error: "We couldn’t provide a reading for this question. Try rephrasing it." });
-      }
-      return res.json({ reading, reportToken: seal(reading, mode) });
+      const { reading, usage, status, error } = await generateReading({ client, input: input.trim(), mode, model });
+      if (usage) console.info("Mobile model usage", {
+        model, inputTokens: usage.prompt_tokens, outputTokens: usage.completion_tokens,
+      });
+      if (!reading) return res.status(status).json({ error });
+      const reportToken = seal(reading, mode);
+      delivered = true;
+      return res.json({ reading, reportToken });
     } catch (error) {
       console.warn("Mobile reading failed", { name: error?.name, status: error?.status });
       return res.status(503).json({ error: unavailable });
     } finally {
       active--;
+      if (!delivered && reservation) {
+        try { reservation.refund(); }
+        catch (error) { console.warn("Unable to restore a reading allowance", { name: error?.name }); }
+      }
     }
   });
 

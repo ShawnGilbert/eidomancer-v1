@@ -4,6 +4,8 @@ import { Capacitor } from "@capacitor/core";
 import "@fontsource-variable/dm-sans";
 import "@fontsource/instrument-serif/400.css";
 import { dailySignal, experiences, layers } from "./content.js";
+import { readConsent, writeConsent } from "./consent.js";
+import { clearStoreToken, storeToken } from "./store-access.js";
 import "./style.css";
 
 const api = (import.meta.env.VITE_MOBILE_API_ORIGIN || "").replace(/\/$/, "");
@@ -13,16 +15,20 @@ function Sigil({ className = "" }) {
   return <img className={className} src={new URL("./sigil.svg", import.meta.url).href} alt="" />;
 }
 
-async function post(path, body) {
+async function post(path, body, token) {
   if (Capacitor.isNativePlatform() && !api.startsWith("https://")) throw new Error("The reading service isn’t configured in this build.");
   const response = await fetch(`${api}/api/mobile/${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(23000),
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "The service is temporarily unavailable.");
+  if (!response.ok) {
+    const error = new Error(data.error || "The service is temporarily unavailable.");
+    error.status = response.status;
+    throw error;
+  }
   return data;
 }
 
@@ -51,9 +57,14 @@ function Reading({ result, mode }) {
   return <article className="reading panel" aria-label="Your reading">
     <span className="eyebrow">AI reading</span>
     <h2>{result.reading.title}</h2>
+    {result.reading.metaphor && <p className="reading-image">{result.reading.metaphor}</p>}
     {primary.map(section)}
     <details><summary>Explore all seven layers</summary>
       {Object.keys(layers).filter((key) => !primary.includes(key)).map(section)}
+      {result.reading.alternative && <section><h3>What could change this reading?</h3><p>{result.reading.alternative}</p></section>}
+      {result.reading.evidence?.length > 0 && <section><h3>From your account</h3>
+        {result.reading.evidence.map(({ quote, kind }) => <p key={quote}><strong>{kind === "conduct" ? "Reported action" : kind === "declaration" ? "Stated intent" : kind === "priority" ? "Your priorities" : "Exception"}</strong> · “{quote}”</p>)}
+      </section>}
     </details>
     {!reporting && status !== "Report received." && <button className="link" onClick={() => setReporting(true)}>Report this reading</button>}
     {reporting && <form onSubmit={sendReport}>
@@ -71,10 +82,10 @@ function Reading({ result, mode }) {
   </article>;
 }
 
-function Form({ mode }) {
+function Form({ mode, consent, setConsent }) {
   const config = experiences[mode];
   const [input, setInput] = useState("");
-  const [consent, setConsent] = useState(false);
+  const [asking, setAsking] = useState(false);
   const [result, setResult] = useState(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -84,14 +95,28 @@ function Form({ mode }) {
     if (result) resultRef.current?.focus();
   }, [result]);
 
-  async function submit(event) {
+  function submit(event) {
     event.preventDefault();
-    if (!consent || input.trim().length < 10 || pending) return;
+    if (input.trim().length < 10 || pending) return;
+    if (!consent) setAsking(true);
+    else requestReading();
+  }
+
+  async function requestReading() {
+    setAsking(false);
     setPending(true);
     setResult(null);
     setError("");
     try {
-      setResult(await post("readings", { mode, input: input.trim(), consent: true }));
+      const request = { mode, input: input.trim(), consent: true };
+      const token = await storeToken(post);
+      try {
+        setResult(await post("readings", request, token));
+      } catch (failure) {
+        if (!token || failure.status !== 401) throw failure;
+        clearStoreToken();
+        setResult(await post("readings", request, await storeToken(post)));
+      }
     } catch (failure) {
       setError(failure instanceof SyntaxError || failure.name === "TypeError" || failure.name === "TimeoutError"
         ? "The reading service didn’t respond. Check your connection and try again."
@@ -107,17 +132,20 @@ function Form({ mode }) {
       <label htmlFor="reading-input">{config.label}</label>
       <textarea id="reading-input" placeholder={config.placeholder} value={input}
         required minLength={10} maxLength={limit} disabled={pending} onChange={(event) => setInput(event.target.value)} />
-      <label className="consent"><input type="checkbox" checked={consent} required disabled={pending}
-        onChange={(event) => setConsent(event.target.checked)} />
-        <span>I agree to send this text to Eidomancer’s server and OpenAI to generate my reading. Leave out identifying details.</span>
-      </label>
-      <button className="primary" disabled={pending} type="submit">{pending ? "Reading your question…" : config.action}</button>
+      <p className="consent">Leave out identifying details. Readings use OpenAI.</p>
+      {asking ? <section aria-label="AI reading permission">
+        <p>Eidomancer sends the text you submit to its server and OpenAI for moderation and to create your reading. You can withdraw this permission in Privacy &amp; support.</p>
+        <div className="actions">
+          <button type="button" onClick={() => { setConsent(true); requestReading(); }}>Allow &amp; get reading</button>
+          <button type="button" className="link" onClick={() => setAsking(false)}>Cancel</button>
+        </div>
+      </section> : <button className="primary" disabled={pending} type="submit">{pending ? "Reading your question…" : config.action}</button>}
       {pending && <p className="sr-only" role="status">Generating your reading.</p>}
       {error && <p className="error" role="alert">{error}</p>}
     </form>}
     {result && <div ref={resultRef} tabIndex={-1}>
       <Reading result={result} mode={mode} />
-      <button className="link" onClick={() => { setResult(null); setInput(""); setConsent(false); }}>
+      <button className="link" onClick={() => { setResult(null); setInput(""); }}>
         Start a new reading
       </button>
     </div>}
@@ -131,6 +159,11 @@ function currentView() {
 
 function App() {
   const [view, setView] = useState(currentView);
+  const [consent, rememberConsent] = useState(() => readConsent(window.localStorage));
+  function setConsent(allowed) {
+    rememberConsent(allowed);
+    writeConsent(window.localStorage, allowed);
+  }
   const [date, setDate] = useState(() => new Date());
   const top = useRef(null);
   const signal = dailySignal(date);
@@ -179,9 +212,11 @@ function App() {
         <div className="panel legal">
           <p>Daily Signal is available on your device. Ask Eidomancer and Reveal the Pattern send the text you submit to the Eidomancer service and OpenAI with your permission. The app doesn’t require an account or save reading history.</p>
           <p>Eidomancer processes network information to operate and limit abuse. If you report a reading, the generated text and report reason are retained for review.</p>
+          <p>AI reading permission is {consent ? "on" : "off"}.</p>
+          {consent && <button type="button" className="link" onClick={() => setConsent(false)}>Withdraw AI reading permission</button>}
           {api && <p><a href={`${api}/privacy`} target="_blank" rel="noreferrer">Full privacy policy and support ↗</a></p>}
         </div>
-      </> : <Form key={view} mode={view} />}
+      </> : <Form key={view} mode={view} consent={consent} setConsent={setConsent} />}
     </main>
     <footer><button className="link" onClick={() => navigate("privacy")}>Privacy & support</button></footer>
   </div>;

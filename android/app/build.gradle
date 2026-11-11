@@ -1,8 +1,19 @@
 apply plugin: 'com.android.application'
 
+def uploadSigning = [
+    file: System.getenv("EIDOMANCER_UPLOAD_STORE"),
+    password: System.getenv("EIDOMANCER_UPLOAD_PASSWORD"),
+    alias: System.getenv("EIDOMANCER_UPLOAD_ALIAS"),
+    keyPassword: System.getenv("EIDOMANCER_UPLOAD_KEY_PASSWORD")
+]
+if (uploadSigning.values().any { it } && !uploadSigning.values().every { it }) {
+    throw new GradleException("Set all Android upload signing environment variables together.")
+}
+
 android {
     namespace = "com.eidomancer.app"
     compileSdk = rootProject.ext.compileSdkVersion
+    buildFeatures { aidl = true }
     defaultConfig {
         applicationId "com.eidomancer.app"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -16,8 +27,19 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    if (uploadSigning.file) {
+        signingConfigs {
+            upload {
+                storeFile file(uploadSigning.file)
+                storePassword uploadSigning.password
+                keyAlias uploadSigning.alias
+                keyPassword uploadSigning.keyPassword
+            }
+        }
+    }
     buildTypes {
         release {
+            if (uploadSigning.file) signingConfig signingConfigs.upload
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

@@ -6,10 +6,19 @@ import test from "node:test";
 import { once } from "node:events";
 import express from "express";
 import { createMobileApi } from "../server/api.js";
-import { fields } from "../server/lens.js";
+import { fields, parseReading } from "../server/lens.js";
 import { dailySignal } from "../src/content.js";
 
-const reading = Object.fromEntries(fields.map((field) => [field, `Sample ${field}`]));
+const account = "I took the late shift twice when the schedule changed.";
+const structured = {
+  analysis: {
+    ...Object.fromEntries(fields.slice(1).map((field) => [field, `Sample ${field}`])),
+    alternative: "The schedule may have changed independently.", recurrence: "unestablished",
+    evidence: [{ kind: "conduct", quote: "I took the late shift twice" }],
+  },
+  imagery: { title: "The Shifted Clock", metaphor: "The clock moved before the hands did." },
+};
+const reading = parseReading(JSON.stringify(structured), account);
 
 async function fixture(t, overrides = {}) {
   const calls = [];
@@ -23,7 +32,7 @@ async function fixture(t, overrides = {}) {
       } },
       chat: { completions: { create: async (request) => {
         calls.push(request);
-        return { choices: [{ message: { content: JSON.stringify(reading) } }] };
+        return { choices: [{ message: { content: JSON.stringify(structured) } }] };
       } } },
     },
     reportDir, reportKey: Buffer.alloc(32, 7), perIp: 12, perDay: 100,
@@ -72,7 +81,7 @@ test("returns seven layers and records an authenticated report once", async (t) 
     Origin: "capacitor://localhost", "Access-Control-Request-Method": "POST",
   } });
   assert.equal(preflight.headers.get("access-control-allow-origin"), "capacitor://localhost");
-  const result = await post("readings", { mode: "pattern", input: "Two events happened after the same change.", consent: true });
+  const result = await post("readings", { mode: "pattern", input: account, consent: true });
   assert.equal(result.status, 200);
   const data = await result.json();
   assert.deepEqual(data.reading, reading);
@@ -87,8 +96,18 @@ test("returns seven layers and records an authenticated report once", async (t) 
   const files = await readdir(reportDir);
   assert.equal(files.length, 1);
   const stored = JSON.parse(await readFile(path.join(reportDir, files[0]), "utf8"));
-  assert.deepEqual(stored.reading, reading);
+  assert.deepEqual(stored.reading, Object.fromEntries(Object.entries(reading).filter(([key]) => key !== "evidence")));
   assert.equal(stored.reason, "misleading");
   assert.equal(stored.mode, "pattern");
   assert.equal(Object.hasOwn(stored, "input"), false);
+});
+
+test("a missing or exhausted entitlement never reaches moderation", async (t) => {
+  let access = "unlicensed";
+  const { post, calls } = await fixture(t, { entitlements: { reserve: () => access } });
+  const question = { mode: "ask", input: account, consent: true };
+  assert.equal((await post("readings", question)).status, 401);
+  access = "limited";
+  assert.equal((await post("readings", question)).status, 429);
+  assert.deepEqual(calls, []);
 });
