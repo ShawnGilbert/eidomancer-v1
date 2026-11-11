@@ -37,7 +37,7 @@ final class EidomancerViewController: CAPBridgeViewController {
 final class StoreProofPlugin: CAPPlugin, CAPBridgedPlugin {
     let identifier = "StoreProofPlugin"
     let jsName = "StoreProof"
-    let pluginMethods = [CAPPluginMethod(name: "prove", returnType: CAPPluginReturnPromise)]
+    let pluginMethods: [CAPPluginMethod] = [CAPPluginMethod(name: "prove", returnType: CAPPluginReturnPromise)!]
 
     @objc func prove(_ call: CAPPluginCall) {
         guard let id = call.getString("id"), let install = call.getString("install"),

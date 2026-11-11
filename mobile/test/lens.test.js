@@ -81,3 +81,33 @@ test("first-use consent persists and withdrawal requires another opt-in", () => 
   writeConsent(storage, false);
   assert.equal(readConsent(storage), false);
 });
+
+test("the same savings can support different guidance when the observer's downside changes", () => {
+  const highRisk = cases.find(({ id }) => id === "housing-asymmetric-risk");
+  const lowerRisk = cases.find(({ id }) => id === "housing-altered-priority");
+  const options = [
+    [highRisk, "I cannot afford another move", "Keep the current lease while you test nighttime noise.",
+      "Losing the ability to record or affording another move could outweigh the monthly savings."],
+    [lowerRisk, "I can afford another move if it fails", "Try a short stay and keep enough money set aside to move again.",
+      "With recording handled elsewhere, a short trial can tell you whether the savings are worth it."],
+  ];
+  const results = options.map(([item, priority, guidance, insight]) => evaluate({
+    imagery: { title: "The Price of the Door", metaphor: "The same key can carry a different weight." },
+    analysis: {
+      signal: "The proposed studio saves $150 a month and your lease is month to month.",
+      tension: "The savings have to be weighed against the cost of changing homes.",
+      pattern: "You have a proposed move and no repeated outcomes to compare.",
+      alternative: "The actual terms of a trial may affect how easily you can reverse the decision.",
+      insight,
+      essence: "The same rent difference can carry different risk.",
+      echo: "If the trial reveals a cost you cannot absorb, the current lease gives you another path.",
+      guidance,
+      recurrence: "unestablished",
+      evidence: [{ kind: "priority", quote: priority }],
+    },
+  }, item.account));
+  assert.equal(results[0].signal, results[1].signal);
+  assert.match(results[0].guidance, /Keep the current lease/);
+  assert.match(results[1].guidance, /Try a short stay/);
+  assert.equal(evaluate({ ...response, analysis: { ...response.analysis, evidence: results[0].evidence } }, lowerRisk.account), null);
+});
