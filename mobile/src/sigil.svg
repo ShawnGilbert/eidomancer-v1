@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <linearGradient id="a" x1="62" y1="36" x2="195" y2="224" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffe9c4"/><stop offset=".45" stop-color="#dfb478"/><stop offset="1" stop-color="#9b76d1"/>
+    </linearGradient>
+  </defs>
+  <g stroke="url(#a)">
+    <circle cx="128" cy="128" r="107" opacity=".32"/>
+    <circle cx="128" cy="128" r="90" opacity=".55" stroke-dasharray="2 7"/>
+    <ellipse cx="128" cy="128" rx="109" ry="48" transform="rotate(-32 128 128)" opacity=".45"/>
+    <ellipse cx="128" cy="128" rx="109" ry="48" transform="rotate(32 128 128)" opacity=".45"/>
+    <path d="M128 36 185 128 128 220 71 128Z" fill="#bf9be2" fill-opacity=".12" stroke-width="2"/>
+    <path d="M128 36 147 128 128 220 109 128Z M71 128l57-27 57 27-57 27Z M128 36v184" stroke-width="1.25"/>
+    <path d="M128 36 71 128l38 0Z M128 220l57-92h-38Z" fill="#d9b08f" fill-opacity=".13"/>
+    <circle cx="128" cy="128" r="4" fill="#ffebc9"/>
+  </g>
+  <g fill="#eed0a1"><circle cx="44" cy="72" r="2"/><circle cx="208" cy="191" r="2"/><circle cx="204" cy="63" r="2"/></g>
+</svg>
