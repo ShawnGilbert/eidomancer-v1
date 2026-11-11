@@ -3,6 +3,8 @@ export const layers = {
   essence: "Essence", echo: "Echo", guidance: "Guidance",
 };
 
+export const readingPreviewLayer = "insight";
+
 export const experiences = {
   ask: {
     name: "Ask Eidomancer",
@@ -10,7 +12,6 @@ export const experiences = {
     label: "What’s on your mind?",
     placeholder: "I’m thinking about changing jobs. I want more freedom, but I need stable income.",
     action: "Get a reading",
-    primary: ["insight", "guidance"],
   },
   pattern: {
     name: "Reveal the Pattern",
@@ -18,7 +19,6 @@ export const experiences = {
     label: "What keeps happening?",
     placeholder: "Describe two times it happened, what came before, and what followed.",
     action: "Explore the pattern",
-    primary: ["signal", "pattern", "guidance"],
   },
 };
 

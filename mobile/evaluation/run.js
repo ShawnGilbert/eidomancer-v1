@@ -2,7 +2,7 @@ import "dotenv/config";
 import { performance } from "node:perf_hooks";
 import OpenAI from "openai";
 import { generateReading } from "../server/reading.js";
-import { experiences, layers } from "../src/content.js";
+import { layers, readingPreviewLayer } from "../src/content.js";
 import { liveCases } from "./live-cases.js";
 
 const model = process.env.MOBILE_MODEL || "gpt-4.1-mini";
@@ -48,7 +48,7 @@ if (process.argv.includes("--plan")) {
     const initialReadingCard = reading ? {
       title: reading.title,
       metaphor: reading.metaphor,
-      sections: experiences[item.mode].primary.map((key) => ({ label: layers[key], text: reading[key] })),
+      sections: [{ label: layers[readingPreviewLayer], text: reading[readingPreviewLayer] }],
     } : null;
     emit({
       type: "case", ...item, seconds: (performance.now() - start) / 1000,

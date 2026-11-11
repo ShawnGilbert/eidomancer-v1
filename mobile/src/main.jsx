@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { Capacitor } from "@capacitor/core";
 import "@fontsource-variable/dm-sans";
 import "@fontsource/instrument-serif/400.css";
-import { dailySignal, experiences, layers } from "./content.js";
+import { dailySignal, experiences, layers, readingPreviewLayer } from "./content.js";
 import { readConsent, writeConsent } from "./consent.js";
 import { clearStoreToken, storeToken } from "./store-access.js";
 import "./style.css";
@@ -32,12 +32,12 @@ async function post(path, body, token) {
   return data;
 }
 
-function Reading({ result, mode }) {
+function Reading({ result }) {
   const [reporting, setReporting] = useState(false);
   const [report, setReport] = useState("");
   const [status, setStatus] = useState("");
   const [pending, setPending] = useState(false);
-  const primary = experiences[mode].primary;
+  const [expanded, setExpanded] = useState(false);
   const section = (key) => <section key={key}><h3>{layers[key]}</h3><p>{result.reading[key]}</p></section>;
 
   async function sendReport(event) {
@@ -58,9 +58,10 @@ function Reading({ result, mode }) {
     <span className="eyebrow">AI reading</span>
     <h2>{result.reading.title}</h2>
     {result.reading.metaphor && <p className="reading-image">{result.reading.metaphor}</p>}
-    {primary.map(section)}
-    <details><summary>Explore all seven layers</summary>
-      {Object.keys(layers).filter((key) => !primary.includes(key)).map(section)}
+    {!expanded && section(readingPreviewLayer)}
+    <details onToggle={(event) => setExpanded(event.currentTarget.open)}>
+      <summary>Explore all seven layers</summary>
+      {Object.keys(layers).map(section)}
       {result.reading.alternative && <section><h3>What could change this reading?</h3><p>{result.reading.alternative}</p></section>}
       {result.reading.evidence?.length > 0 && <section><h3>From your account</h3>
         {result.reading.evidence.map(({ quote, kind }) => <p key={quote}><strong>{kind === "conduct" ? "Reported action" : kind === "declaration" ? "Stated intent" : kind === "priority" ? "Your priorities" : "Exception"}</strong> · “{quote}”</p>)}
@@ -144,7 +145,7 @@ function Form({ mode, consent, setConsent }) {
       {error && <p className="error" role="alert">{error}</p>}
     </form>}
     {result && <div ref={resultRef} tabIndex={-1}>
-      <Reading result={result} mode={mode} />
+      <Reading result={result} />
       <button className="link" onClick={() => { setResult(null); setInput(""); }}>
         Start a new reading
       </button>
