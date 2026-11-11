@@ -8,9 +8,19 @@
     "server": "node server.js",
     "start": "node server.js",
     "build": "vite build --emptyOutDir",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "mobile:dev": "vite --config mobile/vite.config.mjs",
+    "mobile:build": "vite build --config mobile/vite.config.mjs",
+    "mobile:sync": "npm run mobile:build && cap sync",
+    "mobile:serve": "node mobile/server/index.js",
+    "mobile:test": "node --test mobile/test/*.test.js"
   },
   "dependencies": {
+    "@capacitor/android": "8.6.0",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/ios": "8.6.0",
+    "@fontsource-variable/dm-sans": "5.3.0",
+    "@fontsource/instrument-serif": "5.3.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
@@ -20,6 +30,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.6.0",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.8",

@@ -1,0 +1,8 @@
+{
+  "appId": "com.eidomancer.app",
+  "appName": "Eidomancer",
+  "webDir": "mobile/dist",
+  "backgroundColor": "#110e1a",
+  "ios": { "backgroundColor": "#110e1a" },
+  "android": { "backgroundColor": "#110e1a" }
+}

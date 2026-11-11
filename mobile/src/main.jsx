@@ -1,0 +1,190 @@
+import React, { useEffect, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
+import { Capacitor } from "@capacitor/core";
+import "@fontsource-variable/dm-sans";
+import "@fontsource/instrument-serif/400.css";
+import { dailySignal, experiences, layers } from "./content.js";
+import "./style.css";
+
+const api = (import.meta.env.VITE_MOBILE_API_ORIGIN || "").replace(/\/$/, "");
+const limit = 1800;
+
+function Sigil({ className = "" }) {
+  return <img className={className} src={new URL("./sigil.svg", import.meta.url).href} alt="" />;
+}
+
+async function post(path, body) {
+  if (Capacitor.isNativePlatform() && !api.startsWith("https://")) throw new Error("The reading service isn’t configured in this build.");
+  const response = await fetch(`${api}/api/mobile/${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(23000),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "The service is temporarily unavailable.");
+  return data;
+}
+
+function Reading({ result, mode }) {
+  const [reporting, setReporting] = useState(false);
+  const [report, setReport] = useState("");
+  const [status, setStatus] = useState("");
+  const [pending, setPending] = useState(false);
+  const primary = experiences[mode].primary;
+  const section = (key) => <section key={key}><h3>{layers[key]}</h3><p>{result.reading[key]}</p></section>;
+
+  async function sendReport(event) {
+    event.preventDefault();
+    setPending(true);
+    try {
+      await post("reports", { token: result.reportToken, reason: report });
+      setStatus("Report received.");
+      setReporting(false);
+    } catch {
+      setStatus("Couldn’t send the report. Try again.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return <article className="reading panel" aria-label="Your reading">
+    <span className="eyebrow">AI reading</span>
+    <h2>{result.reading.title}</h2>
+    {primary.map(section)}
+    <details><summary>Explore all seven layers</summary>
+      {Object.keys(layers).filter((key) => !primary.includes(key)).map(section)}
+    </details>
+    {!reporting && status !== "Report received." && <button className="link" onClick={() => setReporting(true)}>Report this reading</button>}
+    {reporting && <form onSubmit={sendReport}>
+      <p>Reporting sends the generated reading to Eidomancer for review.</p>
+      <label htmlFor="reason">Reason</label>
+      <select required id="reason" value={report} onChange={(event) => setReport(event.target.value)}>
+        <option value="">Choose a reason</option><option value="unsafe">Unsafe guidance</option>
+        <option value="offensive">Offensive content</option><option value="misleading">Misleading claim</option>
+        <option value="other">Other</option>
+      </select>
+      <div className="actions"><button disabled={pending} type="submit">Send report</button>
+        <button disabled={pending} className="link" type="button" onClick={() => setReporting(false)}>Cancel</button></div>
+    </form>}
+    {status && <p role="status">{status}</p>}
+  </article>;
+}
+
+function Form({ mode }) {
+  const config = experiences[mode];
+  const [input, setInput] = useState("");
+  const [consent, setConsent] = useState(false);
+  const [result, setResult] = useState(null);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const resultRef = useRef(null);
+
+  useEffect(() => {
+    if (result) resultRef.current?.focus();
+  }, [result]);
+
+  async function submit(event) {
+    event.preventDefault();
+    if (!consent || input.trim().length < 10 || pending) return;
+    setPending(true);
+    setResult(null);
+    setError("");
+    try {
+      setResult(await post("readings", { mode, input: input.trim(), consent: true }));
+    } catch (failure) {
+      setError(failure instanceof SyntaxError || failure.name === "TypeError" || failure.name === "TimeoutError"
+        ? "The reading service didn’t respond. Check your connection and try again."
+        : failure.message);
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return <>
+    <h1>{config.name}</h1><p className="intro">{config.summary}</p>
+    {!result && <form className="panel" onSubmit={submit} aria-busy={pending}>
+      <label htmlFor="reading-input">{config.label}</label>
+      <textarea id="reading-input" placeholder={config.placeholder} value={input}
+        required minLength={10} maxLength={limit} disabled={pending} onChange={(event) => setInput(event.target.value)} />
+      <label className="consent"><input type="checkbox" checked={consent} required disabled={pending}
+        onChange={(event) => setConsent(event.target.checked)} />
+        <span>I agree to send this text to Eidomancer’s server and OpenAI to generate my reading. Leave out identifying details.</span>
+      </label>
+      <button className="primary" disabled={pending} type="submit">{pending ? "Reading your question…" : config.action}</button>
+      {pending && <p className="sr-only" role="status">Generating your reading.</p>}
+      {error && <p className="error" role="alert">{error}</p>}
+    </form>}
+    {result && <div ref={resultRef} tabIndex={-1}>
+      <Reading result={result} mode={mode} />
+      <button className="link" onClick={() => { setResult(null); setInput(""); setConsent(false); }}>
+        Start a new reading
+      </button>
+    </div>}
+  </>;
+}
+
+function currentView() {
+  const requested = window.location.hash.slice(1);
+  return requested === "privacy" || Object.hasOwn(experiences, requested) ? requested : "daily";
+}
+
+function App() {
+  const [view, setView] = useState(currentView);
+  const [date, setDate] = useState(() => new Date());
+  const top = useRef(null);
+  const signal = dailySignal(date);
+
+  useEffect(() => {
+    const refresh = () => setDate(new Date());
+    const interval = window.setInterval(refresh, 30000);
+    window.addEventListener("focus", refresh);
+    return () => { window.clearInterval(interval); window.removeEventListener("focus", refresh); };
+  }, []);
+
+  useEffect(() => {
+    function handleNavigation() {
+      setView(currentView());
+      top.current.focus();
+      window.scrollTo(0, 0);
+    }
+    window.addEventListener("hashchange", handleNavigation);
+    return () => window.removeEventListener("hashchange", handleNavigation);
+  }, []);
+
+  function navigate(next) {
+    if (next !== view) window.location.hash = next;
+  }
+
+  return <div className="shell">
+    <header><button className="wordmark" onClick={() => navigate("daily")}><Sigil />Eidomancer</button>
+      {view !== "daily" && <button className="back" onClick={() => navigate("daily")}>← Daily Signal</button>}</header>
+    <main ref={top} tabIndex={-1}>
+      {view === "daily" ? <>
+        <div className="date-row"><h1>Daily Signal</h1><time>{new Intl.DateTimeFormat("en", { month: "long", day: "numeric" }).format(date)}</time></div>
+        <article className="daily panel">
+          <div className="art"><Sigil /></div>
+          <div className="daily-copy"><h2>{signal.title}</h2><p>{signal.signal}</p>
+            <details><summary>Try this today</summary><p>{signal.guidance}</p></details>
+          </div>
+        </article>
+        <nav aria-label="Readings">
+          {Object.entries(experiences).map(([key, item]) =>
+            <button key={key} className="destination panel" onClick={() => navigate(key)}>
+              <span><strong>{item.name}</strong><small>{item.summary}</small></span><span aria-hidden="true">↗</span>
+            </button>)}
+        </nav>
+      </> : view === "privacy" ? <>
+        <h1>Privacy & support</h1>
+        <div className="panel legal">
+          <p>Daily Signal is available on your device. Ask Eidomancer and Reveal the Pattern send the text you submit to the Eidomancer service and OpenAI with your permission. The app doesn’t require an account or save reading history.</p>
+          <p>Eidomancer processes network information to operate and limit abuse. If you report a reading, the generated text and report reason are retained for review.</p>
+          {api && <p><a href={`${api}/privacy`} target="_blank" rel="noreferrer">Full privacy policy and support ↗</a></p>}
+        </div>
+      </> : <Form key={view} mode={view} />}
+    </main>
+    <footer><button className="link" onClick={() => navigate("privacy")}>Privacy & support</button></footer>
+  </div>;
+}
+
+createRoot(document.getElementById("root")).render(<App />);

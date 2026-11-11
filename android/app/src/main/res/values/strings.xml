@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Eidomancer</string>
+    <string name="title_activity_main">Eidomancer</string>
+    <string name="package_name">com.eidomancer.app</string>
+    <string name="custom_url_scheme">com.eidomancer.app</string>
+</resources>
